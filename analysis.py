@@ -286,16 +286,21 @@ max_wave, max_id, max_date = extract_one(max_wave_data)
 
 tab2.write(f"Max wave for {real_username} in champ: **{max_wave}**, as {max_id} on {max_date}")
 tab2.write(f"User Id used: {user_id}")
+is_data_full = tab2.checkbox("Graph all data? (not just 0.16)")
 
 
-if len(data_new) > 1:
+data_to_use = data if is_data_full else data_new
+position_data_to_use = position_data if is_data_full else position_data_new
+
+
+if len(data_to_use) > 1:
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
-        go.Scatter(x=data_new.date, y=data_new.wave, name="Wave (left axis)"),
+        go.Scatter(x=data_to_use.date, y=data_to_use.wave, name="Wave (left axis)"),
         secondary_y=False,
     )
     fig.add_trace(
-        go.Scatter(x=position_data_new.date, y=position_data_new.position, name="Tourney position"),
+        go.Scatter(x=position_data_to_use.date, y=position_data_to_use.position, name="Tourney position"),
         secondary_y=True,
     )
     fig.update_yaxes(secondary_y=True, range=[0, 200])
