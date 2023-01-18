@@ -3,6 +3,7 @@ from collections import Counter
 from functools import lru_cache
 from statistics import mean, stdev
 from typing import List, Optional
+from urllib.parse import urlencode
 
 import pandas as pd
 import plotly.express as px
@@ -121,6 +122,13 @@ def color(value):
     return "color: orange"
 
 
+def strike(text):
+    result = ""
+    for c in text:
+        result = result + c + "\u0336"
+    return result
+
+
 ###############
 ### tourney results
 ###############
@@ -158,6 +166,7 @@ last_results["diff"] = last_results["wave"] - last_results["diff"]
 last_results["diff"] = last_results.apply(lambda row: ("+" if row["diff"] >= 0 else "") + str(row["diff"]), axis=1)
 last_results["diff"] = last_results.apply(lambda row: row["diff"] if row["diff"] != "+0" else "==", axis=1)
 last_results["diff"] = last_results.apply(lambda row: row["diff"] + (" (pb!)" if is_pb(row["id"], row["wave"]) else ""), axis=1)
+last_results["tourney name"] = last_results.apply(lambda row: strike(row["tourney name"]) if row["tourney name"] in sus else row["tourney name"], axis=1)
 
 
 tab1.title("The Tower tourney results")
@@ -202,8 +211,8 @@ top_n = winners.slider("How many players to plot?", min_value=1, max_value=200, 
 last_n_tournaments = winners.slider("How many past tournaments?", min_value=2, max_value=15, value=10)
 
 
-current_top_nicknames = [get_real_nickname(row[0], row[1]) for row in total_results[tourneys[0]][:top_n]]
-current_top = [row[0] for row in total_results[tourneys[0]][:top_n]]
+current_top_nicknames = [get_real_nickname(row[0], row[1]) for row in total_results[tourneys[0]][:top_n] if row[1] not in sus]
+current_top = [row[0] for row in total_results[tourneys[0]][:top_n] if row[1] not in sus]
 means = [mean([result[2] for result in results_by_id[id_][-last_n_tournaments:]]) for id_ in current_top]
 stdevs = [stdev(data) if len(data := [result[2] for result in results_by_id[id_][-last_n_tournaments:]]) > 1 else 0 for id_ in current_top]
 
@@ -239,7 +248,14 @@ winners.plotly_chart(fig)
 ###############
 
 
-last_top_scorer = list(total_results.values())[-1][0][1]
+last_top_scorers = [row[1] for row in list(total_results.values())[-1]]
+
+for scorer in last_top_scorers:
+    if scorer not in sus:
+        last_top_scorer = scorer
+        break
+
+
 player_list = [current_player if current_player else last_top_scorer] + sorted(
     {result for tourney_file in total_results.values() for _, result, _ in tourney_file} | set(hardcoded_nicknames.values())
 )
@@ -445,6 +461,8 @@ if users:
             position_datas.append(position_data)
 
     if datas:
+        comparison.code("http://thetower.lol?" + urlencode({"compare": users}, doseq=True))
+
         pd_datas = pd.concat(datas)
         fig = px.line(pd_datas, x="date", y="wave", color="user", markers=True)
 
