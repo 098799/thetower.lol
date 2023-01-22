@@ -14,6 +14,16 @@ from plotly.subplots import make_subplots
 from hardcoding import hardcoded_nicknames, rev_hardcoded_nicknames, sus
 from load_data import load_data
 
+st.set_page_config(
+    page_title="The Tower top200 tourney results",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+    menu_items={
+        "Get Help": "mailto:admin@thetower.lol",
+    },
+)
+
+
 with st.sidebar:
     league = st.radio("Choose league (champ is the supported one)", ("Champ", "Plat"))
     st.write("Experimental tweaks (use at your own peril)")
@@ -76,19 +86,19 @@ current_player: Optional[str]
 compare_players: Optional[List[str]]
 
 if player := query.get("player"):
-    tab2, tab1, winners, comparison, tab3, breakdown = st.tabs(
-        ["Player lookup", "Tourney results", "Winners graphs", "Player comparison", "Top scores", "Champ breakdown"]
+    tab2, tab1, winners, comparison, tab3, breakdown, sustab = st.tabs(
+        ["Player lookup", "Tourney results", "Winners graphs", "Player comparison", "Top scores", "Champ breakdown", "sus"]
     )
     current_player = player[0]
     compare_players = None
 elif compare_players := st.experimental_get_query_params().get("compare"):
-    comparison, tab1, winners, tab2, tab3, breakdown = st.tabs(
-        ["Player comparison", "Tourney results", "Winners graphs", "Player lookup", "Top scores", "Champ breakdown"]
+    comparison, tab1, winners, tab2, tab3, breakdown, sustab = st.tabs(
+        ["Player comparison", "Tourney results", "Winners graphs", "Player lookup", "Top scores", "Champ breakdown", "sus"]
     )
     current_player = None
 else:
-    tab1, winners, tab2, comparison, tab3, breakdown = st.tabs(
-        ["Tourney results", "Winners graphs", "Player lookup", "Player comparison", "Top scores", "Champ breakdown"]
+    tab1, winners, tab2, comparison, tab3, breakdown, sustab = st.tabs(
+        ["Tourney results", "Winners graphs", "Player lookup", "Player comparison", "Top scores", "Champ breakdown", "sus"]
     )
     current_player = None
     compare_players = None
@@ -112,6 +122,14 @@ def color_top(wave):
     for strata, color in zip(stratas[::-1], colors[::-1]):
         if wave >= strata:
             return f"color: {color}"
+
+
+sus_person = "sus!!!"
+
+
+def am_i_sus(name):
+    if name == sus_person:
+        return "color: red"
 
 
 def color(value):
@@ -145,10 +163,8 @@ def is_pb(id_, wave):
 
 
 tourneys = sorted(total_results.keys(), reverse=True)
-
 tourney_file_name = tab1.selectbox("Select tournament:", tourneys)
 previous_tourney = tourneys[index if (index := tourneys.index(tourney_file_name) + 1) < len(tourneys) else tourneys.index(tourney_file_name)]
-
 
 last_results = pd.DataFrame(translate_results(total_results[tourney_file_name]))
 previous_results = pd.DataFrame(translate_results(total_results[previous_tourney]))
@@ -156,6 +172,7 @@ previous_results = pd.DataFrame(translate_results(total_results[previous_tourney
 columns = ["id", "tourney name", "real name", "wave"]
 previous_results.columns = columns
 last_results.columns = columns
+
 
 last_results["pos"] = [previous_res[0] if len(previous_res := previous_results[previous_results["id"] == id_].index) else 200 for id_ in last_results["id"]]
 last_results["pos"] = last_results["pos"] - last_results.index
@@ -166,18 +183,44 @@ last_results["diff"] = last_results["wave"] - last_results["diff"]
 last_results["diff"] = last_results.apply(lambda row: ("+" if row["diff"] >= 0 else "") + str(row["diff"]), axis=1)
 last_results["diff"] = last_results.apply(lambda row: row["diff"] if row["diff"] != "+0" else "==", axis=1)
 last_results["diff"] = last_results.apply(lambda row: row["diff"] + (" (pb!)" if is_pb(row["id"], row["wave"]) else ""), axis=1)
+
+
+# add medals
+place_counter = 1
+
+
+for index, result in enumerate(last_results.loc(0)):
+    if result["tourney name"] not in sus:
+        if result["real name"] == "":
+            last_results.loc[index, "real name"] = result["tourney name"]
+
+        if place_counter == 1:
+            last_results.loc[index, "real name"] += " 🥇"
+        if place_counter == 2:
+            last_results.loc[index, "real name"] += " 🥈"
+        if place_counter == 3:
+            last_results.loc[index, "real name"] += " 🥉"
+
+        place_counter += 1
+
+    if place_counter > 3:
+        break
+
+
+# sus
+last_results["real name"] = last_results.apply(lambda row: sus_person if row["tourney name"] in sus else row["real name"], axis=1)
 last_results["tourney name"] = last_results.apply(lambda row: strike(row["tourney name"]) if row["tourney name"] in sus else row["tourney name"], axis=1)
 
 
-tab1.title("The Tower tourney results")
-
-
 def make_url(username):
-    return f"<a href='http://116.203.133.96:8501?player={username}&links=true'>{username}</a>"
+    return f"<a href='http://thetower.lol?player={username}&links=true'>{username}</a>"
 
 
 to_be_displayed = (
-    last_results[["pos", "tourney name", "real name", "wave", "diff"]].style.applymap(color, subset=["diff", "pos"]).applymap(color_top, subset=["wave"])
+    last_results[["pos", "tourney name", "real name", "wave", "diff"]]
+    .style.applymap(color, subset=["diff", "pos"])
+    .applymap(color_top, subset=["wave"])
+    .applymap(am_i_sus, subset=["real name"])
 )
 
 if links:
@@ -481,3 +524,18 @@ if users:
 
         fig = px.line(pd.concat(position_datas), x="date", y="position", color="user", markers=True)
         comparison.plotly_chart(fig)
+
+
+###############
+### sustab
+###############
+
+sustab.title("Sus people")
+sustab.write(
+    """Sometimes on the leaderboards there are hackers or otherwise suspicious individuals. The system doesn't necessarily manage to detect and flag all of them, so some postprocessing is required. There's no official approval board for this, I'm just a guy on discord that tries to analyze results. If you'd like your name rehabilitated, please join the tower discord and talk to us in the tournament channel."""
+)
+
+sustab.write("My discord id is `098799#0707`.")
+
+sustab.write("Currently, sus people are:")
+sustab.write(sorted(sus))

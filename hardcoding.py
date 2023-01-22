@@ -2,8 +2,9 @@ hardcoded_nicknames = {
     "508E64777E74593A": "Davroar",
     "3AF60D885181322C": "Skye",
     "2319505BE01FA063": "Peach",
-    "D2E91B297D898157": "PerkMasterDayox",
+    "D2E91B297D898157": "ĐåÝøX",
     "BE82DF9283461C75": "silent",
+    "7EA771A7A2DCFAA9": "silent too",
     "9C0FFCDC9EC303DB": "Brianator",
     "B9ADDEEDC5E85D1B": "Blaze",
     "3E5F96B750CEE6C4": "NanaSeiYuri",
@@ -20,4 +21,4 @@ hardcoded_nicknames = {
 
 rev_hardcoded_nicknames = {value: key for key, value in hardcoded_nicknames.items()}
 
-sus = {"Kehtimmy", "Chronic", "joeljj", "WillBravo7", "Kehtimmy", "legionair", "EEnton", "aaa", "Naiqey", "Psyko"}
+sus = {"Kehtimmy", "Chronic", "joeljj", "WillBravo7", "Kehtimmy", "legionair", "EEnton", "aaa", "Naiqey", "Psyko", "5th"}
