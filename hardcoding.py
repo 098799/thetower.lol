@@ -1,3 +1,7 @@
+stratas = [250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 10000]
+
+colors = ["#992d22", "#e390dc", "#ff65b8", "#d69900", "#06d68a", "#3970ec", "#206c5b", "#ff0000", "#6dc170", "#00ff00", "#ffffff"]
+
 hardcoded_nicknames = {
     "508E64777E74593A": "Davroar",
     "3AF60D885181322C": "Skye",
@@ -22,3 +26,5 @@ hardcoded_nicknames = {
 rev_hardcoded_nicknames = {value: key for key, value in hardcoded_nicknames.items()}
 
 sus = {"Kehtimmy", "Chronic", "joeljj", "WillBravo7", "Kehtimmy", "legionair", "EEnton", "aaa", "Naiqey", "Psyko", "5th"}
+
+sus_person = "sus!!!"
