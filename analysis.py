@@ -38,10 +38,14 @@ st.write(
     border-radius: 4px 4px 0 0;
     position: relative;
     top: 1px;
+    # border-left: 5px solid #F63366;
 }
 .stRadio > div > label :hover {
     color: #F63366;
 }
+.stRadio input:checked + div {
+    color: #F63366;
+    border-left: 5px solid #F63366;
 }
 </style>""",
     unsafe_allow_html=True,
