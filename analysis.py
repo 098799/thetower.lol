@@ -1,7 +1,8 @@
 import datetime
+import sys
 from collections import Counter
-from functools import lru_cache
-from statistics import mean, stdev
+from functools import lru_cache, partial
+from statistics import mean, median, stdev
 from typing import List, Optional
 from urllib.parse import urlencode
 
@@ -12,9 +13,11 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from formatting import am_i_sus, color, color_top, strike
+from formatting import am_i_sus, color, color_nickname, color_nickname__top, color_top, strike
 from hardcoding import colors, hardcoded_nicknames, rev_hardcoded_nicknames, stratas, sus, sus_person
 from load_data import load_data
+
+strata_to_color = dict(zip(stratas, colors))
 
 st.set_page_config(
     page_title="The Tower top200 tourney results",
@@ -103,8 +106,23 @@ def get_majority_name(nickname):
 
 
 @lru_cache(maxsize=None)
-def get_real_nickname(id_, nickname):
-    return hardcoded_nicknames.get(id_, get_majority_name(nickname))
+def get_majority_name_by_id(id_):
+    data = results_by_id[id_]
+    counter = Counter([nickname for _, nickname, _ in data])
+    return counter.most_common()[0][0]
+
+
+@lru_cache(maxsize=None)
+def get_real_nickname(id_, nickname=None):
+    name = hardcoded_nicknames.get(id_)
+
+    if name is None:
+        if nickname is None:
+            name = get_majority_name_by_id(id_)
+        else:
+            name = get_majority_name(nickname)
+
+    return name
 
 
 def translate_results(results):
@@ -115,11 +133,39 @@ def translate_results(results):
     return [translate_single(result, results) for result in results]
 
 
+@st.cache
+def compute_roles():
+    roles_by_id = {}
+
+    for id_, results in results_by_id.items():
+        try:
+            max_result = max(filter(lambda row: row[0] >= new_patch, results), key=lambda row: row[2])
+            max_wave = max_result[2]
+        except ValueError:
+            max_wave = 0
+
+        if max_wave < stratas[0]:
+            role = 0
+        else:
+            strata = [strata_low for strata_low, strata_high in zip(stratas, stratas[1:]) if strata_low <= max_wave < strata_high]
+            role = strata[0]
+
+        roles_by_id[id_] = role
+
+    return roles_by_id
+
+
+roles_by_id = compute_roles()
+
+
 ###############
 ### tab layout setup
 ###############
 
 query = st.experimental_get_query_params()
+
+if query:
+    print(datetime.datetime.now(), query)
 
 current_player: Optional[str]
 compare_players: Optional[List[str]]
@@ -137,7 +183,7 @@ else:
     current_player = None
     functionality = None
 
-tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "sus"]
+tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
 functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
 
 
@@ -146,6 +192,10 @@ def get_detail_data(user):
     if user_id := rev_hardcoded_nicknames.get(user):
         user_data = results_by_id[user_id]
         real_username = user
+    elif user in results_by_id:
+        user_id = user
+        user_data = results_by_id[user]
+        real_username = get_real_nickname(user)
     else:
         user_id, user_data = sorted(get_data_by_nickname(user), key=lambda datum: len(datum[1]))[-1]
         real_username = get_real_nickname(user_id, user)
@@ -196,6 +246,7 @@ def compute_tourney_results():
 
     # add medals
     place_counter = 1
+    real_counter = 1
 
     for index, result in enumerate(last_results.loc(0)):
         if result["tourney name"] not in sus:
@@ -210,8 +261,9 @@ def compute_tourney_results():
                 last_results.loc[index, "real name"] += " 🥉"
 
             place_counter += 1
+        real_counter += 1
 
-        if place_counter > 3:
+        if real_counter > 200:
             break
 
     if congrats_toggle:
@@ -256,10 +308,12 @@ def compute_tourney_results():
         return f"<a href='http://thetower.lol?player={username}'>{username}</a>"
 
     to_be_displayed = (
-        last_results[["pos", "tourney name", "real name", "wave", "diff"]]
+        last_results[["pos", "tourney name", "real name", "wave", "diff", "id"]]
         .style.applymap(color, subset=["diff", "pos"])
         .applymap(color_top, subset=["wave"])
         .applymap(am_i_sus, subset=["real name"])
+        .apply(partial(color_nickname, roles_by_id=roles_by_id), axis=1)
+        .hide(subset=["id"], axis=1, names=True)
     )
 
     if links:
@@ -294,15 +348,32 @@ def compute_winners():
     fig.update_traces(textinfo="value")
     tab.plotly_chart(fig)
 
-    top_n = tab.slider("How many players to plot?", min_value=1, max_value=200, value=100)
+    last_n_tournaments = tab.slider("How many past tournaments?", min_value=1, max_value=len(previous_tournaments), value=10)
+    top_n = tab.slider("How many players to plot?", min_value=1, max_value=200, value=50)
 
-    tourneys = sorted(total_results.keys(), reverse=True)
-    current_top_nicknames = [get_real_nickname(row[0], row[1]) for row in total_results[tourneys[0]][:top_n] if row[1] not in sus]
-    current_top = [row[0] for row in total_results[tourneys[0]][:top_n] if row[1] not in sus]
-    means = [mean([result[2] for result in results_by_id[id_][-last_n_tournaments:]]) for id_ in current_top]
-    stdevs = [stdev(data) if len(data := [result[2] for result in results_by_id[id_][-last_n_tournaments:]]) > 1 else 0 for id_ in current_top]
+    def get_stats_data(last_n_tournaments, top_n, start_tournament=0):
+        tourneys = sorted(total_results.keys(), reverse=True)
 
+        current_top = [row[0] for row in total_results[tourneys[0]] if row[1] not in sus]
+        ids_in_last_n = [{res[0] for res in total_results[tourney_date]} for tourney_date in tourneys[start_tournament:last_n_tournaments]]
+        consistent_top_ids = [id_ for id_ in current_top if all({id_ in result_ids for result_ids in ids_in_last_n})][:top_n]
+
+        means = [mean([result[2] for result in results_by_id[id_][::-1][start_tournament:last_n_tournaments]]) for id_ in consistent_top_ids]
+        stdevs = [
+            stdev(data) if len(data := [result[2] for result in results_by_id[id_][::-1][start_tournament:last_n_tournaments]]) > 1 else 0
+            for id_ in consistent_top_ids
+        ]
+
+        median_mean = median(means)
+        median_stdev = median(stdevs)
+
+        return consistent_top_ids, means, stdevs, median_mean, median_stdev
+
+    consistent_top_ids, means, stdevs, median_mean, median_stdev = get_stats_data(last_n_tournaments, top_n)
+    current_top_nicknames = [get_real_nickname(id_) for id_ in consistent_top_ids]
     total_data = sorted(zip(current_top_nicknames, means, stdevs), key=lambda x: x[1], reverse=True)
+
+    tab.write(f"Median score in the group: {median_mean}, with median stdev {median_stdev}.")
 
     fig = go.Figure()
     fig.add_trace(
@@ -328,6 +399,18 @@ def compute_winners():
 
     tab.plotly_chart(fig)
 
+    df_data = [get_stats_data(last_n_tournament, top_n)[-2:] for last_n_tournament in range(2, last_n_tournaments)]
+    df_data = [[int(round(mean_, 0)), int(round(stdev_, 0))] for mean_, stdev_ in df_data]
+    df = pd.DataFrame(df_data)
+    df.columns = ["median mean wave", "median stdev of waves"]
+    df["last_n_tournaments"] = list(range(2, len(df) + 2))
+    tab.dataframe(df)
+
+    figure = px.scatter(df, x="last_n_tournaments", y="median mean wave")
+    tab.plotly_chart(figure)
+    figure = px.scatter(df, x="last_n_tournaments", y="median stdev of waves")
+    tab.plotly_chart(figure)
+
 
 ###############
 ### player lookup
@@ -343,8 +426,10 @@ def get_player_list():
             last_top_scorer = scorer
             break
 
-    return [current_player if current_player else last_top_scorer] + sorted(
-        {result for tourney_file in total_results.values() for _, result, _ in tourney_file} | set(hardcoded_nicknames.values())
+    return (
+        [current_player if current_player else last_top_scorer]
+        + sorted({result for tourney_file in total_results.values() for _, result, _ in tourney_file} | set(hardcoded_nicknames.values()))
+        + sorted(results_by_id.keys())
     )
 
 
@@ -352,12 +437,21 @@ def compute_player_lookup():
     # tab = player_lookup_tab
     tab = st
 
-    selectbox_field, toggle_position = tab.columns([3, 1])
+    user = tab.selectbox("Which user would you like to lookup?", get_player_list())
+    tab.code("http://thetower.lol?" + urlencode({"player": user}, doseq=True))
 
-    user = selectbox_field.selectbox("Which user would you like to lookup?", get_player_list())
-    graph_position_instead = toggle_position.checkbox("Graph position instead")
+    if user in sus:
+        tab.write("<font color='red'>This player is considered sus.</font>", unsafe_allow_html=True)
+        return
+
+    data_assuming_nickname = get_data_by_nickname(user)
+
+    if len(data_assuming_nickname) > 2:
+        datas = sorted(data_assuming_nickname, key=lambda x: len(x[1]), reverse=True)
+        user = st.selectbox("Since multiple players have the same username, please choose id", [datum[0] for datum in datas])
 
     real_username, user_id, data = get_detail_data(user)
+
     max_wave_data = data[data["wave"] == data["wave"].max()]
 
     data_new = data[data["date"] > new_patch]
@@ -379,21 +473,32 @@ def compute_player_lookup():
         date = list(series_one_or_two.date)[0]
         return wave, id_, date
 
+    role = strata_to_color.get(roles_by_id[user_id], "#AAAAAA")
+
     if not max_wave_data_new.empty:
         max_wave, max_id, max_date = extract_one(max_wave_data_new)
-        tab.write(f"Max wave for {real_username} in champ _since 0.16_: **{max_wave}**, as {max_id} on {max_date}")
-        tab.write(f"Average wave for {real_username} in champ _since 0.16_: **{round(mean_wave, 2)}** with the standard deviation of {round(std_wave, 2)}")
+        tab.write(
+            f"Max wave for <font color='{role}'>{real_username}</font> in champ _since 0.16_: **{max_wave}**, as {max_id} on {max_date}", unsafe_allow_html=True
+        )
+        tab.write(
+            f"Average wave for <font color='{role}'>{real_username}</font> in champ _since 0.16_: **{round(mean_wave, 2)}** with the standard deviation of {round(std_wave, 2)}",
+            unsafe_allow_html=True,
+        )
 
     if not last_5_data.empty:
         tab.write(
-            f"Average wave for {real_username} in champ for the last 5 tournaments: **{round(mean_wave_last, 2)}** with the standard deviation of {round(std_wave_last, 2)}"
+            f"Average wave for <font color='{role}'>{real_username}</font> in champ for the last 5 tournaments: **{round(mean_wave_last, 2)}** with the standard deviation of {round(std_wave_last, 2)}",
+            unsafe_allow_html=True,
         )
 
     max_wave, max_id, max_date = extract_one(max_wave_data)
 
-    tab.write(f"Max wave for {real_username} in champ: **{max_wave}**, as {max_id} on {max_date}")
+    tab.write(f"Max wave for <font color='{role}'>{real_username}</font> in champ: **{max_wave}**, as {max_id} on {max_date}", unsafe_allow_html=True)
     tab.write(f"User Id used: {user_id}")
-    is_data_full = tab.checkbox("Graph all data? (not just 0.16)")
+
+    is_data_full_box, graph_position_instead_box = tab.columns(2)
+    is_data_full = is_data_full_box.checkbox("Graph all data? (not just 0.16)")
+    graph_position_instead = graph_position_instead_box.checkbox("Graph position instead")
 
     data_to_use = data if is_data_full else data_new
 
@@ -451,12 +556,12 @@ def get_top_scores_df():
             continue
 
         for score in tourney_results:
-            total_scores.append([tourney_date, get_real_nickname(score[0], score[1]), score[2]])
+            total_scores.append([tourney_date, get_real_nickname(score[0], score[1]), score[2], score[0]])
 
     top_scores = [score for score in sorted(total_scores, key=lambda x: x[2], reverse=True) if score[1] not in sus]
 
     df = pd.DataFrame(top_scores)
-    df.columns = ["date", "regular nickname", "wave"]
+    df.columns = ["date", "regular nickname", "wave", "id"]
 
     overall_df = df.loc(0)[:500]
     overall_df["index"] = list(range(1, len(overall_df) + 1))
@@ -473,7 +578,7 @@ def get_top_scores_df():
         peeps.add(top_score[1])
 
     condensed_df = pd.DataFrame(condensed_scores)
-    condensed_df.columns = ["date", "regular nickname", "wave"]
+    condensed_df.columns = ["date", "regular nickname", "wave", "id"]
     condensed_df = condensed_df.loc(0)[:100]
     condensed_df["index"] = list(range(1, len(condensed_df) + 1))
     condensed_df = condensed_df.set_index(keys="index")
@@ -496,9 +601,17 @@ def compute_top_scores():
 
     overall_df, condensed_df = get_top_scores_df()
 
-    tab.dataframe(condensed_df.style.applymap(color_top, subset=["wave"]), use_container_width=True, height=400)
+    tab.dataframe(
+        condensed_df.style.applymap(color_top, subset=["wave"]).apply(partial(color_nickname__top, roles_by_id=roles_by_id), axis=1),
+        use_container_width=True,
+        height=400,
+    )
     tab.write("Overall:")
-    tab.dataframe(overall_df.style.applymap(color_top, subset=["wave"]), use_container_width=True, height=400)
+    tab.dataframe(
+        overall_df.style.applymap(color_top, subset=["wave"]).apply(partial(color_nickname__top, roles_by_id=roles_by_id), axis=1),
+        use_container_width=True,
+        height=400,
+    )
 
 
 ###############
@@ -606,16 +719,19 @@ def compute_comparison():
 ###############
 
 
-def compute_sus():
+def compute_about():
     # tab = sus_tab
     tab = st
 
-    tab.title("Sus people")
+    tab.title("About")
+    tab.markdown("My discord id is `098799#0707`.")
+    tab.markdown("Thanks to `Milamber33` for a lot of help with css and other things.")
+    tab.markdown("Thanks to `Jim808` and `ObsUK` for a graph ideas and encouragement.")
+
+    tab.header("Sus people")
     tab.write(
         """Sometimes on the leaderboards there are hackers or otherwise suspicious individuals. The system doesn't necessarily manage to detect and flag all of them, so some postprocessing is required. There's no official approval board for this, I'm just a guy on discord that tries to analyze results. If you'd like your name rehabilitated, please join the tower discord and talk to us in the tournament channel."""
     )
-
-    tab.write("My discord id is `098799#0707`.")
 
     tab.write("Currently, sus people are:")
     tab.write(sorted(sus))

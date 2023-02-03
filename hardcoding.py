@@ -12,7 +12,7 @@ hardcoded_nicknames = {
     "9C0FFCDC9EC303DB": "Brianator",
     "B9ADDEEDC5E85D1B": "Blaze",
     "3E5F96B750CEE6C4": "NanaSeiYuri",
-    "8BD9973232D2CB4B": "...this guy with the green discord pic",
+    "8BD9973232D2CB4B": "this guy with a green discord pic",
     "9DDCD4902FE1A201": "TJ the weird lines lollipop",
     "33540FD38D7F3B6B": "Helasus23",
     "ECC7934F0D89CFDD": "Dr. Soelent",
@@ -21,10 +21,14 @@ hardcoded_nicknames = {
     "463AC882BCB747CE": "XΣЯIƧӨ",
     "D89A1205670BBB54": "Neonblinder",
     "A87E159A44462308": "TeapotMaster",
+    "BB8938ABCD564BD3": "Pasco (f2p)",
+    "108021C0ABED93A7": "tight fisted himji",
+    "E29694349117A9F5": "Axillion (f2p)",
+    "8CEF3BEC794790BA": "KindaMiteyAncientSmileKyth ⭐ (f2p)",
 }
 
 rev_hardcoded_nicknames = {value: key for key, value in hardcoded_nicknames.items()}
 
-sus = {"Kehtimmy", "Chronic", "joeljj", "WillBravo7", "Kehtimmy", "legionair", "EEnton", "aaa", "Naiqey", "Psyko", "5th"}
+sus = {"Kehtimmy", "Chronic", "joeljj", "WillBravo7", "Kehtimmy", "legionair", "EEnton", "aaa", "Naiqey", "Psyko", "5th", "marcino"}
 
 sus_person = "sus!!!"
