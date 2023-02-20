@@ -1,6 +1,10 @@
 stratas = [250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 10000]
-
 colors = ["#992d22", "#e390dc", "#ff65b8", "#d69900", "#06d68a", "#3970ec", "#206c5b", "#ff0000", "#6dc170", "#00ff00", "#ffffff"]
+strata_to_color = dict(zip(stratas, colors))
+
+position_stratas = [10, 50, 100, 200][::-1]
+position_colors = ["#5555FF", "green", "#664620", "red"][::-1]
+
 
 hardcoded_nicknames = {
     "508E64777E74593A": "Davroar",
@@ -25,10 +29,55 @@ hardcoded_nicknames = {
     "108021C0ABED93A7": "tight fisted himji",
     "E29694349117A9F5": "Axillion (f2p)",
     "8CEF3BEC794790BA": "KindaMiteyAncientSmileKyth ⭐ (f2p)",
+    "47630203FD36A45C": "Beckswarsteiner",
+    "9C2FCA80BB3E1B3F": "Charmander Main's Rival",
 }
 
 rev_hardcoded_nicknames = {value: key for key, value in hardcoded_nicknames.items()}
 
-sus = {"Kehtimmy", "Chronic", "joeljj", "WillBravo7", "Kehtimmy", "legionair", "EEnton", "aaa", "Naiqey", "Psyko", "5th", "marcino"}
+# sus = {
+#     "Kehtimmy",
+#     "Chronic",
+#     "joeljj",
+#     "WillBravo7",
+#     "Kehtimmy",
+#     "legionair",
+#     "EEnton",
+#     "aaa",
+#     "Naiqey",
+#     "Psyko",
+#     "5th",
+#     "marcino",
+#     "Jerry",
+# }
+
+
+sus_data = {
+    ("Kehtimmy", "8E573E09E336FC9F"),
+    ("Chronic", "D1805B42F5484DD"),
+    ("joeljj", "10CBAF5DF160809F"),
+    ("WillBravo7", "DAA662A9560A9AB9"),
+    ("Kehtimmy", "8E573E09E336FC9F"),
+    ("legionair", "B733058A1394D0DC"),
+    ("EEnton", "D7F00B0832BF9752"),
+    ("aaa", "644DB9D23AA27B71"),
+    ("Naiqey", "1ED2E5712F3A316B"),
+    ("Psyko", "691AE6AD71799E8F"),
+    ("5th", "7EF5F28EF124CCD"),
+    ("Jerry", "E032D681F1F87B07"),
+    ("rolinha", "FDC77C6CAC67C3B"),
+    ("Dolarima", "1646B7C05FE152C1"),
+    ("karlo", "58B9F99F87E36133"),
+    ("tatikare", "649C62F11FD7DB67"),
+    ("wjrtjdfn", "915244990762E022"),
+    ("____HoLiFak____", "D600A296D053717A"),
+}
+
+rehabilitated = {
+    ("marcino", "B4AC0E8BBF6C9D45"),
+}
+
+sus_ids = {id_ for _, id_ in sus_data}
+
 
 sus_person = "sus!!!"

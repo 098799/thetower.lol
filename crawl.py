@@ -46,6 +46,7 @@ def sync_file(date):
         time.sleep(5)
         subprocess.run(f"mv /home/tgrining/Downloads/tourney_data.csv /home/tgrining/tourney/data/{date.isoformat()}.csv", shell=True)
         subprocess.run("rsync -azP ~/tourney hetzner:/", shell=True)
+        subprocess.run("ssh hetzner 'systemctl restart streamlit'", shell=True)
 
         return True
     return False
