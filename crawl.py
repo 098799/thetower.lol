@@ -4,11 +4,13 @@ import os
 import re
 import subprocess
 import time
+from typing import sys
 
 from selenium import webdriver
 
 options = webdriver.ChromeOptions()
 options.add_argument(r"--user-data-dir=/home/tgrining/.config/google-chrome")
+
 
 handler = logging.getLogger()
 handler.setLevel("INFO")
@@ -45,8 +47,11 @@ def sync_file(date):
         logging.info("copying results...")
         time.sleep(5)
         subprocess.run(f"mv /home/tgrining/Downloads/tourney_data.csv /home/tgrining/tourney/data/{date.isoformat()}.csv", shell=True)
-        subprocess.run("rsync -azP ~/tourney hetzner:/", shell=True)
+        subprocess.run("rsync -azP ~/tourney/data hetzner:/tourney/", shell=True)
+        subprocess.run("rsync -azP ~/tourney/data hetzner:/tourney2/", shell=True)
+        time.sleep(5)
         subprocess.run("ssh hetzner 'systemctl restart streamlit'", shell=True)
+        subprocess.run("ssh hetzner 'systemctl restart streamlit2'", shell=True)
 
         return True
     return False
@@ -61,8 +66,12 @@ def download_and_sync():
         now = datetime.datetime.now()
         date_now = now.date()
 
-        correct_day_of_the_week = now.weekday() == 3 or now.weekday() == 6
-        its_time = now.hour == 1 and now.minute >= 2
+        if len(sys.argv) == 1:
+            correct_day_of_the_week = now.weekday() == 3 or now.weekday() == 6
+            its_time = now.hour == 1 and now.minute >= 2
+        else:
+            correct_day_of_the_week = True
+            its_time = True
 
         if correct_day_of_the_week and its_time:
             downloaded = get_file(now)

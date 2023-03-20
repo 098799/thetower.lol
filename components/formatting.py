@@ -1,7 +1,11 @@
 from functools import partial
 from operator import ge, le
 
-from hardcoding import colors, position_colors, position_stratas, stratas, sus_person
+from components.constants import colors, position_colors, position_stratas, stratas, sus_person
+
+
+def barebones_format(color):
+    return color
 
 
 def simple_format(color):
@@ -22,6 +26,7 @@ def color_strata(wave, stratas, colors, operator, formatting_function):
 
 color_top = partial(color_strata, stratas=stratas, colors=colors, operator=ge, formatting_function=simple_format)
 color_position = partial(color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=simple_format)
+color_position_barebones = partial(color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=barebones_format)
 
 
 def color_nickname__detail(row, roles_by_id, stratas, colors, operator, formatting_function):
@@ -43,11 +48,14 @@ def am_i_sus(name):
 
 
 def color(value):
-    if value.startswith("+"):
-        return "color: green"
-    elif value.startswith("-"):
+    strvalue = str(value)
+
+    if strvalue.startswith("0"):
+        return "color: orange"
+    elif strvalue.startswith("-"):
         return "color: red"
-    return "color: orange"
+    else:
+        return "color: green"
 
 
 def strike(text):
@@ -55,3 +63,7 @@ def strike(text):
     for c in text:
         result = result + c + "\u0336"
     return result
+
+
+def make_url(username):
+    return f"<a href='http://thetower.lol?player={username}'>{username}</a>"

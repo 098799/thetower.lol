@@ -12,8 +12,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from formatting import am_i_sus, color, color_nickname, color_nickname__top, color_position, color_position__top, color_top, strike
-from hardcoding import (
+from components.constants import (
     colors,
     hardcoded_nicknames,
     position_colors,
@@ -26,7 +25,8 @@ from hardcoding import (
     sus_ids,
     sus_person,
 )
-from load_data import load_data
+from components.data import load_data
+from components.formatting import am_i_sus, color, color_nickname, color_nickname__top, color_position, color_position__top, color_top, strike
 
 st.set_page_config(
     page_title="The Tower top200 tourney results",
@@ -62,6 +62,9 @@ st.write(
 </style>""",
     unsafe_allow_html=True,
 )
+
+
+st.info("We will be switching to new version, currently deployed at http://thetower.lol:8502/, any day now, pinky promise.")
 
 
 @st.cache(allow_output_mutation=True)
@@ -273,10 +276,10 @@ def compute_tourney_results():
     last_results["diff"] = [
         previous_res[0] if (previous_res := list(previous_results[previous_results["id"] == id_].wave)) else 0 for id_ in last_results["id"]
     ]
-    last_results["diff"] = last_results["wave"] - last_results["diff"]
-    last_results["diff"] = last_results.apply(lambda row: ("+" if row["diff"] >= 0 else "") + str(row["diff"]), axis=1)
-    last_results["diff"] = last_results.apply(lambda row: row["diff"] if row["diff"] != "+0" else "==", axis=1)
-    last_results["diff"] = last_results.apply(lambda row: row["diff"] + (" (pb!)" if is_pb(row["id"], row["wave"]) else ""), axis=1)
+    last_results["diff"][last_results["diff"] != 0] = last_results["wave"][last_results["diff"] != 0] - last_results["diff"][last_results["diff"] != 0]
+    # last_results["diff"] = last_results.apply(lambda row: ("+" if row["diff"] >= 0 else "") + str(row["diff"]), axis=1)
+    # last_results["diff"] = last_results.apply(lambda row: row["diff"] if row["diff"] != "+0" else "==", axis=1)
+    # last_results["diff"] = last_results.apply(lambda row: row["diff"] + (" (pb!)" if is_pb(row["id"], row["wave"]) else ""), axis=1)
 
     # add medals
     place_counter = 1
@@ -382,6 +385,7 @@ def compute_tourney_results():
         .applymap(color_top, subset=["wave"])
         .apply(partial(color_nickname, roles_by_id=roles_by_id), axis=1)
         .applymap(am_i_sus, subset=["real name"])
+        .bar(subset=["diff"], cmap="RdYlGn")
         .hide(subset=["id"], axis=1, names=True)
     )
 
@@ -401,7 +405,7 @@ def compute_winners():
     # tab = winners_tab
     tab = st
 
-    pies_tab, averages_tab, additional_analysis_tab = tab.tabs(["Pies", "Averages", "Additional analysis"])
+    pies_tab, roll_your_pie_tab, averages_tab, additional_analysis_tab = tab.tabs(["Pies", "Bake your own pie", "Averages", "Additional analysis"])
 
     def get_winner(results, top_k=1):
         winners = []
@@ -425,6 +429,7 @@ def compute_winners():
     winners_data = [get_winner(results[1])[0] for results in previous_tournaments[:last_n_tournaments]]
     winners_df = pd.DataFrame(tuple(Counter(winners_data).items()))
     winners_df.columns = ["name", "count"]
+
     fig = px.pie(winners_df, values="count", names="name", title="Winners of champ, courtesy of Jim")
     fig.update_traces(textinfo="value")
     pies_tab.plotly_chart(fig)
@@ -472,6 +477,37 @@ def compute_winners():
     fig = px.pie(winners_score_df_2, values="score", names="name", title="Skye's scoring: 10 for first, 5 for second, 3 for third, 2 for top 5, 1 for top 10")
     fig.update_traces(textinfo="value")
     pies_tab.plotly_chart(fig)
+
+    places = range(1, 11)
+
+    roll_columns = roll_your_pie_tab.columns([1, 1, 1, 1, 1])
+
+    sliders = {
+        place - 1: roll_columns[(place - 1) % 5].slider(f"How many points for place {place}?", min_value=0, max_value=10, value=winner_score.get(place - 1, 0))
+        for place in places
+    }
+
+    winners_score_data_sliders = [
+        {key: sliders[index] for index, key in enumerate(get_winner(results[1], top_k=10))} for results in previous_tournaments[:last_n_tournaments]
+    ]
+
+    winners_score_roll = defaultdict(int)
+
+    for scores in winners_score_data_sliders:
+        for username, score in scores.items():
+            winners_score_roll[username] += score
+
+    colormap = roll_your_pie_tab.selectbox(
+        "Color map?", [item for item in dir(px.colors.sequential) if not item.startswith("__") and not item.startswith("swatches")]
+    )
+
+    winners_score_df_roll = pd.DataFrame(sorted(winners_score_roll.items(), key=lambda x: x[1], reverse=True))
+    winners_score_df_roll.columns = ["name", "score"]
+    fig = px.pie(
+        winners_score_df_roll, values="score", names="name", title="Bake your own pie", color_discrete_sequence=getattr(px.colors.sequential, colormap)
+    )
+    fig.update_traces(textinfo="value")
+    roll_your_pie_tab.plotly_chart(fig)
 
     last_n_tournaments = averages_tab.slider("How many past tournaments?", min_value=1, max_value=len(previous_tournaments), value=20)
     top_n = averages_tab.slider("How many players to plot?", min_value=1, max_value=200, value=50)
@@ -945,11 +981,14 @@ def compute_about():
 
     tab.header("Sus people")
     tab.write(
-        """Sometimes on the leaderboards there are hackers or otherwise suspicious individuals. The system doesn't necessarily manage to detect and flag all of them, so some postprocessing is required. There's no official approval board for this, I'm just a guy on discord that tries to analyze results. If you'd like your name rehabilitated, please join the tower discord and talk to us in the tournament channel."""
+        """Sometimes on the leaderboards there are suspicious individuals that had achieved hard to believe tournament scores. The system doesn't necessarily manage to detect and flag all of them, so some postprocessing is required. There's no official approval board for this, I'm just a guy on discord that tries to analyze results. If you'd like your name rehabilitated, please join the tower discord and talk to us in the tournament channel."""
+    )
+    tab.write(
+        """It is important to note that **not all people listed here are confirmed hackers**!! In fact, Pog has explicitly stated that some of them may not be hackers, or at least it cannot be proven at this point."""
     )
 
     tab.write("Currently, sus people are:")
-    tab.write(sorted([nickname for nickname, id_ in sus_data]))
+    tab.write(pd.DataFrame(sorted([(nickname, id_) for nickname, id_ in sus_data]), columns=["nickname", "id"]))
 
     tab.header("Vindicated")
     tab.write("Previously on the sus list but vindicated by the tower staff:")
