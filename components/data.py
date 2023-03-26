@@ -8,7 +8,7 @@ import extra_streamlit_components as stx
 import pandas as pd
 import streamlit as st
 
-from components.constants import Role, date_to_patch, hardcoded_nicknames, patch_to_roles, sus_ids, wave_to_role
+from components.constants import Role, date_to_patch, hardcoded_nicknames, id_mapping, patch_to_roles, sus_ids, wave_to_role
 from components.formatting import color_position_barebones
 
 
@@ -47,38 +47,24 @@ def load_data(folder):
 
 
 def get_id_real_name_mapping(df: pd.DataFrame) -> Dict[str, str]:
-    ids = df.id.unique()
+    def get_most_common(df):
+        return Counter(df["tourney_name"]).most_common()[0][0]
 
-    mapping: Dict[str, str] = {}
-
-    for id_ in ids:
-        if id_ in hardcoded_nicknames:
-            mapping[id_] = hardcoded_nicknames[id_]
-            continue
-
-        filtered_df = df[df["id"] == id_]
-        counter = Counter(filtered_df["tourney_name"])
-        mapping[id_] = counter.most_common()[0][0]
-
-    return mapping
+    return {id_: hardcoded_nicknames.get(id_mapping.get(id_, id_), get_most_common(group)) for id_, group in df.groupby("id")}
 
 
 def get_row_to_role(df: pd.DataFrame):
     name_roles: Dict[int, Optional[Role]] = {}
 
-    for id_ in df.id.unique():
-        for patch, roles in patch_to_roles.items():
-            filtered_df = df[(df["id"] == id_) & (df["date"] >= patch.start_date) & (df["date"] <= patch.end_date)]
-            wave_roles = sorted(filtered_df["wave_role"], reverse=True)
+    for patch, roles in patch_to_roles.items():
+        id_df = df[(df["date"] >= patch.start_date) & (df["date"] <= patch.end_date)]
 
-            if wave_roles:
-                for index in filtered_df.index:
-                    name_roles[index] = wave_roles[0]
+        for _, filtered_df in id_df.groupby("id"):
+            if not filtered_df.empty:
+                wave_role = sorted(filtered_df["wave_role"], reverse=True)[0]
+                name_roles.update({index: wave_role for index in filtered_df.index})
 
-    for index in df.index:
-        name_roles[index] = name_roles.get(index)
-
-    df["name_role"] = [role for _, role in sorted(name_roles.items())]
+    df["name_role"] = df.index.map(name_roles.get)
     df["name_role_color"] = df.name_role.map(lambda role: getattr(role, "color", None))
     return df
 
@@ -114,6 +100,10 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
     df = pd.concat(dfs)
 
     id_to_real_name = get_id_real_name_mapping(df)
+
+    df["raw_id"] = df.id
+    df["id"] = df.id.map(lambda id_: id_mapping.get(id_, id_))  # id renormalization
+
     df["real_name"] = df.id.map(lambda id_: id_to_real_name[id_])
     df["patch"] = df.date.map(date_to_patch)
     df["patch_version"] = df.patch.map(lambda x: x.version_minor)
@@ -133,5 +123,24 @@ def get_manager():
     return stx.CookieManager()
 
 
-# df = load_tourney_results("data")
-# breakpoint()
+@st.cache(allow_output_mutation=True)
+def get_player_list(df):
+    last_date = df.date.unique()[-1]
+    first_choices = list(df[df.date == last_date].real_name)
+    set_of_first_choices = set(first_choices)
+    all_real_names = set(df.real_name.unique()) - set_of_first_choices
+    all_tourney_names = set(df.tourney_name.unique())
+    all_user_ids = df.raw_id.unique().tolist()
+    last_top_scorer = df[(df.date == sorted(df.date.unique())[-1]) & (df.position == 1)].tourney_name.iloc[0]
+    return first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer
+
+
+# import cProfile
+# import pstats
+
+# pr = cProfile.Profile()
+# pr.run("load_tourney_results('data')")
+
+# stats = pstats.Stats(pr)
+# stats.sort_stats("cumtime")
+# stats.print_stats(50)

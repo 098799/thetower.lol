@@ -6,6 +6,7 @@ import streamlit as st
 
 from components.about import compute_about
 from components.breakdown import compute_breakdown
+from components.comparison import compute_comparison
 from components.constants import Options
 from components.data import get_manager, load_tourney_results
 from components.player_lookup import compute_player_lookup
@@ -91,15 +92,17 @@ else:
     functionality = None
 
 options.current_player = current_player
+options.compare_players = compare_players
 
-# tabs = ["Comparison"]
-tabs = ["Tourney results", "Player lookup", "Winners", "Top scores", "Breakdown", "About"]
+
+tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
 functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
 
 
 def keep():
     compute_tourney_results
     compute_player_lookup
+    compute_comparison
     compute_winners
     compute_top_scores
     compute_breakdown

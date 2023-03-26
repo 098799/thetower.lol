@@ -45,6 +45,13 @@ hardcoded_nicknames = {
     "270281236E7EAF76": "Pikle",
 }
 
+
+id_mapping = {
+    "C06D09C980D38976": "BCCBAF556C357D63",
+    "DB6B7A5083D902E1": "8BD9973232D2CB4B",
+}
+
+
 rev_hardcoded_nicknames = {value: key for key, value in hardcoded_nicknames.items()}
 
 # sus = {
@@ -90,6 +97,8 @@ sus_data = {
     ("jakob", "693330CB30AC7AAA"),
     ("rafcixon", "58AF3CDEAC26FEB5"),
     ("TacoWarrior", "5052D480E8312586"),
+    ("Kuath", "BBEC115D0E4D37CC"),
+    ("delcos", "576ED3406DA40C03"),
 }
 
 rehabilitated = {}
@@ -194,6 +203,7 @@ colors_018 = [
     "#7fffd4",
     "#ffffff",
 ]
+strata_to_color_018 = dict(zip(stratas_boundaries_018, colors_018))
 
 patch_to_roles: Dict[Patch, List[Role]] = {
     patch_015: [
@@ -248,3 +258,7 @@ class Options(BaseModel):
     congrats_toggle: bool
     links_toggle: bool
     current_player: Optional[str]
+    compare_players: Optional[List[str]]
+
+
+medals = ["🥇", "🥈", "🥉"]

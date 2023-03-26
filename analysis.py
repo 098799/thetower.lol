@@ -13,14 +13,14 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from components.constants import (
-    colors,
+    colors_018,
     hardcoded_nicknames,
     position_colors,
     position_stratas,
     rehabilitated,
     rev_hardcoded_nicknames,
-    strata_to_color,
-    stratas,
+    strata_to_color_018,
+    stratas_boundaries_018,
     sus_data,
     sus_ids,
     sus_person,
@@ -64,7 +64,10 @@ st.write(
 )
 
 
-st.info("We will be switching to new version, currently deployed at http://thetower.lol:8502/, any day now, pinky promise.")
+# st.info("We will be switching to new version, currently deployed at http://thetower.lol:8502/, any day now, pinky promise.")
+st.info(
+    "We have switched to the new version. I'm keeping this one alive for now here: http://thetower.lol:8502/, but beware that links will point to the new one."
+)
 
 
 @st.cache(allow_output_mutation=True)
@@ -162,10 +165,10 @@ def compute_roles():
         except ValueError:
             max_wave = 0
 
-        if max_wave < stratas[0]:
+        if max_wave < stratas_boundaries_018[0]:
             role = 0
         else:
-            strata = [strata_low for strata_low, strata_high in zip(stratas, stratas[1:]) if strata_low <= max_wave < strata_high]
+            strata = [strata_low for strata_low, strata_high in zip(stratas_boundaries_018, stratas_boundaries_018[1:]) if strata_low <= max_wave < strata_high]
             role = strata[0]
 
         roles_by_id[id_] = role
@@ -174,7 +177,7 @@ def compute_roles():
 
 
 roles_by_id = compute_roles()
-colors_by_id = {id_: strata_to_color.get(strata, "grey") for id_, strata in roles_by_id.items()}
+colors_by_id = {id_: strata_to_color_018.get(strata, "grey") for id_, strata in roles_by_id.items()}
 
 
 ###############
@@ -335,7 +338,7 @@ def compute_tourney_results():
                         new_rednames.append(redname_real_username)
 
                 if new_rednames:
-                    colored_names = [f"<font color='{strata_to_color[strata_bottom]}'>{name}</font>" for name in new_rednames if name]
+                    colored_names = [f"<font color='{strata_to_color_018[strata_bottom]}'>{name}</font>" for name in new_rednames if name]
                     st.write(f"Congratulations for new {strata_name} {', '.join(colored_names)}!", unsafe_allow_html=True)
 
             pbs = []
@@ -547,7 +550,7 @@ def compute_winners():
     )
     fig.update_layout(barmode="stack", title=f"Average performance of the last tourney's top{top_n} in last {last_n_tournaments} tournaments")
 
-    for color_, strata in zip(colors[:-1], stratas[:-1]):
+    for color_, strata in zip(colors_018[:-1], stratas_boundaries_018[:-1]):
         fig.add_hline(
             y=strata,
             line_color=color_,
@@ -630,7 +633,7 @@ def compute_player_lookup():
         date = list(series_one_or_two.date)[0]
         return wave, id_, date
 
-    role = strata_to_color.get(roles_by_id[user_id], "#AAAAAA")
+    role = strata_to_color_018.get(roles_by_id[user_id], "#AAAAAA")
 
     if not max_wave_data_new.empty:
         max_wave, max_id, max_date = extract_one(max_wave_data_new)
@@ -683,7 +686,7 @@ def compute_player_lookup():
         min_ = min(data_new.wave)
         max_ = max(data_new.wave)
 
-        for color_, strata in zip(colors, stratas):
+        for color_, strata in zip(colors_018, stratas_boundaries_018):
             if max_ > strata > min_:
                 fig.add_hline(
                     y=strata,
@@ -797,7 +800,10 @@ def compute_breakdown():
     tab = st
 
     def get_stratified_counts(results):
-        return {lower_strata: sum(higher_strata >= result[2] > lower_strata for result in results) for lower_strata, higher_strata in zip(stratas, stratas[1:])}
+        return {
+            lower_strata: sum(higher_strata >= result[2] > lower_strata for result in results)
+            for lower_strata, higher_strata in zip(stratas_boundaries_018, stratas_boundaries_018[1:])
+        }
 
     def get_up_or_down(previous_results, next_results, date):
         previous_lookup = {id_: wave for id_, _, wave in previous_results}
@@ -827,7 +833,9 @@ def compute_breakdown():
     up_or_down_results = {
         date: get_up_or_down(previous_results, new_results, date) for (_, previous_results), (date, new_results) in zip(total_sorted, total_sorted[1:])
     }
-    restratified_results = {strata: [stratified_result.get(strata, 0) for date, stratified_result in stratified_results.items()] for strata in stratas}
+    restratified_results = {
+        strata: [stratified_result.get(strata, 0) for date, stratified_result in stratified_results.items()] for strata in stratas_boundaries_018
+    }
     restratified_up_or_down = {strata: [up_or_down.get(strata, 0) for date, up_or_down in up_or_down_results.items()] for strata in ["up", "same", "down"]}
     restratified_up_or_down = {
         **restratified_up_or_down,
@@ -836,8 +844,8 @@ def compute_breakdown():
         ],
     }
 
-    if 100000 in stratas:
-        stratas.pop(-1)
+    if 100000 in stratas_boundaries_018:
+        stratas_boundaries_018.pop(-1)
     restratified_results.pop(10000, None)
 
     stratified_plot_data = [
@@ -849,7 +857,7 @@ def compute_breakdown():
         for name, results in restratified_results.items()
     ]
 
-    for datum, color_ in zip(stratified_plot_data, colors):
+    for datum, color_ in zip(stratified_plot_data, colors_018):
         datum.update(marker_color=color_)
 
     fig = go.Figure(data=stratified_plot_data)
@@ -949,7 +957,7 @@ def compute_comparison():
             min_ = min(pd_datas.wave)
             max_ = max(pd_datas.wave)
 
-            for color_, strata in zip(colors, stratas):
+            for color_, strata in zip(colors_018, stratas_boundaries_018):
                 if max_ > strata > min_:
                     fig.add_hline(
                         y=strata,

@@ -50,8 +50,9 @@ def sync_file(date):
         subprocess.run("rsync -azP ~/tourney/data hetzner:/tourney/", shell=True)
         subprocess.run("rsync -azP ~/tourney/data hetzner:/tourney2/", shell=True)
         time.sleep(5)
-        subprocess.run("ssh hetzner 'systemctl restart streamlit'", shell=True)
         subprocess.run("ssh hetzner 'systemctl restart streamlit2'", shell=True)
+        time.sleep(200)
+        subprocess.run("ssh hetzner 'systemctl restart streamlit'", shell=True)
 
         return True
     return False

@@ -5,25 +5,29 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from components.constants import Patch, colors_017, colors_018, patch_015, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018, sus_ids
-from components.data import load_tourney_results
+from components.constants import Patch, colors_017, colors_018, id_mapping, patch_015, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018, sus_ids
+from components.data import get_player_list, load_tourney_results
 from components.formatting import color_position
 
 
 def compute_player_lookup(df, options=None):
-    all_real_names = set(df.real_name.unique())
-    all_tourney_names = set(df.tourney_name.unique())
-    all_user_ids = df.id.unique().tolist()
-    last_top_scorer = df[(df.date == sorted(df.date.unique())[-1]) & (df.position == 1)].tourney_name.iloc[0]
-    player_list = [last_top_scorer if options.current_player is None else options.current_player] + sorted(all_real_names | all_tourney_names) + all_user_ids
+    first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
+    player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
+
+    if options.current_player is not None:
+        player_list = [options.current_player] + player_list
 
     user = st.selectbox("Which user would you like to lookup?", player_list)
+
+    if not user:
+        return
+
     st.code("http://thetower.lol?" + urlencode({"player": user}, doseq=True))
 
-    if user in (all_real_names | all_tourney_names):
+    if user in (set(first_choices) | all_real_names | all_tourney_names):
         player_df = df[(df.real_name == user) | (df.tourney_name == user)]
     elif user in all_user_ids:
-        player_df = df[df.id == user]
+        player_df = df[df.id == id_mapping.get(user, user)]
     else:
         raise ValueError("Incorrect user, don't be a smartass.")
 
@@ -70,7 +74,7 @@ def compute_player_lookup(df, options=None):
         else:
             colors, stratas = colors_017, stratas_boundaries
     elif patch == "just last 16 tourneys":
-        patch_df = player_df.iloc[:16]
+        patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
         colors, stratas = colors_018, stratas_boundaries_018
     else:
         patch_df = player_df
@@ -154,6 +158,8 @@ def compute_player_lookup(df, options=None):
             f"<br>Best position for <font color='{patch_role_color}'>{real_name}</font> in champ during patch 0.{patch.version_minor}: <font color='{max_pos_data.position_role_color}'>**{max_pos}**</font>, as {max_pos_data.tourney_name} on {max_pos_data.date}",
             unsafe_allow_html=True,
         )
+
+    st.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
 
 
 if __name__ == "__main__":

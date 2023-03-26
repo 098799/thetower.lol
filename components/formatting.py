@@ -1,7 +1,7 @@
 from functools import partial
 from operator import ge, le
 
-from components.constants import colors, position_colors, position_stratas, stratas, sus_person
+from components.constants import colors, medals, position_colors, position_stratas, stratas, sus_person
 
 
 def barebones_format(color):
@@ -59,11 +59,17 @@ def color(value):
 
 
 def strike(text):
-    result = ""
-    for c in text:
-        result = result + c + "\u0336"
-    return result
+    return "\u0336".join(text)
+    # result = ""
+    # for c in text:
+    #     result = result + c + "\u0336"
+    # return result
 
 
 def make_url(username):
-    return f"<a href='http://thetower.lol?player={username}'>{username}</a>"
+    original_username = username
+
+    for medal in medals:
+        username = username.strip(medal)
+
+    return f"<a href='http://thetower.lol?player={username.strip()}'>{original_username}</a>"
