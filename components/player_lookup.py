@@ -77,7 +77,7 @@ def compute_player_lookup(df, options=None):
     )
 
     graph_options = [options.default_graph.value] + [value for value in Graph.__members__.keys() if value != options.default_graph.value]
-    patch = st.selectbox("Limit results to a patch?", graph_options)
+    patch = st.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
 
     if patch.startswith("patch"):
         patch = globals()[patch]

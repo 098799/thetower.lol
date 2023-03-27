@@ -135,6 +135,14 @@ def get_player_list(df):
     return first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer
 
 
+if __name__ == "__main__":
+    df = load_tourney_results("data")
+
+    for name, group in df.groupby("tourney_name"):
+        if len(group.id.unique()) > 1:
+            breakpoint()
+
+
 # import cProfile
 # import pstats
 
