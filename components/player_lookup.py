@@ -5,7 +5,19 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from components.constants import Patch, colors_017, colors_018, id_mapping, patch_015, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018, sus_ids
+from components.constants import (
+    Graph,
+    Patch,
+    colors_017,
+    colors_018,
+    id_mapping,
+    patch_015,
+    patch_016,
+    patch_018,
+    stratas_boundaries,
+    stratas_boundaries_018,
+    sus_ids,
+)
 from components.data import get_player_list, load_tourney_results
 from components.formatting import color_position
 
@@ -64,7 +76,11 @@ def compute_player_lookup(df, options=None):
         unsafe_allow_html=True,
     )
 
-    patch = st.selectbox("Limit results to a patch?", ["just last 16 tourneys", "no limit", patch_018, patch_016, patch_015])
+    graph_options = [options.default_graph.value] + [value for value in Graph.__members__.keys() if value != options.default_graph.value]
+    patch = st.selectbox("Limit results to a patch?", graph_options)
+
+    if patch.startswith("patch"):
+        patch = globals()[patch]
 
     if isinstance(patch, Patch):
         patch_df = player_df[player_df.patch == patch]
@@ -73,7 +89,7 @@ def compute_player_lookup(df, options=None):
             colors, stratas = colors_018, stratas_boundaries_018
         else:
             colors, stratas = colors_017, stratas_boundaries
-    elif patch == "just last 16 tourneys":
+    elif patch == Graph.last_16.value:
         patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
         colors, stratas = colors_018, stratas_boundaries_018
     else:

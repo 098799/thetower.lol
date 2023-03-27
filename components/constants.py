@@ -1,4 +1,5 @@
 import datetime
+from enum import Enum
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel
@@ -254,11 +255,20 @@ def wave_to_role(wave: int, patch: Optional[Patch]) -> Optional[Role]:
     return wave_to_role_in_patch(roles, wave)
 
 
+class Graph(Enum):
+    all = "all"
+    last_16 = "last_16"
+    patch_018 = "patch_018"
+    patch_016 = "patch_016"
+    patch_015 = "patch_015"
+
+
 class Options(BaseModel):
     congrats_toggle: bool
     links_toggle: bool
     current_player: Optional[str]
     compare_players: Optional[List[str]]
+    default_graph: Graph
 
 
 medals = ["🥇", "🥈", "🥉"]
