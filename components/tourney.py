@@ -54,8 +54,11 @@ with st.sidebar:
     st.write("Toggles")
 
     links = st.checkbox("Links to users? (will make dataframe ugly)", value=get_manager().get("links"))
+
     congrats_cookie_value = get_manager().get("congrats")
     default_graph_value = get_manager().get("default_graph")
+    average_foreground_value = get_manager().get("average_foreground")
+
     congrats_toggle = st.checkbox("Do you like seeing congratulations?", value=congrats_cookie_value if congrats_cookie_value is not None else True)
 
     graph_choices: List[str] = list(Graph.__members__.keys())
@@ -65,11 +68,14 @@ with st.sidebar:
         index=graph_choices.index(default_graph_value if default_graph_value is not None else "all"),
     )
 
+    average_foreground = st.checkbox("Rolling averages as default in graphs?", value=average_foreground_value if average_foreground_value is not None else True)
+
     get_manager().set("links", links, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="links")
     get_manager().set("congrats", bool(congrats_toggle), expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="congrats")
     get_manager().set("default_graph", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="default_graph")
+    get_manager().set("average_foreground", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="average_foreground")
 
-    options = Options(congrats_toggle=congrats_toggle, links_toggle=links, default_graph=default_graph)
+    options = Options(congrats_toggle=congrats_toggle, links_toggle=links, default_graph=default_graph, average_foreground=average_foreground)
 
 
 pd.set_option("display.max_rows", None)

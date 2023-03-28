@@ -289,6 +289,7 @@ class Options(BaseModel):
     current_player: Optional[str]
     compare_players: Optional[List[str]]
     default_graph: Graph
+    average_foreground: bool
 
 
 medals = ["🥇", "🥈", "🥉"]

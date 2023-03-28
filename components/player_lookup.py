@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 
 from components.constants import (
     Graph,
+    Options,
     Patch,
     colors_017,
     colors_018,
@@ -22,7 +23,7 @@ from components.data import get_player_list, load_tourney_results
 from components.formatting import color_position
 
 
-def compute_player_lookup(df, options=None):
+def compute_player_lookup(df, options: Options):
     first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
 
@@ -77,7 +78,9 @@ def compute_player_lookup(df, options=None):
     )
 
     graph_options = [options.default_graph.value] + [value for value in Graph.__members__.keys() if value != options.default_graph.value]
-    patch = st.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
+    patch_col, average_col = st.columns([1, 1])
+    patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
+    rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
 
     if patch.startswith("patch"):
         patch = globals()[patch]
@@ -97,15 +100,31 @@ def compute_player_lookup(df, options=None):
         colors, stratas = colors_018, stratas_boundaries_018
 
     tbdf = patch_df.reset_index(drop=True)
+    tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().round().astype(int)
 
     if len(tbdf) > 1:
         graph_position_instead = st.checkbox("Graph position instead")
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         if not graph_position_instead:
+            foreground_kwargs = {}
+            background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+
             fig.add_trace(
-                go.Scatter(x=tbdf.date, y=tbdf.wave, name="Wave (left axis)"),
-                secondary_y=False,
+                go.Scatter(
+                    x=tbdf.date,
+                    y=tbdf.wave,
+                    name="Wave (left axis)",
+                    **foreground_kwargs if not options.average_foreground else background_kwargs,
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=tbdf.date,
+                    y=tbdf.average,
+                    name="5 tourney moving average",
+                    **foreground_kwargs if options.average_foreground else background_kwargs,
+                )
             )
 
             min_ = min(tbdf.wave)
@@ -140,13 +159,13 @@ def compute_player_lookup(df, options=None):
         st.plotly_chart(fig)
 
     to_be_displayed = (
-        tbdf[["date", "tourney_name", "wave", "position"]]
+        tbdf[["date", "tourney_name", "wave", "position", "average"]]
         .style.apply(
-            lambda row: [None, f"color: {tbdf[tbdf['date']==row.date].name_role_color.iloc[0]}", None, None],
+            lambda row: [None, f"color: {tbdf[tbdf['date']==row.date].name_role_color.iloc[0]}", None, None, None],
             axis=1,
         )
         .apply(
-            lambda row: [None, None, f"color: {tbdf[tbdf['date']==row.date].wave_role_color.iloc[0]}", None],
+            lambda row: [None, None, f"color: {tbdf[tbdf['date']==row.date].wave_role_color.iloc[0]}", None, None],
             axis=1,
         )
         .applymap(color_position, subset=["position"])
@@ -180,4 +199,4 @@ def compute_player_lookup(df, options=None):
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-    compute_player_lookup(df)
+    compute_player_lookup(df, options=Options(congrats_toggle=True, links_toggle=True, default_graph=Graph("all")))
