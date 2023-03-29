@@ -1,7 +1,7 @@
 from functools import partial
 from operator import ge, le
 
-from components.constants import colors, medals, position_colors, position_stratas, stratas, sus_person
+from components.constants import colors, colors_018, medals, position_colors, position_stratas, stratas, stratas_boundaries_018, sus_person
 
 
 def barebones_format(color):
@@ -25,6 +25,7 @@ def color_strata(wave, stratas, colors, operator, formatting_function):
 
 
 color_top = partial(color_strata, stratas=stratas, colors=colors, operator=ge, formatting_function=simple_format)
+color_top_18 = partial(color_strata, stratas=stratas_boundaries_018, colors=colors_018, operator=ge, formatting_function=simple_format)
 color_position = partial(color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=simple_format)
 color_position_barebones = partial(color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=barebones_format)
 

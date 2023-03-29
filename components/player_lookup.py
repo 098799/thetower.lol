@@ -100,7 +100,8 @@ def compute_player_lookup(df, options: Options):
         colors, stratas = colors_018, stratas_boundaries_018
 
     tbdf = patch_df.reset_index(drop=True)
-    tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().round().astype(int)
+    tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
+    tbdf["position_average"] = tbdf.position.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
 
     if len(tbdf) > 1:
         graph_position_instead = st.checkbox("Graph position instead")
@@ -122,7 +123,7 @@ def compute_player_lookup(df, options: Options):
                 go.Scatter(
                     x=tbdf.date,
                     y=tbdf.average,
-                    name="5 tourney moving average",
+                    name=f"{rolling_average} tourney moving average",
                     **foreground_kwargs if options.average_foreground else background_kwargs,
                 )
             )
@@ -134,8 +135,25 @@ def compute_player_lookup(df, options: Options):
                 if max_ > strata > min_:
                     fig.add_hline(y=strata, line_color=color_, line_dash="dash", opacity=0.4, line_width=3)
         else:
+            foreground_kwargs = {}
+            background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+
             fig.add_trace(
-                go.Scatter(x=tbdf.date, y=tbdf.position, name="Tourney position"),
+                go.Scatter(
+                    x=tbdf.date,
+                    y=tbdf.position,
+                    name="Tourney position",
+                    **foreground_kwargs if not options.average_foreground else background_kwargs,
+                ),
+                secondary_y=True,
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=tbdf.date,
+                    y=tbdf.position_average,
+                    name=f"{rolling_average} tourney moving average",
+                    **foreground_kwargs if options.average_foreground else background_kwargs,
+                ),
                 secondary_y=True,
             )
             fig.update_yaxes(secondary_y=True, range=[200, 0])

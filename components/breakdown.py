@@ -6,49 +6,51 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from components.constants import Options, sus_ids
+from components.data import load_tourney_results
 
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
-    non_sus_df = df[~df.id.isin(sus_ids)]
+    def get_data(df):
+        non_sus_df = df[~df.id.isin(sus_ids)]
+        unique_roles = sorted(non_sus_df.wave_role.unique(), key=lambda role: role.wave_bottom)
+        unique_dates = non_sus_df.date.unique()
 
-    counts_per_date = {}
+        counts_data = {role: {date: 0 for date in unique_dates} for role in unique_roles}
 
-    for date in non_sus_df.date.unique():
-        date_df = non_sus_df[non_sus_df["date"] == date]
-        counts = date_df.groupby("wave_role").count()
+        counts_per_date = non_sus_df.groupby(["date", "wave_role"])
 
-        counts_per_date[date] = counts
+        for (date, role), counts in counts_per_date:
+            count = counts.count()[0] if not counts.empty else 0
+            counts_data[role][date] = count
 
-    dates = []
-    counts_data = defaultdict(list)
+        return unique_dates, counts_data
 
-    for date, counts in counts_per_date.items():
-        dates.append(date)
-
-        for role in sorted(non_sus_df.wave_role.unique(), key=lambda role: role.wave_bottom):
-            count_data = counts[counts.index == role]
-
-            if count_data.empty:
-                count = 0
-            else:
-                count = count_data.id.iloc[0]
-
-            counts_data[role].append(count)
+    dates, counts_data = get_data(df)
 
     plot_data = {
         role: go.Bar(
             name=f"{role.wave_bottom} v{role.patch.version_minor}",
             x=dates,
-            y=count,
+            y=list(count_data.values()),
+            marker_color=role.color,
+            opacity=0.8,
         )
-        for role, count in counts_data.items()
+        for role, count_data in counts_data.items()
     }
 
-    for role, datum in plot_data.items():
-        datum.update(marker_color=role.color)
-
     fig = go.Figure(data=list(plot_data.values()))
-    fig.update_traces(opacity=0.8)
     fig.update_layout(barmode="stack", title="Role counts per tournament (non-sus), courtesy of ObsUK")
 
     st.plotly_chart(fig)
+
+
+# import cProfile
+# import pstats
+
+# pr = cProfile.Profile()
+# df = load_tourney_results("data")
+# pr.run("compute_breakdown(df)")
+
+# stats = pstats.Stats(pr)
+# stats.sort_stats("cumtime")
+# stats.print_stats(50)
