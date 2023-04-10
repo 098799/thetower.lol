@@ -129,7 +129,7 @@ def get_player_list(df):
     first_choices = list(df[df.date == last_date].real_name)
     set_of_first_choices = set(first_choices)
     all_real_names = set(df.real_name.unique()) - set_of_first_choices
-    all_tourney_names = set(df.tourney_name.unique())
+    all_tourney_names = set(df.tourney_name.unique()) - set_of_first_choices
     all_user_ids = df.raw_id.unique().tolist()
     last_top_scorer = df[(df.date == sorted(df.date.unique())[-1]) & (df.position == 1)].tourney_name.iloc[0]
     return first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer
@@ -137,10 +137,7 @@ def get_player_list(df):
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-
-    for name, group in df.groupby("tourney_name"):
-        if len(group.id.unique()) > 1:
-            breakpoint()
+    breakpoint()
 
 
 # import cProfile

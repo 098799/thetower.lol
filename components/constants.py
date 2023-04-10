@@ -26,7 +26,7 @@ hardcoded_nicknames = {
     "9C0FFCDC9EC303DB": "Brianator",
     "B9ADDEEDC5E85D1B": "Blaze",
     "3E5F96B750CEE6C4": "NanaSeiYuri",
-    "8BD9973232D2CB4B": "this guy with a green discord pic",
+    "8BD9973232D2CB4B": "this (still) micro guy",
     "9DDCD4902FE1A201": "TJ the weird lines lollipop",
     "33540FD38D7F3B6B": "Helasus23",
     "ECC7934F0D89CFDD": "Dr. Soelent",
@@ -120,6 +120,11 @@ sus_data = {
     ("TacoWarrior", "5052D480E8312586"),
     ("Kuath", "BBEC115D0E4D37CC"),
     ("delcos", "576ED3406DA40C03"),
+    ("__Announement__", "65CF85638390169A"),
+    ("FixBHSizePlease", "8EE7D9DC9D98D098"),
+    ("GiveEldarARole", "E4459A4A57EA94E1"),
+    ("PrepPodcastWhen", "B49E6C31D41017F6"),
+    ("Destromath", "2D7215062839FEBF"),
 }
 
 rehabilitated = {}

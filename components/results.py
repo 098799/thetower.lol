@@ -7,7 +7,10 @@ from components.formatting import am_i_sus, color_position__top, make_url, strik
 
 def compute_tourney_results(df, options: Options):
     tourneys = sorted(df["date"].unique(), reverse=True)
-    tourney_file_name = st.selectbox("Select tournament:", tourneys)
+
+    tourney_col, sus_col = st.columns([5, 1])
+    tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
+    show_sus = sus_col.checkbox("Show sus in results?", value=True)
 
     filtered_df = df[df["date"] == tourney_file_name].reset_index(drop=True)
     filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (
@@ -48,12 +51,11 @@ def compute_tourney_results(df, options: Options):
                 previous_best_wave = previous_results.wave.max()
                 previous_best_role = previous_results.wave_role.max()
 
-                if current_wave > previous_best_wave:
+                if current_wave > previous_best_wave or len(players_df) == 1:
                     new_pbs.append((current_wave, current_wave_role, current_date, previous_results[previous_results["wave"] == previous_best_wave].iloc[0]))
 
-                if current_role > previous_best_role:
+                if current_role > previous_best_role or len(players_df) == 1:
                     new_role_rows.append(person_row)
-                    # new_roles.append(previous_results[previous_results["wave_role"] == previous_best_role].iloc[0])
 
             new_role_string = ", ".join([f"<font color='{row.wave_role.color}'>{df[df.id == row.id].iloc[0].real_name}</font>" for row in new_role_rows])
 
@@ -68,7 +70,10 @@ def compute_tourney_results(df, options: Options):
             )
 
             if new_wave_string:
-                st.write(f"Congratulations for new PBs:<br>{new_wave_string}.", unsafe_allow_html=True)
+                st.write(f"Congratulations for new PBs:<br>{new_wave_string}", unsafe_allow_html=True)
+
+    if not show_sus:
+        to_be_displayed = to_be_displayed[to_be_displayed["real_name"] != sus_person]
 
     to_be_displayed = (
         to_be_displayed[["position", "tourney_name", "real_name", "wave"]]

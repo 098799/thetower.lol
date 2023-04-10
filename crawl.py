@@ -69,7 +69,7 @@ def download_and_sync():
 
         if len(sys.argv) == 1:
             correct_day_of_the_week = now.weekday() == 3 or now.weekday() == 6
-            its_time = now.hour == 1 and now.minute >= 2
+            its_time = now.hour == 2 and now.minute >= 2
         else:
             correct_day_of_the_week = True
             its_time = True
