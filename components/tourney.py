@@ -53,81 +53,81 @@ st.write(
 st.error("This site is currently suspended until the hacker situation is resolved.")
 
 
-# with st.sidebar:
-#     st.write("Toggles")
+with st.sidebar:
+    st.write("Toggles")
 
-#     links = st.checkbox("Links to users? (will make dataframe ugly)", value=get_manager().get("links"))
+    links = st.checkbox("Links to users? (will make dataframe ugly)", value=get_manager().get("links"))
 
-#     congrats_cookie_value = get_manager().get("congrats")
-#     default_graph_value = get_manager().get("default_graph")
-#     average_foreground_value = get_manager().get("average_foreground")
+    congrats_cookie_value = get_manager().get("congrats")
+    default_graph_value = get_manager().get("default_graph")
+    average_foreground_value = get_manager().get("average_foreground")
 
-#     congrats_toggle = st.checkbox("Do you like seeing congratulations?", value=congrats_cookie_value if congrats_cookie_value is not None else True)
+    congrats_toggle = st.checkbox("Do you like seeing congratulations?", value=congrats_cookie_value if congrats_cookie_value is not None else True)
 
-#     graph_choices: List[str] = list(Graph.__members__.keys())
-#     default_graph = st.radio(
-#         "How should the player data be presented by default?",
-#         graph_choices,
-#         index=graph_choices.index(default_graph_value if default_graph_value is not None else "all"),
-#     )
+    graph_choices: List[str] = list(Graph.__members__.keys())
+    default_graph = st.radio(
+        "How should the player data be presented by default?",
+        graph_choices,
+        index=graph_choices.index(default_graph_value if default_graph_value is not None else "all"),
+    )
 
-#     average_foreground = st.checkbox("Rolling averages as default in graphs?", value=average_foreground_value if average_foreground_value is not None else True)
+    average_foreground = st.checkbox("Rolling averages as default in graphs?", value=average_foreground_value if average_foreground_value is not None else True)
 
-#     get_manager().set("links", links, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="links")
-#     get_manager().set("congrats", bool(congrats_toggle), expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="congrats")
-#     get_manager().set("default_graph", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="default_graph")
-#     get_manager().set("average_foreground", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="average_foreground")
+    get_manager().set("links", links, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="links")
+    get_manager().set("congrats", bool(congrats_toggle), expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="congrats")
+    get_manager().set("default_graph", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="default_graph")
+    get_manager().set("average_foreground", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="average_foreground")
 
-#     options = Options(congrats_toggle=congrats_toggle, links_toggle=links, default_graph=default_graph, average_foreground=average_foreground)
-
-
-# pd.set_option("display.max_rows", None)
+    options = Options(congrats_toggle=congrats_toggle, links_toggle=links, default_graph=default_graph, average_foreground=average_foreground)
 
 
-# ###############
-# ### tab layout setup
-# ###############
-
-# query = st.experimental_get_query_params()
-
-# if query:
-#     print(datetime.datetime.now(), query)
-
-# current_player: Optional[str]
-# compare_players: Optional[List[str]]
-
-# player = query.get("player")
-# compare_players = st.experimental_get_query_params().get("compare")
-
-# if player:
-#     current_player = player[0]
-#     functionality = "Player lookup"
-# elif compare_players:
-#     current_player = None
-#     functionality = "Comparison"
-# else:
-#     current_player = None
-#     functionality = None
-
-# options.current_player = current_player
-# options.compare_players = compare_players
+pd.set_option("display.max_rows", None)
 
 
-# tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
-# functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
+###############
+### tab layout setup
+###############
+
+query = st.experimental_get_query_params()
+
+if query:
+    print(datetime.datetime.now(), query)
+
+current_player: Optional[str]
+compare_players: Optional[List[str]]
+
+player = query.get("player")
+compare_players = st.experimental_get_query_params().get("compare")
+
+if player:
+    current_player = player[0]
+    functionality = "Player lookup"
+elif compare_players:
+    current_player = None
+    functionality = "Comparison"
+else:
+    current_player = None
+    functionality = None
+
+options.current_player = current_player
+options.compare_players = compare_players
 
 
-# def keep():
-#     compute_tourney_results
-#     compute_player_lookup
-#     compute_comparison
-#     compute_winners
-#     compute_top_scores
-#     compute_breakdown
-#     compute_about
+tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
+functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
 
 
-# function = f"compute_{'_'.join(functionality.lower().split())}"
+def keep():
+    compute_tourney_results
+    compute_player_lookup
+    compute_comparison
+    compute_winners
+    compute_top_scores
+    compute_breakdown
+    compute_about
 
-# df = load_tourney_results("data")
-# globals()[function](df, options)
+
+function = f"compute_{'_'.join(functionality.lower().split())}"
+
+df = load_tourney_results("data")
+globals()[function](df, options)

@@ -125,6 +125,11 @@ sus_data = {
     ("GiveEldarARole", "E4459A4A57EA94E1"),
     ("PrepPodcastWhen", "B49E6C31D41017F6"),
     ("Destromath", "2D7215062839FEBF"),
+    ("HappyEaster2Kaga", "3D1A244DE0C96487"),
+    ("DiscordAndReddit", "944AE172F9F5822C"),
+    ("AndEspeciallyTo", "E2D79490BDF34620"),
+    ("PogAndTheModTeam", "EB87F9F35191164"),
+    ("pyhrfjvyysbyybj", "54CCC8E03C5A748C"),
 }
 
 rehabilitated = {}

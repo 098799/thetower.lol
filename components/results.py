@@ -8,9 +8,9 @@ from components.formatting import am_i_sus, color_position__top, make_url, strik
 def compute_tourney_results(df, options: Options):
     tourneys = sorted(df["date"].unique(), reverse=True)
 
-    tourney_col, sus_col = st.columns([5, 1])
+    tourney_col, debug_col = st.columns([5, 1])
     tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
-    show_sus = sus_col.checkbox("Show sus in results?", value=True)
+    show_hist = debug_col.checkbox("Historical data?", value=True)
 
     filtered_df = df[df["date"] == tourney_file_name].reset_index(drop=True)
     filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (
@@ -72,22 +72,64 @@ def compute_tourney_results(df, options: Options):
             if new_wave_string:
                 st.write(f"Congratulations for new PBs:<br>{new_wave_string}", unsafe_allow_html=True)
 
-    if not show_sus:
-        to_be_displayed = to_be_displayed[to_be_displayed["real_name"] != sus_person]
+    # to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
 
-    to_be_displayed = (
-        to_be_displayed[["position", "tourney_name", "real_name", "wave"]]
-        .style.apply(
-            lambda row: [None, None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None],
-            axis=1,
+    if show_hist:
+        to_be_displayed = to_be_displayed[["id", "position", "tourney_name", "real_name", "wave"]]
+        to_be_displayed = to_be_displayed.rename({"wave": tourney_file_name}, axis=1)
+
+        all_dates = df.date.unique()
+        current_date_index = list(all_dates).index(tourney_file_name)
+        previous_4_dates = all_dates[current_date_index - 4 : current_date_index][::-1]
+
+        prev_dfs = {date: df[df["date"] == date].reset_index(drop=True) for date in previous_4_dates}
+
+        for date, prev_df in prev_dfs.items():
+            to_be_displayed[date] = [mini_df.iloc[0].wave if not (mini_df := prev_df[prev_df.id == id_]).empty else 0 for id_ in to_be_displayed.id]
+
+        to_be_displayed = (
+            to_be_displayed[["position", "tourney_name", "real_name", *[tourney_file_name, *previous_4_dates], "id"]]
+            .style.apply(
+                lambda row: [
+                    None,
+                    None,
+                    f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}",
+                    *([None] * (len(previous_4_dates) + 2)),
+                ],
+                axis=1,
+            )
+            .apply(
+                lambda row: [
+                    None,
+                    None,
+                    None,
+                    f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
+                    *([None] * (len(previous_4_dates) + 1)),
+                ],
+                axis=1,
+            )
+            .apply(
+                lambda row: [
+                    *([None] * 4),
+                    *[
+                        f"color: {mini_df.wave_role_color.iloc[0] if not (mini_df := prev_df[prev_df.id==row.id]).empty else '#FFF'}"
+                        for prev_df in prev_dfs.values()
+                    ],
+                    None,
+                ],
+                axis=1,
+            )
+            .applymap(color_position__top, subset=["position"])
+            .applymap(am_i_sus, subset=["real_name"])
         )
-        .apply(
-            lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}"],
-            axis=1,
+    else:
+        to_be_displayed = (
+            to_be_displayed[["position", "tourney_name", "real_name", "wave"]]
+            .style.apply(lambda row: [None, None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None], axis=1)
+            .apply(lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}"], axis=1)
+            .applymap(color_position__top, subset=["position"])
+            .applymap(am_i_sus, subset=["real_name"])
         )
-        .applymap(color_position__top, subset=["position"])
-        .applymap(am_i_sus, subset=["real_name"])
-    )
 
     if options.links_toggle:
         to_be_displayed = to_be_displayed.format(make_url, subset=["real_name"]).to_html(escape=False)
