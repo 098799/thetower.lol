@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "dtower.sus",
+    "dtower.tourney_results",
 ]
 
 MIDDLEWARE = [

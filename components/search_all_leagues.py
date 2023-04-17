@@ -1,0 +1,3 @@
+from components.player_lookup import compute_player_lookup
+
+compute_search_all_leagues = compute_player_lookup

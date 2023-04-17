@@ -168,14 +168,17 @@ def compute_player_lookup(df, options: Options):
 
         st.plotly_chart(fig)
 
+    additional_column = ["league"] if "league" in tbdf.columns else []
+    additional_format = [None] if "league" in tbdf.columns else []
+
     to_be_displayed = (
-        tbdf[["date", "tourney_name", "wave", "position", "average"]]
+        tbdf[["date", "tourney_name", "wave", "position", "average"] + additional_column]
         .style.apply(
-            lambda row: [None, f"color: {tbdf[tbdf['date']==row.date].name_role_color.iloc[0]}", None, None, None],
+            lambda row: [None, f"color: {tbdf[tbdf['date']==row.date].name_role_color.iloc[0]}", None, None, None] + additional_format,
             axis=1,
         )
         .apply(
-            lambda row: [None, None, f"color: {tbdf[tbdf['date']==row.date].wave_role_color.iloc[0]}", None, None],
+            lambda row: [None, None, f"color: {tbdf[tbdf['date']==row.date].wave_role_color.iloc[0]}", None, None] + additional_format,
             axis=1,
         )
         .applymap(color_position, subset=["position"])

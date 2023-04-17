@@ -16,10 +16,11 @@ import streamlit as st
 from components.about import compute_about
 from components.breakdown import compute_breakdown
 from components.comparison import compute_comparison
-from components.constants import Graph, Options
+from components.constants import Graph, Options, league_to_folder
 from components.data import get_manager, load_tourney_results
 from components.player_lookup import compute_player_lookup
 from components.results import compute_tourney_results
+from components.search_all_leagues import compute_search_all_leagues
 from components.top_scores import compute_top_scores
 from components.winners import compute_winners
 
@@ -123,25 +124,16 @@ options.current_player = current_player
 options.compare_players = compare_players
 
 
-league_to_folder = {
-    "Champion": "data",
-    "Platinum": "plat",
-    "Gold": "gold",
-    "Silver": "silver",
-    "Copper": "copper",
-}
-
-
 league_switcher = os.environ.get("LEAGUE_SWITCHER")
 
+tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
 
 if league_switcher:
     league: str = st.radio("Which league?", list(league_to_folder.keys()), index=0)
+    tabs.append("Search all leagues")
 else:
-    league = "Champion"
+    league = "Champions"
 
-
-tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
 functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
 
 
@@ -153,9 +145,21 @@ def keep():
     compute_top_scores
     compute_breakdown
     compute_about
+    compute_search_all_leagues
 
 
-function = f"compute_{'_'.join(functionality.lower().split())}"
+function_string = f"compute_{'_'.join(functionality.lower().split())}"
 
-df = load_tourney_results(league_to_folder[league])
-globals()[function](df, options)
+if function_string == "compute_search_all_leagues":
+    leagues = sorted(league_to_folder.items())
+    dfs = [load_tourney_results(league) for _, league in leagues]
+
+    for df, (league, _) in zip(dfs, leagues):
+        df["league"] = league
+
+    df = pd.concat(dfs)
+else:
+    df = load_tourney_results(league_to_folder[league])
+
+function = globals()[function_string]
+function(df, options)

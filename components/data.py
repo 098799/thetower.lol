@@ -9,15 +9,17 @@ import csv
 import datetime
 from collections import Counter, defaultdict
 from glob import glob
-from typing import Dict, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 import extra_streamlit_components as stx
 import pandas as pd
 import streamlit as st
 
-from components.constants import Role, date_to_patch, hardcoded_nicknames, id_mapping, patch_to_roles, wave_to_role
+from components.constants import Role, date_to_patch, folder_to_league, hardcoded_nicknames, id_mapping, patch_to_roles, wave_to_role
 from components.formatting import color_position_barebones
 from dtower.sus.models import SusPerson
+from dtower.tourney_results.models import TourneyResult
 
 
 def load_data(folder):
@@ -78,18 +80,22 @@ def get_row_to_role(df: pd.DataFrame):
 
 
 @st.cache(allow_output_mutation=True)
-def load_tourney_results(folder: str) -> pd.DataFrame:
+def load_tourney_results__prev(folder: str) -> pd.DataFrame:
     result_files = sorted(glob(f"{folder}/*"))
+    return _load_tourney_results([(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in result_files])
 
+
+def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
     dfs = []
 
     sus_ids = get_sus_ids()
 
-    for result_file in result_files:
+    for result_file, date in result_files:
         df = pd.read_csv(result_file, header=None)
         df.columns = ["id", "tourney_name", "wave"]
 
-        result_date = datetime.datetime.fromisoformat(result_file.split("/")[-1].split(".")[0]).date()
+        # result_date = datetime.datetime.fromisoformat().date()
+        result_date = datetime.date.fromisoformat(date)
         df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
         df["date"] = [result_date] * len(df)
 
@@ -129,6 +135,24 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
 
 
 @st.cache(allow_output_mutation=True)
+def load_tourney_results(folder: str) -> pd.DataFrame:
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
+    additional_filter = {} if hidden_features else dict(public=True)
+
+    result_files = sorted(
+        [
+            (
+                Path("thetower/dtower") / result_file,
+                date.isoformat(),
+            )
+            for result_file, date in TourneyResult.objects.filter(league=folder_to_league[folder], **additional_filter).values_list("result_file", "date")
+        ],
+        key=lambda x: x[1],
+    )
+    return _load_tourney_results(result_files)
+
+
+@st.cache(allow_output_mutation=True)
 def get_manager():
     return stx.CookieManager()
 
@@ -155,7 +179,7 @@ def get_sus_ids():
 
 
 if __name__ == "__main__":
-    df = load_tourney_results("data")
+    df = load_tourney_results__db("data")
     breakpoint()
 
 
