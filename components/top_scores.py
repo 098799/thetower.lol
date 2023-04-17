@@ -1,10 +1,13 @@
 import streamlit as st
 
-from components.constants import Options, patch_015, patch_016, patch_018, sus_ids
+from components.constants import Options, patch_015, patch_016, patch_018
+from components.data import get_sus_ids
 from components.formatting import color_position__top, make_url
 
 
 def compute_top_scores(df, options: Options):
+    sus_ids = get_sus_ids()
+
     def format_(row, df, column):
         return f"color: {df[df['ovr_pos'] == row['ovr_pos']][column].iloc[0]}"
 

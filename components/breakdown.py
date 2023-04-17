@@ -5,11 +5,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from components.constants import Options, sus_ids
-from components.data import load_tourney_results
+from components.constants import Options
+from components.data import get_sus_ids, load_tourney_results
 
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
+    sus_ids = get_sus_ids()
+
     def get_data(df):
         non_sus_df = df[~df.id.isin(sus_ids)]
         unique_roles = sorted(non_sus_df.wave_role.unique(), key=lambda role: role.wave_bottom)

@@ -1,3 +1,10 @@
+import os
+
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
+django.setup()
+
 import csv
 import datetime
 from collections import Counter, defaultdict
@@ -8,8 +15,9 @@ import extra_streamlit_components as stx
 import pandas as pd
 import streamlit as st
 
-from components.constants import Role, date_to_patch, hardcoded_nicknames, id_mapping, patch_to_roles, sus_ids, wave_to_role
+from components.constants import Role, date_to_patch, hardcoded_nicknames, id_mapping, patch_to_roles, wave_to_role
 from components.formatting import color_position_barebones
+from dtower.sus.models import SusPerson
 
 
 def load_data(folder):
@@ -75,6 +83,8 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
 
     dfs = []
 
+    sus_ids = get_sus_ids()
+
     for result_file in result_files:
         df = pd.read_csv(result_file, header=None)
         df.columns = ["id", "tourney_name", "wave"]
@@ -126,13 +136,22 @@ def get_manager():
 @st.cache(allow_output_mutation=True)
 def get_player_list(df):
     last_date = df.date.unique()[-1]
-    first_choices = list(df[df.date == last_date].real_name)
+    sus_ids = get_sus_ids()
+    first_choices = list(df[df.date == last_date][~df.id.isin(sus_ids)].real_name)
     set_of_first_choices = set(first_choices)
     all_real_names = set(df.real_name.unique()) - set_of_first_choices
     all_tourney_names = set(df.tourney_name.unique()) - set_of_first_choices
     all_user_ids = df.raw_id.unique().tolist()
     last_top_scorer = df[(df.date == sorted(df.date.unique())[-1]) & (df.position == 1)].tourney_name.iloc[0]
     return first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer
+
+
+def get_sus_data():
+    return SusPerson.objects.filter(sus=True).values("name", "player_id").order_by("name")
+
+
+def get_sus_ids():
+    return set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 
 
 if __name__ == "__main__":

@@ -1,4 +1,13 @@
+import os
+
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
+django.setup()
+
+
 import datetime
+import os
 from typing import List, Optional
 
 import pandas as pd
@@ -45,12 +54,13 @@ st.write(
     color: #F63366;
     border-left: 5px solid #F63366;
 }
-</style>""",
+</style>
+    """,
     unsafe_allow_html=True,
 )
 
 
-st.error("This site is currently suspended until the hacker situation is resolved.")
+# st.error("This site is currently suspended until the hacker situation is resolved.")
 
 
 with st.sidebar:
@@ -113,6 +123,24 @@ options.current_player = current_player
 options.compare_players = compare_players
 
 
+league_to_folder = {
+    "Champion": "data",
+    "Platinum": "plat",
+    "Gold": "gold",
+    "Silver": "silver",
+    "Copper": "copper",
+}
+
+
+league_switcher = os.environ.get("LEAGUE_SWITCHER")
+
+
+if league_switcher:
+    league: str = st.radio("Which league?", list(league_to_folder.keys()), index=0)
+else:
+    league = "Champion"
+
+
 tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
 functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
 
@@ -129,5 +157,5 @@ def keep():
 
 function = f"compute_{'_'.join(functionality.lower().split())}"
 
-df = load_tourney_results("data")
+df = load_tourney_results(league_to_folder[league])
 globals()[function](df, options)

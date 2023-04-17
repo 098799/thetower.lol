@@ -1,16 +1,17 @@
 import streamlit as st
 
-from components.constants import Options, sus_ids, sus_person
-from components.data import load_tourney_results
+from components.constants import Options, sus_person
+from components.data import get_sus_ids, load_tourney_results
 from components.formatting import am_i_sus, color_position__top, make_url, strike
 
 
 def compute_tourney_results(df, options: Options):
     tourneys = sorted(df["date"].unique(), reverse=True)
+    sus_ids = get_sus_ids()
 
     tourney_col, debug_col = st.columns([5, 1])
     tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
-    show_hist = debug_col.checkbox("Historical data?", value=True)
+    show_hist = debug_col.checkbox("Historical data?", value=False)
 
     filtered_df = df[df["date"] == tourney_file_name].reset_index(drop=True)
     filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (
@@ -72,7 +73,7 @@ def compute_tourney_results(df, options: Options):
             if new_wave_string:
                 st.write(f"Congratulations for new PBs:<br>{new_wave_string}", unsafe_allow_html=True)
 
-    # to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
+    to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
 
     if show_hist:
         to_be_displayed = to_be_displayed[["id", "position", "tourney_name", "real_name", "wave"]]

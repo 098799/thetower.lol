@@ -5,25 +5,14 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from components.constants import (
-    Graph,
-    Options,
-    Patch,
-    colors_017,
-    colors_018,
-    id_mapping,
-    patch_015,
-    patch_016,
-    patch_018,
-    stratas_boundaries,
-    stratas_boundaries_018,
-    sus_ids,
-)
-from components.data import get_player_list, load_tourney_results
+from components.constants import Graph, Options, Patch, colors_017, colors_018, id_mapping, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018
+from components.data import get_player_list, get_sus_ids, load_tourney_results
 from components.formatting import color_position
 
 
 def compute_player_lookup(df, options: Options):
+    sus_ids = get_sus_ids()
+
     first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
 
@@ -31,6 +20,9 @@ def compute_player_lookup(df, options: Options):
         player_list = [options.current_player] + player_list
 
     user = st.selectbox("Which user would you like to lookup?", player_list)
+
+    if user == "Soelent":
+        st.image("towerfans.jpg")
 
     if not user:
         return
@@ -73,7 +65,7 @@ def compute_player_lookup(df, options: Options):
         st.error("This player is considered sus.")
 
     st.write(
-        f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}.",
+        f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
         unsafe_allow_html=True,
     )
 
@@ -191,7 +183,7 @@ def compute_player_lookup(df, options: Options):
     st.dataframe(to_be_displayed, use_container_width=True)
 
     for patch in patches_active[::-1]:
-        st.subheader(f"Patch 0.{patch.version_minor}")
+        st.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}")
         patch_df = player_df[player_df.patch == patch]
 
         patch_role_color = patch_df.iloc[-1].name_role.color

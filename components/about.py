@@ -1,7 +1,9 @@
 import pandas as pd
 import streamlit as st
 
-from components.constants import rehabilitated, sus_data
+from components.constants import rehabilitated
+from components.data import get_sus_data
+from dtower.sus.models import SusPerson
 
 
 def compute_about(*args, **kwargs):
@@ -19,7 +21,8 @@ def compute_about(*args, **kwargs):
     )
 
     st.write("Currently, sus people are:")
-    st.write(pd.DataFrame(sorted([(nickname, id_) for nickname, id_ in sus_data]), columns=["nickname", "id"]))
+
+    st.write(pd.DataFrame(get_sus_data()))
 
     st.header("Vindicated")
     st.write("Previously on the sus list but vindicated by the tower staff:")
