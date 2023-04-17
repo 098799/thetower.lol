@@ -136,8 +136,6 @@ rev_hardcoded_nicknames = {value: key for key, value in hardcoded_nicknames.item
 #     ("tower", "51A2288E5BA89CD0"),
 # }
 
-rehabilitated = {}
-
 # sus_ids = {id_ for _, id_ in sus_data}
 
 
