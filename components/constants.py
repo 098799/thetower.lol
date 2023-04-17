@@ -306,14 +306,3 @@ class Options(BaseModel):
 
 
 medals = ["🥇", "🥈", "🥉"]
-
-
-league_to_folder = {
-    "Champions": "data",
-    "Platinum": "plat",
-    "Gold": "gold",
-    "Silver": "silver",
-    "Copper": "copper",
-}
-
-folder_to_league = {value: key for key, value in league_to_folder.items()}

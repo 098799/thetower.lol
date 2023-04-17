@@ -16,9 +16,10 @@ import extra_streamlit_components as stx
 import pandas as pd
 import streamlit as st
 
-from components.constants import Role, date_to_patch, folder_to_league, hardcoded_nicknames, id_mapping, patch_to_roles, wave_to_role
+from components.constants import Role, date_to_patch, hardcoded_nicknames, id_mapping, patch_to_roles, wave_to_role
 from components.formatting import color_position_barebones
 from dtower.sus.models import SusPerson
+from dtower.tourney_results.constants import data_folder_name_mapping
 from dtower.tourney_results.models import TourneyResult
 
 
@@ -145,7 +146,9 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
                 Path("thetower/dtower") / result_file,
                 date.isoformat(),
             )
-            for result_file, date in TourneyResult.objects.filter(league=folder_to_league[folder], **additional_filter).values_list("result_file", "date")
+            for result_file, date in TourneyResult.objects.filter(league=data_folder_name_mapping[folder], **additional_filter).values_list(
+                "result_file", "date"
+            )
         ],
         key=lambda x: x[1],
     )

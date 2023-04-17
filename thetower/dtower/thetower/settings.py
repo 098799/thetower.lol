@@ -25,7 +25,7 @@ with open("SECRET_KEY", "r") as infile:
     SECRET_KEY = infile.read()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.getenv("DEBUG") == "True" else False
+DEBUG = True if os.getenv("DEBUG") == "true" else False
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "thetower.lol", "towerfans.lol"]
 
