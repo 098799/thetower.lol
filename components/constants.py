@@ -43,6 +43,9 @@ hardcoded_nicknames = {
     "9C2FCA80BB3E1B3F": "Charmander Main's Rival",
     "43C3D0DB28BD5726": "RathianRuby",
     "270281236E7EAF76": "Pikle",
+    "980FBDFF0196B1C5": "Cmoir",
+    "9147A44AAB2B4E9D": "AnBaSi",
+    "18B32A67E70B6CCC": "JCurse",
 }
 
 

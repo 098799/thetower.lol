@@ -67,10 +67,10 @@ def strike(text):
     # return result
 
 
-def make_url(username):
+def make_url(username, base_url="thetower.lol"):
     original_username = username
 
     for medal in medals:
         username = username.strip(medal)
 
-    return f"<a href='http://thetower.lol?player={username.strip()}'>{original_username}</a>"
+    return f"<a href='http://{base_url}?player={username.strip()}'>{original_username}</a>"

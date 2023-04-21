@@ -6,18 +6,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.constants import (
-    Graph,
-    Options,
-    Patch,
-    colors_017,
-    colors_018,
-    id_mapping,
-    patch_016,
-    patch_018,
-    stratas_boundaries,
-    stratas_boundaries_018,
-)
+from components.constants import Graph, Options, Patch, colors_017, colors_018, id_mapping, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018
 from components.data import get_player_list, get_sus_ids, load_tourney_results
 from components.formatting import color_top_18, make_url
 
@@ -115,7 +104,7 @@ def compute_comparison(df, options: Options):
 
     pd_datas = pd.concat(datas)
 
-    last_5_tourneys = sorted(pd_datas.date.unique())[-5:]
+    last_5_tourneys = sorted(pd_datas.date.unique())[-5:][::-1]
     last_results = pd.DataFrame(
         [
             [

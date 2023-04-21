@@ -1,4 +1,8 @@
+import os
+from functools import partial
+
 import streamlit as st
+from streamlit_js_eval import get_page_location
 
 from components.constants import Options, sus_person
 from components.data import get_sus_ids, load_tourney_results
@@ -6,6 +10,7 @@ from components.formatting import am_i_sus, color_position__top, make_url, strik
 
 
 def compute_tourney_results(df, options: Options):
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
     tourneys = sorted(df["date"].unique(), reverse=True)
     sus_ids = get_sus_ids()
 
@@ -28,7 +33,7 @@ def compute_tourney_results(df, options: Options):
     to_be_displayed["real_name"] = [sus_person if id_ in sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
     to_be_displayed["tourney_name"] = [strike(name) if id_ in sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
 
-    if options.congrats_toggle:
+    if not hidden_features and options.congrats_toggle:
         new_role_rows = []
         new_pbs = []
 
@@ -133,7 +138,13 @@ def compute_tourney_results(df, options: Options):
         )
 
     if options.links_toggle:
-        to_be_displayed = to_be_displayed.format(make_url, subset=["real_name"]).to_html(escape=False)
+        try:
+            page_location_data = get_page_location()
+            base_url = page_location_data["host"]
+        except Exception:
+            base_url = "thetower.lol"
+
+        to_be_displayed = to_be_displayed.format(partial(make_url, base_url=base_url), subset=["real_name"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
         st.dataframe(to_be_displayed, use_container_width=True, height=800)
