@@ -1,5 +1,8 @@
 # The Tower tourney results
 - python3.8+
 - install dependencies: `pip install -r requirements.txt`
-- setup data: create `data` folder and upload `.csv` files from the tower discord,
-- run with: `streamlit run analysis.py`
+- `pip install -e thetower` to install the django stuff,
+- run with: `streamlit run components/tourney.py`
+
+- `db.sqlite3` goes to `thetower/dtower` folder
+- `uploads` csvs folder go to `thetower/dtower`:
