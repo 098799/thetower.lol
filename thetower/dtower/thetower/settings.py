@@ -20,12 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-with open("SECRET_KEY", "r") as infile:
-    SECRET_KEY = infile.read()
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.getenv("DEBUG") == "true" else False
+
+# SECURITY WARNING: keep the secret key used in production secret!
+if DEBUG:
+    with open("SECRET_KEY", "r") as infile:
+        SECRET_KEY = infile.read()
+
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "thetower.lol", "towerfans.lol"]
 
