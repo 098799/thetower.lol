@@ -5,6 +5,7 @@ streamlit-javascript==0.1.5
 streamlit-js-eval==0.1.5
 extra-streamlit-components==0.1.56
 pandas==1.5.2
+pydantic==1.10.5
 
 # plots
 plotly==5.11.0
