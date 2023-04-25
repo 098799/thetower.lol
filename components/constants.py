@@ -232,12 +232,12 @@ colors_018 = [
     "#ff8000",
     "#ff4200",
     "#ff0000",
-    "#89d1ff",
-    "#61b8ff",
-    "#5c8ddb",
-    "#3082ff",
-    "#00b1a5",
-    "#7fffd4",
+    "#88cffc",  # "#89d1ff",
+    "#3da8ff",  # "#61b8ff",
+    "#2b7df4",  # "#5c8ddb",
+    "#0061ff",  # "#3082ff",
+    "#05a99d",  # "#00b1a5",
+    "#7efdd3",  # "#7fffd4",
     "#ffffff",
 ]
 strata_to_color_018 = dict(zip(stratas_boundaries_018, colors_018))
