@@ -75,6 +75,9 @@ id_mapping = {
     "B9AD93E941A4BC96": "A6CF24A8D9939FD0",
     "B9AD93E941A4BC96": "A6CF24A8D9939FD0",
     "D207A2B3ABBA75AF": "2C807DB3AC91AFDD",
+    "E93F2C796A9FB6F9": "2B34E2D0CEF90B99",
+    "175407440A9CC05E": "AAA9A8A0EC988FE7",
+    "DA698CA1D0A546CD": "AAA9A8A0EC988FE7",
 }
 
 
@@ -228,9 +231,9 @@ colors_018 = [
     "#7bff97",
     "#67f543",
     "#19b106",
-    "#ff9e30",
-    "#ff8000",
-    "#ff4200",
+    "#ffc447",  # "#ff8000",
+    "#ff9931",  # "#ff4200",
+    "#ff5f23",  # "#ff0000",
     "#ff0000",
     "#88cffc",  # "#89d1ff",
     "#3da8ff",  # "#61b8ff",

@@ -5,7 +5,7 @@ from components.data import get_sus_ids
 from components.formatting import color_position__top, make_url
 
 
-def compute_top_scores(df, options: Options):
+def compute_top(df, options: Options):
     sus_ids = get_sus_ids()
 
     def format_(row, df, column):

@@ -5,11 +5,11 @@ import streamlit as st
 from streamlit_js_eval import get_page_location
 
 from components.constants import Options, sus_person
-from components.data import get_sus_ids, load_tourney_results
+from components.data import get_sus_ids
 from components.formatting import am_i_sus, color_position__top, make_url, strike
 
 
-def compute_tourney_results(df, options: Options):
+def compute_results(df, options: Options):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     tourneys = sorted(df["date"].unique(), reverse=True)
     sus_ids = get_sus_ids()
@@ -131,7 +131,7 @@ def compute_tourney_results(df, options: Options):
     else:
         to_be_displayed = (
             to_be_displayed[["position", "tourney_name", "real_name", "wave"]]
-            .style.apply(lambda row: [None, None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None], axis=1)
+            .style.apply(lambda row: [None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None, None], axis=1)
             .apply(lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}"], axis=1)
             .applymap(color_position__top, subset=["position"])
             .applymap(am_i_sus, subset=["real_name"])

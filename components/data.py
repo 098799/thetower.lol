@@ -169,7 +169,7 @@ def get_manager():
 def get_player_list(df):
     last_date = df.date.unique()[-1]
     sus_ids = get_sus_ids()
-    first_choices = list(df[df.date == last_date][~df.id.isin(sus_ids)].real_name)
+    first_choices = list(df[(df.date == last_date) & ~(df.id.isin(sus_ids))].real_name)
     set_of_first_choices = set(first_choices)
     all_real_names = set(df.real_name.unique()) - set_of_first_choices
     all_tourney_names = set(df.tourney_name.unique()) - set_of_first_choices
@@ -187,8 +187,7 @@ def get_sus_ids():
 
 
 if __name__ == "__main__":
-    df = load_tourney_results__db("data")
-    breakpoint()
+    df = load_tourney_results("data")
 
 
 # import cProfile

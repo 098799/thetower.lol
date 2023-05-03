@@ -18,10 +18,11 @@ from components.breakdown import compute_breakdown
 from components.comparison import compute_comparison
 from components.constants import Graph, Options
 from components.data import get_manager, load_tourney_results
+from components.namechangers import compute_namechangers
 from components.player_lookup import compute_player_lookup
-from components.results import compute_tourney_results
+from components.results import compute_results
 from components.search_all_leagues import compute_search_all_leagues
-from components.top_scores import compute_top_scores
+from components.top_scores import compute_top
 from components.winners import compute_winners
 from dtower.tourney_results.constants import league_to_folder
 
@@ -127,7 +128,7 @@ options.compare_players = compare_players
 
 league_switcher = os.environ.get("LEAGUE_SWITCHER")
 
-tabs = ["Tourney results", "Player lookup", "Winners", "Comparison", "Top scores", "Breakdown", "About"]
+tabs = ["Results", "Player lookup", "Winners", "Comparison", "Top", "Breakdown", "Namechangers", "About"]
 
 if league_switcher:
     league: str = st.radio("Which league?", list(league_to_folder.keys()), index=0)
@@ -139,13 +140,14 @@ functionality: str = st.radio("Which functionality to show?", tabs, index=0 if n
 
 
 def keep():
-    compute_tourney_results
+    compute_results
     compute_player_lookup
     compute_comparison
     compute_winners
-    compute_top_scores
+    compute_top
     compute_breakdown
     compute_about
+    compute_namechangers
     compute_search_all_leagues
 
 

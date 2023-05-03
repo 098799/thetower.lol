@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = True if os.getenv("DEBUG") == "true" else False
 
 # SECURITY WARNING: keep the secret key used in production secret!
-if DEBUG:
+if not DEBUG:
     with open("SECRET_KEY", "r") as infile:
         SECRET_KEY = infile.read()
 

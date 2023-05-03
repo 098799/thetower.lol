@@ -5,9 +5,23 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from components.constants import Graph, Options, Patch, colors_017, colors_018, id_mapping, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018
+from components.constants import (
+    Graph,
+    Options,
+    Patch,
+    colors_017,
+    colors_018,
+    id_mapping,
+    patch_015,
+    patch_016,
+    patch_018,
+    stratas_boundaries,
+    stratas_boundaries_018,
+)
 from components.data import get_player_list, get_sus_ids, load_tourney_results
 from components.formatting import color_position
+
+patches = [patch_018, patch_016, patch_015]
 
 
 def compute_player_lookup(df, options: Options):
