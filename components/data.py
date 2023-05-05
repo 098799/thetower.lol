@@ -16,9 +16,9 @@ import extra_streamlit_components as stx
 import pandas as pd
 import streamlit as st
 
-from components.constants import Role, date_to_patch, hardcoded_nicknames, id_mapping, patch_to_roles, wave_to_role
+from components.constants import Role, date_to_patch, patch_to_roles, wave_to_role
 from components.formatting import color_position_barebones
-from dtower.sus.models import SusPerson
+from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import data_folder_name_mapping
 from dtower.tourney_results.models import TourneyResult
 
@@ -57,11 +57,20 @@ def load_data(folder):
     return total_results, results_by_id, position_by_id
 
 
-def get_id_real_name_mapping(df: pd.DataFrame) -> Dict[str, str]:
+def get_player_id_lookup():
+    return dict(PlayerId.objects.all().values_list("id", "player__name"))
+
+
+def get_id_lookup():
+    player_primary_id = {name: id_ for id_, name, primary in PlayerId.objects.all().values_list("id", "player__name", "primary") if primary}
+    return {id_: player_primary_id[name] for id_, name in PlayerId.objects.all().values_list("id", "player__name")}
+
+
+def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[str, str]:
     def get_most_common(df):
         return Counter(df["tourney_name"]).most_common()[0][0]
 
-    return {id_: hardcoded_nicknames.get(id_mapping.get(id_, id_), get_most_common(group)) for id_, group in df.groupby("id")}
+    return {id_: lookup.get(id_, get_most_common(group)) for id_, group in df.groupby("id")}
 
 
 def get_row_to_role(df: pd.DataFrame):
@@ -120,9 +129,11 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
 
     df = pd.concat(dfs)
 
-    id_to_real_name = get_id_real_name_mapping(df)
+    lookup = get_player_id_lookup()
+    id_to_real_name = get_id_real_name_mapping(df, lookup)
 
     df["raw_id"] = df.id
+    id_mapping = get_id_lookup()
     df["id"] = df.id.map(lambda id_: id_mapping.get(id_, id_))  # id renormalization
 
     df["real_name"] = df.id.map(lambda id_: id_to_real_name[id_])
@@ -191,6 +202,7 @@ def get_sus_ids():
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
+    breakpoint()
 
 
 # import cProfile
