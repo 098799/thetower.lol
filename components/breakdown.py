@@ -15,7 +15,7 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
     def get_data(df):
         non_sus_df = df[~df.id.isin(sus_ids)]
         unique_roles = sorted(non_sus_df.wave_role.unique(), key=lambda role: role.wave_bottom)
-        unique_dates = non_sus_df.date.unique()
+        unique_dates = pd.to_datetime(non_sus_df.date.unique())
 
         counts_data = {role: {date: 0 for date in unique_dates} for role in unique_roles}
 
