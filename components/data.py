@@ -8,19 +8,59 @@ django.setup()
 import csv
 import datetime
 from collections import Counter, defaultdict
+from functools import lru_cache
 from glob import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import extra_streamlit_components as stx
+import numpy as np
 import pandas as pd
 import streamlit as st
 
-from components.constants import Role, date_to_patch, patch_to_roles, wave_to_role
 from components.formatting import color_position_barebones
 from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import data_folder_name_mapping
-from dtower.tourney_results.models import TourneyResult
+from dtower.tourney_results.models import Patch, Role, TourneyResult
+
+
+@lru_cache
+def get_patches():
+    return Patch.objects.all().order_by("start_date")
+
+
+def date_to_patch(date: datetime.datetime) -> Optional[Patch]:
+    for patch in get_patches():
+        if date >= patch.start_date and date <= patch.end_date:
+            return patch
+
+
+def wave_to_role_in_patch(roles: List[Role], wave: int) -> Optional[Role]:
+    for role in roles:
+        if wave >= role.wave_bottom and wave < role.wave_top:
+            return role
+
+
+@lru_cache
+def patch_to_roles():
+    patch_to_roles = defaultdict(list)
+
+    for role in Role.objects.all():
+        patch_to_roles[role.patch].append(role)
+
+    return patch_to_roles
+
+
+def wave_to_role(wave: int, patch: Optional[Patch]) -> Optional[Role]:
+    if not patch:
+        return None
+
+    roles = patch_to_roles()[patch]
+
+    if not roles:
+        return None
+
+    return wave_to_role_in_patch(roles, wave)
 
 
 def load_data(folder):
@@ -76,8 +116,10 @@ def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[s
 def get_row_to_role(df: pd.DataFrame):
     name_roles: Dict[int, Optional[Role]] = {}
 
-    for patch, roles in patch_to_roles.items():
-        id_df = df[(df["date"] >= patch.start_date) & (df["date"] <= patch.end_date)]
+    for patch, roles in patch_to_roles().items():
+        patch_start = np.datetime64(patch.start_date)
+        patch_end = np.datetime64(patch.end_date)
+        id_df = df[(df["date"] >= patch_start) & (df["date"] <= patch_end)]
 
         for _, filtered_df in id_df.groupby("id"):
             if not filtered_df.empty:

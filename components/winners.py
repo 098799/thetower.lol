@@ -4,12 +4,14 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.constants import Patch, patch_015, patch_016, patch_018
-from components.data import load_tourney_results
+from components.data import get_patches, load_tourney_results
+from dtower.tourney_results.models import Patch
+
+patches = sorted(get_patches(), key=lambda patch: patch.start_date, reverse=True)
 
 
 def compute_winners(df, options=None):
-    patch = st.selectbox("Limit results to a patch?", ["no", patch_018, patch_016, patch_015])
+    patch = st.selectbox("Limit results to a patch?", ["no", *patches])
 
     if isinstance(patch, Patch):
         df = df[df.patch == patch]

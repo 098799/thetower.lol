@@ -28,3 +28,6 @@ us_to_jim = {
     silver: silver,
     copper: copper,
 }
+
+
+wave_border_choices = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3500, 4000, 100000]

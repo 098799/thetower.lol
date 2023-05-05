@@ -6,11 +6,10 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.constants import Graph, Options, Patch, colors_017, colors_018, patch_015, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018
+from components.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
 from components.data import get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
 from components.formatting import color_top_18, make_url
-
-patches = [patch_018, patch_016, patch_015]
+from dtower.tourney_results.models import Patch
 
 
 def compute_comparison(df, options: Options):
@@ -36,6 +35,8 @@ def compute_comparison(df, options: Options):
         patch = globals()[patch]
 
     id_mapping = get_id_lookup()
+
+    patch_018 = Patch.objects.get(version_minor=18)
 
     for user in users:
         if user in (set(first_choices) | all_real_names | all_tourney_names):
@@ -140,8 +141,8 @@ def compute_comparison(df, options: Options):
                 opacity=0.4,
             )
 
-    start_16 = patch_016.start_date - datetime.timedelta(days=1)
-    start_18 = patch_018.start_date - datetime.timedelta(days=1)
+    start_16 = Patch.objects.get(version_minor=16).start_date - datetime.timedelta(days=1)
+    start_18 = Patch.objects.get(version_minor=18).start_date - datetime.timedelta(days=1)
 
     for start, name in [(start_16, "0.16"), (start_18, "0.18")]:
         if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(days=3):

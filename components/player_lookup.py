@@ -5,11 +5,10 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from components.constants import Graph, Options, Patch, colors_017, colors_018, patch_015, patch_016, patch_018, stratas_boundaries, stratas_boundaries_018
+from components.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
 from components.data import get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
 from components.formatting import color_position
-
-patches = [patch_018, patch_016, patch_015]
+from dtower.tourney_results.models import Patch
 
 
 def compute_player_lookup(df, options: Options):
@@ -99,6 +98,9 @@ def compute_player_lookup(df, options: Options):
     tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
     tbdf["position_average"] = tbdf.position.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
 
+    start_16 = Patch.objects.get(version_minor=16).start_date - datetime.timedelta(days=1)
+    start_18 = Patch.objects.get(version_minor=18).start_date - datetime.timedelta(days=1)
+
     if len(tbdf) > 1:
         graph_position_instead = st.checkbox("Graph position instead")
         fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -153,9 +155,6 @@ def compute_player_lookup(df, options: Options):
                 secondary_y=True,
             )
             fig.update_yaxes(secondary_y=True, range=[200, 0])
-
-        start_16 = patch_016.start_date - datetime.timedelta(days=1)
-        start_18 = patch_018.start_date - datetime.timedelta(days=1)
 
         for start, name in [(start_16, "0.16"), (start_18, "0.18")]:
             if start < tbdf.date.min() - datetime.timedelta(days=2) or start > tbdf.date.max() + datetime.timedelta(days=3):

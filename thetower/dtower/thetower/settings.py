@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "dtower.sus",
     "dtower.tourney_results",
+    "colorfield",
 ]
 
 MIDDLEWARE = [

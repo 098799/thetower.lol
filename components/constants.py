@@ -148,65 +148,44 @@ position_colors = ["#333333", "#5555FF", "green", the_color, "red"][::-1]
 sus_person = "sus!!!"
 
 
-class Patch(BaseModel):
-    class Config:
-        frozen = True
+# class Patch(BaseModel):
+#     class Config:
+#         frozen = True
 
-    version_minor: int
-    start_date: datetime.datetime
-    end_date: Optional[datetime.datetime]
+#     version_minor: int
+#     start_date: datetime.datetime
+#     end_date: Optional[datetime.datetime]
 
-    def __str__(self):
-        return f"<Patch 0.{self.version_minor}>"
-
-
-patch_015 = Patch(
-    version_minor=15,
-    start_date=datetime.datetime(2020, 9, 7),
-    # start_date=datetime.datetime(2022, 9, 7).date(),
-    end_date=datetime.datetime(2022, 10, 29),
-)
-patch_016 = Patch(
-    version_minor=16,
-    start_date=datetime.datetime(2022, 11, 2),
-    end_date=datetime.datetime(2023, 2, 22),
-)
-patch_018 = Patch(
-    version_minor=18,
-    start_date=datetime.datetime(2023, 2, 25),
-    end_date=datetime.datetime(2024, 2, 25),
-)
+#     def __str__(self):
+#         return f"<Patch 0.{self.version_minor}>"
 
 
-def date_to_patch(date: datetime.datetime) -> Optional[Patch]:
-    if date >= patch_015.start_date and date <= patch_015.end_date:
-        return patch_015
-    if date >= patch_016.start_date and date <= patch_016.end_date:
-        return patch_016
-    if date >= patch_018.start_date:
-        return patch_018
+# patch_015 = Patch(
+#     version_minor=15,
+#     start_date=datetime.datetime(2020, 9, 7),
+#     # start_date=datetime.datetime(2022, 9, 7).date(),
+#     end_date=datetime.datetime(2022, 10, 29),
+# )
+# patch_016 = Patch(
+#     version_minor=16,
+#     start_date=datetime.datetime(2022, 11, 2),
+#     end_date=datetime.datetime(2023, 2, 22),
+# )
+# patch_018 = Patch(
+#     version_minor=18,
+#     start_date=datetime.datetime(2023, 2, 25),
+#     end_date=datetime.datetime(2024, 2, 25),
+# )
 
 
-class Role(BaseModel):
-    class Config:
-        frozen = True
+# class Role(BaseModel):
+#     class Config:
+#         frozen = True
 
-    wave_bottom: int
-    wave_top: int
-    patch: Patch
-    color: str
-
-    def __gt__(self, other):
-        try:
-            return self.wave_top > other.wave_top
-        except (AttributeError, TypeError):
-            return True
-
-    def __ge__(self, other):
-        try:
-            return self.wave_top >= other.wave_top
-        except (AttributeError, TypeError):
-            return True
+#     wave_bottom: int
+#     wave_top: int
+#     patch: Patch
+#     color: str
 
 
 stratas_boundaries = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 100000]
@@ -245,53 +224,35 @@ colors_018 = [
 ]
 strata_to_color_018 = dict(zip(stratas_boundaries_018, colors_018))
 
-patch_to_roles: Dict[Patch, List[Role]] = {
-    patch_015: [
-        Role(
-            wave_bottom=strata_bottom,
-            wave_top=strata_top,
-            patch=patch_015,
-            color=color,
-        )
-        for strata_bottom, strata_top, color in zip(stratas_boundaries, stratas_boundaries[1:], colors_017)
-    ],
-    patch_016: [
-        Role(
-            wave_bottom=strata_bottom,
-            wave_top=strata_top,
-            patch=patch_016,
-            color=color,
-        )
-        for strata_bottom, strata_top, color in zip(stratas_boundaries, stratas_boundaries[1:], colors_017)
-    ],
-    patch_018: [
-        Role(
-            wave_bottom=strata_bottom,
-            wave_top=strata_top,
-            patch=patch_018,
-            color=color,
-        )
-        for strata_bottom, strata_top, color in zip(stratas_boundaries_018, stratas_boundaries_018[1:], colors_018)
-    ],
-}
-
-
-def wave_to_role_in_patch(roles: List[Role], wave: int) -> Optional[Role]:
-    for role in roles:
-        if wave >= role.wave_bottom and wave < role.wave_top:
-            return role
-
-
-def wave_to_role(wave: int, patch: Optional[Patch]) -> Optional[Role]:
-    if not patch:
-        return None
-
-    roles = patch_to_roles.get(patch)
-
-    if not roles:
-        return None
-
-    return wave_to_role_in_patch(roles, wave)
+# patch_to_roles: Dict[Patch, List[Role]] = {
+#     patch_015: [
+#         Role(
+#             wave_bottom=strata_bottom,
+#             wave_top=strata_top,
+#             patch=patch_015,
+#             color=color,
+#         )
+#         for strata_bottom, strata_top, color in zip(stratas_boundaries, stratas_boundaries[1:], colors_017)
+#     ],
+#     patch_016: [
+#         Role(
+#             wave_bottom=strata_bottom,
+#             wave_top=strata_top,
+#             patch=patch_016,
+#             color=color,
+#         )
+#         for strata_bottom, strata_top, color in zip(stratas_boundaries, stratas_boundaries[1:], colors_017)
+#     ],
+#     patch_018: [
+#         Role(
+#             wave_bottom=strata_bottom,
+#             wave_top=strata_top,
+#             patch=patch_018,
+#             color=color,
+#         )
+#         for strata_bottom, strata_top, color in zip(stratas_boundaries_018, stratas_boundaries_018[1:], colors_018)
+#     ],
+# }
 
 
 class Graph(Enum):

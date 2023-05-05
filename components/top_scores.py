@@ -1,8 +1,10 @@
 import streamlit as st
 
-from components.constants import Options, patch_015, patch_016, patch_018
-from components.data import get_sus_ids
+from components.constants import Options
+from components.data import get_patches, get_sus_ids
 from components.formatting import color_position__top, make_url
+
+patches = sorted(get_patches(), key=lambda patch: patch.start_date, reverse=True)
 
 
 def compute_top(df, options: Options):
@@ -12,7 +14,7 @@ def compute_top(df, options: Options):
         return f"color: {df[df['ovr_pos'] == row['ovr_pos']][column].iloc[0]}"
 
     st.title("Top tournament scores")
-    patch = st.selectbox("Patch?", [patch_018, patch_016, patch_015])
+    patch = st.selectbox("Patch?", patches)
     st.write("Counting only highest per person:")
 
     non_sus_df = df[~df["id"].isin(sus_ids)]
