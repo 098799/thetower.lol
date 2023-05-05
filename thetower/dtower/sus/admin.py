@@ -1,6 +1,7 @@
 from django.contrib import admin
-from dtower.sus.models import SusPerson
 from simple_history.admin import SimpleHistoryAdmin
+
+from dtower.sus.models import SusPerson
 
 
 @admin.register(SusPerson)
@@ -22,3 +23,5 @@ class SusPersonAdmin(SimpleHistoryAdmin):
         "name",
         "notes",
     )
+
+    list_filter = ("sus",)

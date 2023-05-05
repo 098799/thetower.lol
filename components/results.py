@@ -1,6 +1,8 @@
+import datetime
 import os
 from functools import partial
 
+import plotly.express as px
 import streamlit as st
 from streamlit_js_eval import get_page_location
 
@@ -11,7 +13,12 @@ from components.formatting import am_i_sus, color_position__top, make_url, strik
 
 def compute_results(df, options: Options):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
-    tourneys = sorted(df["date"].unique(), reverse=True)
+
+    unique_date_candidates = df["date"].unique()
+    datetimes = [str(item) for item in unique_date_candidates if datetime.datetime.fromisoformat(str(item).rsplit(".", 1)[0]).hour]
+    dates = [str(item).split("T")[0] for item in unique_date_candidates if not datetime.datetime.fromisoformat(str(item).rsplit(".", 1)[0]).hour]
+
+    tourneys = sorted(datetimes + dates, reverse=True)
     sus_ids = get_sus_ids()
 
     tourney_col, debug_col = st.columns([5, 1])
@@ -32,6 +39,14 @@ def compute_results(df, options: Options):
     to_be_displayed = filtered_df.copy()
     to_be_displayed["real_name"] = [sus_person if id_ in sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
     to_be_displayed["tourney_name"] = [strike(name) if id_ in sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
+
+    if hidden_features:
+        if len(datetimes) > 3:
+            offset = st.slider("Offset?", min_value=0, max_value=20, value=10)
+            which_selection = st.slider("Which part of players?", min_value=0, max_value=10, value=0)
+            top_scorers = to_be_displayed[which_selection * offset : which_selection * offset + offset].id
+            fig = px.line(df[df.id.isin(top_scorers) & df.date.isin(datetimes)], x="date", y="wave", color="real_name", markers=True)
+            st.plotly_chart(fig)
 
     if not hidden_features and options.congrats_toggle:
         new_role_rows = []

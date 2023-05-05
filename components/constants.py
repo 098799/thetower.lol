@@ -153,8 +153,8 @@ class Patch(BaseModel):
         frozen = True
 
     version_minor: int
-    start_date: datetime.date
-    end_date: Optional[datetime.date]
+    start_date: datetime.datetime
+    end_date: Optional[datetime.datetime]
 
     def __str__(self):
         return f"<Patch 0.{self.version_minor}>"
@@ -162,19 +162,19 @@ class Patch(BaseModel):
 
 patch_015 = Patch(
     version_minor=15,
-    start_date=datetime.datetime(2020, 9, 7).date(),
+    start_date=datetime.datetime(2020, 9, 7),
     # start_date=datetime.datetime(2022, 9, 7).date(),
-    end_date=datetime.datetime(2022, 10, 29).date(),
+    end_date=datetime.datetime(2022, 10, 29),
 )
 patch_016 = Patch(
     version_minor=16,
-    start_date=datetime.datetime(2022, 11, 2).date(),
-    end_date=datetime.datetime(2023, 2, 22).date(),
+    start_date=datetime.datetime(2022, 11, 2),
+    end_date=datetime.datetime(2023, 2, 22),
 )
 patch_018 = Patch(
     version_minor=18,
-    start_date=datetime.datetime(2023, 2, 25).date(),
-    end_date=datetime.datetime(2024, 2, 25).date(),
+    start_date=datetime.datetime(2023, 2, 25),
+    end_date=datetime.datetime(2024, 2, 25),
 )
 
 

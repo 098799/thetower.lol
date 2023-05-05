@@ -33,19 +33,24 @@ while True:
         print("Something new")
         file_name = get_file_path(us_to_jim[league])
 
-        with open(file_name, "rb") as infile:
-            contents = infile.read()
-            print("Creating file object")
-            csv_file = SimpleUploadedFile(
-                name=get_file_name(),
-                content=contents,
-                content_type="text/csv",
-            )
-            print("Creating tourney_result")
-            TourneyResult.objects.update_or_create(
-                date=get_last_date(),
-                league=league,
-                result_file=csv_file,
-            )
+        try:
+            with open(file_name, "rb") as infile:
+                contents = infile.read()
+        except FileNotFoundError:
+            print("File not found, maybe later")
+            continue
+
+        print("Creating file object")
+        csv_file = SimpleUploadedFile(
+            name=get_file_name(),
+            content=contents,
+            content_type="text/csv",
+        )
+        print("Creating tourney_result")
+        TourneyResult.objects.update_or_create(
+            date=get_last_date(),
+            league=league,
+            result_file=csv_file,
+        )
 
     time.sleep(3600)

@@ -100,8 +100,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
 
         df.columns = ["id", "tourney_name", "wave"]
 
-        # result_date = datetime.datetime.fromisoformat().date()
-        result_date = datetime.date.fromisoformat(date)
+        result_date = datetime.datetime.fromisoformat(date)
         df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
         df["date"] = [result_date] * len(df)
 
@@ -157,6 +156,10 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
         ],
         key=lambda x: x[1],
     )
+
+    additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
+    result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
+
     return _load_tourney_results(result_files)
 
 
