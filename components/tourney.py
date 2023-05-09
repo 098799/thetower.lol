@@ -12,6 +12,7 @@ from typing import List, Optional
 
 import pandas as pd
 import streamlit as st
+from tqdm import tqdm
 
 from components.about import compute_about
 from components.breakdown import compute_breakdown
@@ -154,12 +155,22 @@ function_string = f"compute_{'_'.join(functionality.lower().split())}"
 
 if function_string == "compute_search_all_leagues":
     leagues = sorted(league_to_folder.items())
-    dfs = [load_tourney_results(league) for _, league in leagues]
+
+    my_bar = st.progress(0)
+
+    dfs = []
+
+    for index, (_, league) in enumerate(leagues, 1):
+        df = load_tourney_results(league)
+        my_bar.progress(index / len(leagues))
+
+        dfs.append(df)
 
     for df, (league, _) in zip(dfs, leagues):
         df["league"] = league
 
     df = pd.concat(dfs)
+    my_bar.empty()
 else:
     df = load_tourney_results(league_to_folder[league])
 

@@ -143,7 +143,9 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
 
     sus_ids = get_sus_ids()
 
-    for result_file, date in result_files:
+    load_data_bar = st.progress(0)
+
+    for index, (result_file, date) in enumerate(result_files, 1):
         df = pd.read_csv(result_file, header=None)
 
         if not hidden_features:
@@ -169,6 +171,8 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
         df["position"] = positions
         dfs.append(df)
 
+        load_data_bar.progress(index / len(result_files) * 0.5)
+
     df = pd.concat(dfs)
 
     lookup = get_player_id_lookup()
@@ -178,21 +182,31 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
     id_mapping = get_id_lookup()
     df["id"] = df.id.map(lambda id_: id_mapping.get(id_, id_))  # id renormalization
 
+    load_data_bar.progress(0.6)
+
     df["real_name"] = df.id.map(lambda id_: id_to_real_name[id_])
     df["patch"] = df.date.map(date_to_patch)
     df["patch_version"] = df.patch.map(lambda x: x.version_minor)
 
+    load_data_bar.progress(0.75)
+
     df["wave_role"] = [wave_to_role(wave, date_to_patch(date)) for wave, date in zip(df["wave"], df["date"])]
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
+
+    load_data_bar.progress(0.95)
 
     df["position_role_color"] = [color_position_barebones(position) for position in df["position"]]
     df = df.reset_index(drop=True)
 
+    load_data_bar.progress(1.0)
+
     df = get_row_to_role(df)
+
+    load_data_bar.empty()
     return df
 
 
-@st.cache(allow_output_mutation=True)
+@st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def load_tourney_results(folder: str) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
