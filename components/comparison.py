@@ -32,11 +32,12 @@ def compute_comparison(df, options: Options):
     patch = st.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
 
     if patch.startswith("patch"):
-        patch = globals()[patch]
-
-    id_mapping = get_id_lookup()
+        version = int(patch.split("_")[1])
+        patch = Patch.objects.get(version_minor=version)
 
     patch_018 = Patch.objects.get(version_minor=18)
+
+    id_mapping = get_id_lookup()
 
     for user in users:
         if user in (set(first_choices) | all_real_names | all_tourney_names):

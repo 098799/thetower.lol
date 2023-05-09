@@ -78,7 +78,10 @@ def compute_player_lookup(df, options: Options):
     rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
 
     if patch.startswith("patch"):
-        patch = globals()[patch]
+        version = int(patch.split("_")[1])
+        patch = Patch.objects.get(version_minor=version)
+
+    patch_018 = Patch.objects.get(version_minor=18)
 
     if isinstance(patch, Patch):
         patch_df = player_df[player_df.patch == patch]
