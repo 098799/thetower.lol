@@ -1,12 +1,11 @@
-from collections import defaultdict
 from typing import Optional
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from components.constants import Options
-from components.data import get_sus_ids, load_tourney_results
+from dtower.tourney_results.constants import Options
+from dtower.tourney_results.data import get_sus_ids
 
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:

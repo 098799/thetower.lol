@@ -16,15 +16,14 @@ import streamlit as st
 from components.about import compute_about
 from components.breakdown import compute_breakdown
 from components.comparison import compute_comparison
-from components.constants import Graph, Options
-from components.data import get_manager, load_tourney_results
 from components.namechangers import compute_namechangers
 from components.player_lookup import compute_player_lookup
 from components.results import compute_results
 from components.search_all_leagues import compute_search_all_leagues
 from components.top_scores import compute_top
 from components.winners import compute_winners
-from dtower.tourney_results.constants import league_to_folder
+from dtower.tourney_results.constants import Graph, Options, league_to_folder
+from dtower.tourney_results.data import get_manager, load_tourney_results
 
 st.set_page_config(
     page_title="The Tower top200 tourney results",

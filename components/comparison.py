@@ -6,9 +6,9 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
-from components.data import get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
-from components.formatting import color_top_18, make_url
+from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
+from dtower.tourney_results.data import get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
+from dtower.tourney_results.formatting import color_top_18, make_url
 from dtower.tourney_results.models import Patch
 
 

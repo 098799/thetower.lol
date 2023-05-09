@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.data import get_patches, load_tourney_results
+from dtower.tourney_results.data import get_patches, load_tourney_results
 from dtower.tourney_results.models import Patch
 
 patches = sorted(get_patches(), key=lambda patch: patch.start_date, reverse=True)

@@ -1,8 +1,8 @@
 import pandas as pd
 import streamlit as st
 
-from components.data import get_sus_data
 from dtower.sus.models import SusPerson
+from dtower.tourney_results.data import get_sus_data
 
 
 def compute_about(*args, **kwargs):

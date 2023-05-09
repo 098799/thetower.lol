@@ -1,7 +1,7 @@
 from functools import partial
 from operator import ge, le
 
-from components.constants import colors, colors_018, medals, position_colors, position_stratas, stratas, stratas_boundaries_018, sus_person
+from dtower.tourney_results.constants import colors, colors_018, medals, position_colors, position_stratas, stratas, stratas_boundaries_018, sus_person
 
 
 def barebones_format(color):

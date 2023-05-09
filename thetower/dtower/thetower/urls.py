@@ -17,6 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from dtower.tourney_results.views import plaintext_results
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("text/", plaintext_results),
 ]

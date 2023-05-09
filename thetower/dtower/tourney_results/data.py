@@ -18,9 +18,9 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from components.formatting import color_position_barebones
 from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import data_folder_name_mapping
+from dtower.tourney_results.formatting import color_position_barebones
 from dtower.tourney_results.models import Patch, Role, TourneyResult
 
 

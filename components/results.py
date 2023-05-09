@@ -6,9 +6,9 @@ import plotly.express as px
 import streamlit as st
 from streamlit_js_eval import get_page_location
 
-from components.constants import Options, sus_person
-from components.data import get_sus_ids
-from components.formatting import am_i_sus, color_position__top, make_url, strike
+from dtower.tourney_results.constants import Options, sus_person
+from dtower.tourney_results.data import get_sus_ids
+from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
 
 
 def compute_results(df, options: Options):
@@ -99,9 +99,8 @@ def compute_results(df, options: Options):
         to_be_displayed = to_be_displayed[["id", "position", "tourney_name", "real_name", "wave"]]
         to_be_displayed = to_be_displayed.rename({"wave": tourney_file_name}, axis=1)
 
-        all_dates = df.date.unique()
-        current_date_index = list(all_dates).index(tourney_file_name)
-        previous_4_dates = all_dates[current_date_index - 4 : current_date_index][::-1]
+        current_date_index = dates.index(tourney_file_name)
+        previous_4_dates = dates[current_date_index - 4 : current_date_index][::-1]
 
         prev_dfs = {date: df[df["date"] == date].reset_index(drop=True) for date in previous_4_dates}
 

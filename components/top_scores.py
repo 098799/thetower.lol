@@ -1,8 +1,8 @@
 import streamlit as st
 
-from components.constants import Options
-from components.data import get_patches, get_sus_ids
-from components.formatting import color_position__top, make_url
+from dtower.tourney_results.constants import Options
+from dtower.tourney_results.data import get_patches, get_sus_ids
+from dtower.tourney_results.formatting import color_position__top, make_url
 
 patches = sorted(get_patches(), key=lambda patch: patch.start_date, reverse=True)
 
