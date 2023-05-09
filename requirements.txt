@@ -19,3 +19,4 @@ django-simple-history==3.3.0
 djangorestframework==3.14.0
 whitenoise==6.4.0
 django-colorfield==0.8.0
+pretty-html-table==0.9.16

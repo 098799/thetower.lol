@@ -1,5 +1,6 @@
 from cachetools import TTLCache, cached
 from django.http import HttpResponse
+from pretty_html_table import build_table
 
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
@@ -19,10 +20,10 @@ def get_data(tourney_date=None):
 
 
 def plaintext_results(request):
-    html = get_data()[["position", "tourney_name", "real_name", "wave"]].to_html()
-    return HttpResponse(html)
+    df = get_data()[["position", "tourney_name", "real_name", "wave"]]
+    return HttpResponse(build_table(df, "blue_light"))
 
 
 def plaintext_results__history(request, tourney_date):
-    html = get_data(tourney_date)[["position", "tourney_name", "real_name", "wave"]].to_html()
-    return HttpResponse(html)
+    df = get_data(tourney_date)[["position", "tourney_name", "real_name", "wave"]]
+    return HttpResponse(build_table(df, "green_light"))
