@@ -1,14 +1,16 @@
+from functools import partial
+
 from cachetools import TTLCache, cached
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from pretty_html_table import build_table
 
-from dtower.sus.models import PlayerId
+from dtower.tourney_results.constants import champ, league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
 
 @cached(cache=TTLCache(maxsize=10, ttl=600))
-def get_data(tourney_date=None):
-    df = load_tourney_results("data")
+def get_data(league, tourney_date=None):
+    df = load_tourney_results(league)
     df = df[~df.id.isin(get_sus_ids())]
 
     if not tourney_date:
@@ -20,14 +22,12 @@ def get_data(tourney_date=None):
     return last_df
 
 
-def plaintext_results(request):
-    df = get_data()[["position", "tourney_name", "real_name", "wave"]]
+def plaintext_results(request, league, tourney_date=None):
+    df = get_data(league=league_to_folder[league.title()], tourney_date=tourney_date)[["position", "tourney_name", "real_name", "wave"]]
     return HttpResponse(build_table(df, "blue_light"))
 
 
-def plaintext_results__history(request, tourney_date):
-    df = get_data(tourney_date)[["position", "tourney_name", "real_name", "wave"]]
-    return HttpResponse(build_table(df, "green_light"))
+plaintext_results__champ = partial(plaintext_results, league=champ)
 
 
 # def user_role(request, user):

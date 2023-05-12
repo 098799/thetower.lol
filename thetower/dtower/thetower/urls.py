@@ -1,27 +1,25 @@
-"""
-URL configuration for thetower project.
+import os
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path
 
-from dtower.tourney_results.views import plaintext_results, plaintext_results__history
+from dtower.tourney_results.views import plaintext_results, plaintext_results__champ
 
-urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("text/<str:tourney_date>/", plaintext_results__history),
-    path("text/", plaintext_results),
-    # path("role/<str:user>/", user_role),
-]
+league_switcher = os.environ.get("LEAGUE_SWITCHER")
+
+
+if league_switcher:
+    urlpatterns = [
+        path("admin/", admin.site.urls),
+        path("<str:league>/text/<str:tourney_date>/", plaintext_results),
+        path("<str:league>/text/", plaintext_results),
+        path("text/<str:tourney_date>/", plaintext_results__champ),
+        path("text/", plaintext_results__champ),
+        # path("role/<str:user>/", user_role),
+    ]
+else:
+    urlpatterns = [
+        path("admin/", admin.site.urls),
+        path("text/<str:tourney_date>/", plaintext_results__champ),
+        path("text/", plaintext_results__champ),
+    ]

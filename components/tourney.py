@@ -12,7 +12,6 @@ from typing import List, Optional
 
 import pandas as pd
 import streamlit as st
-from tqdm import tqdm
 
 from components.about import compute_about
 from components.breakdown import compute_breakdown
@@ -23,7 +22,7 @@ from components.results import compute_results
 from components.search_all_leagues import compute_search_all_leagues
 from components.top_scores import compute_top
 from components.winners import compute_winners
-from dtower.tourney_results.constants import Graph, Options, league_to_folder
+from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
 from dtower.tourney_results.data import get_manager, load_tourney_results
 
 st.set_page_config(
@@ -126,15 +125,18 @@ options.current_player = current_player
 options.compare_players = compare_players
 
 
+hidden_features = os.environ.get("HIDDEN_FEATURES")
 league_switcher = os.environ.get("LEAGUE_SWITCHER")
 
-tabs = ["Results", "Player lookup", "Winners", "Comparison", "Top", "Breakdown", "Namechangers", "About"]
+common_tabs = ["Player lookup", "Winners", "Comparison", "Top", "Breakdown", "Namechangers", "About"]
 
 if league_switcher:
-    league: str = st.radio("Which league?", list(league_to_folder.keys()), index=0)
-    tabs.append("Search all leagues")
+    tabs = [f"Results {league}" for league in list(league_to_folder.keys())] + common_tabs
 else:
-    league = "Champions"
+    tabs = ["Results"] + common_tabs
+
+if hidden_features:
+    tabs.append("Search all leagues")
 
 functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
 
@@ -149,6 +151,13 @@ def keep():
     compute_about
     compute_namechangers
     compute_search_all_leagues
+
+
+compute_results_champions = compute_results
+compute_results_platinum = compute_results
+compute_results_gold = compute_results
+compute_results_silver = compute_results
+compute_results_copper = compute_results
 
 
 function_string = f"compute_{'_'.join(functionality.lower().split())}"
@@ -172,6 +181,12 @@ if function_string == "compute_search_all_leagues":
     df = pd.concat(dfs)
     my_bar.empty()
 else:
+    if functionality.startswith("Results"):
+        league = functionality.split()[1]
+    # elif functionality in ["Player lookup", "Comparison"]:
+    else:
+        league = champ
+
     df = load_tourney_results(league_to_folder[league])
 
 function = globals()[function_string]

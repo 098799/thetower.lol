@@ -139,6 +139,8 @@ def load_tourney_results__prev(folder: str) -> pd.DataFrame:
 
 def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
+    league_switcher = os.environ.get("LEAGUE_SWITCHER")
+
     dfs = []
 
     sus_ids = get_sus_ids()
@@ -149,7 +151,12 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
         df = pd.read_csv(result_file, header=None)
 
         if not hidden_features:
-            df = df.iloc[:200]
+            if league_switcher:
+                cutoff = 500
+            else:
+                cutoff = 200
+
+            df = df.iloc[:cutoff]
 
         df.columns = ["id", "tourney_name", "wave"]
 
