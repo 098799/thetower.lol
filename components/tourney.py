@@ -181,7 +181,7 @@ if function_string == "compute_search_all_leagues":
     df = pd.concat(dfs)
     my_bar.empty()
 else:
-    if functionality.startswith("Results"):
+    if functionality.startswith("Results "):
         league = functionality.split()[1]
     # elif functionality in ["Player lookup", "Comparison"]:
     else:

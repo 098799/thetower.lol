@@ -19,7 +19,7 @@ import pandas as pd
 import streamlit as st
 
 from dtower.sus.models import PlayerId, SusPerson
-from dtower.tourney_results.constants import data_folder_name_mapping
+from dtower.tourney_results.constants import champ, data_folder_name_mapping
 from dtower.tourney_results.formatting import color_position_barebones
 from dtower.tourney_results.models import Patch, Role, TourneyResult
 
@@ -42,20 +42,20 @@ def wave_to_role_in_patch(roles: List[Role], wave: int) -> Optional[Role]:
 
 
 @lru_cache
-def patch_to_roles():
+def patch_to_roles(league):
     patch_to_roles = defaultdict(list)
 
-    for role in Role.objects.all():
+    for role in Role.objects.filter(league=league):
         patch_to_roles[role.patch].append(role)
 
     return patch_to_roles
 
 
-def wave_to_role(wave: int, patch: Optional[Patch]) -> Optional[Role]:
+def wave_to_role(wave: int, patch: Optional[Patch], league: str) -> Optional[Role]:
     if not patch:
         return None
 
-    roles = patch_to_roles()[patch]
+    roles = patch_to_roles(league)[patch]
 
     if not roles:
         return None
@@ -113,10 +113,10 @@ def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[s
     return {id_: lookup.get(id_, get_most_common(group)) for id_, group in df.groupby("id")}
 
 
-def get_row_to_role(df: pd.DataFrame):
+def get_row_to_role(df: pd.DataFrame, league):
     name_roles: Dict[int, Optional[Role]] = {}
 
-    for patch, roles in patch_to_roles().items():
+    for patch, roles in patch_to_roles(league).items():
         patch_start = np.datetime64(patch.start_date)
         patch_end = np.datetime64(patch.end_date)
         id_df = df[(df["date"] >= patch_start) & (df["date"] <= patch_end)]
@@ -137,7 +137,7 @@ def load_tourney_results__prev(folder: str) -> pd.DataFrame:
     return _load_tourney_results([(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in result_files])
 
 
-def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
+def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     league_switcher = os.environ.get("LEAGUE_SWITCHER")
 
@@ -197,7 +197,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
 
     load_data_bar.progress(0.75)
 
-    df["wave_role"] = [wave_to_role(wave, date_to_patch(date)) for wave, date in zip(df["wave"], df["date"])]
+    df["wave_role"] = [wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])]
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
 
     load_data_bar.progress(0.95)
@@ -207,7 +207,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]]) -> pd.DataFrame:
 
     load_data_bar.progress(1.0)
 
-    df = get_row_to_role(df)
+    df = get_row_to_role(df, league=league)
 
     load_data_bar.empty()
     return df
@@ -218,15 +218,15 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
 
+    league = data_folder_name_mapping[folder]
+
     result_files = sorted(
         [
             (
                 Path("thetower/dtower") / result_file,
                 date.isoformat(),
             )
-            for result_file, date in TourneyResult.objects.filter(league=data_folder_name_mapping[folder], **additional_filter).values_list(
-                "result_file", "date"
-            )
+            for result_file, date in TourneyResult.objects.filter(league=league, **additional_filter).values_list("result_file", "date")
         ],
         key=lambda x: x[1],
     )
@@ -234,7 +234,7 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
     additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
     result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
 
-    return _load_tourney_results(result_files)
+    return _load_tourney_results(result_files, league)
 
 
 @st.cache(allow_output_mutation=True)
