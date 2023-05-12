@@ -9,6 +9,7 @@ from streamlit_js_eval import get_page_location
 from dtower.tourney_results.constants import Options, sus_person
 from dtower.tourney_results.data import get_sus_ids
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
+from dtower.tourney_results.models import Patch
 
 
 def compute_results(df, options: Options):
@@ -42,11 +43,23 @@ def compute_results(df, options: Options):
 
     if hidden_features:
         if len(datetimes) > 3:
-            offset = st.slider("Offset?", min_value=0, max_value=20, value=10)
-            which_selection = st.slider("Which part of players?", min_value=0, max_value=10, value=0)
-            top_scorers = to_be_displayed[which_selection * offset : which_selection * offset + offset].id
-            fig = px.line(df[df.id.isin(top_scorers) & df.date.isin(datetimes)], x="date", y="wave", color="real_name", markers=True)
-            st.plotly_chart(fig)
+            today = st.checkbox("Overall?", value=True)
+
+            if today:
+                offset = st.slider("Offset for?", min_value=0, max_value=20, value=10)
+                which_selection = st.slider("Which part of players for?", min_value=0, max_value=30, value=0)
+                non_sus_df = df[~df["id"].isin(sus_ids)]
+                patch_df = non_sus_df[non_sus_df["patch"] == Patch.objects.get(version_minor=18)]
+                top_scorers = patch_df.sort_values("wave", ascending=False).drop_duplicates("id").reset_index(drop=True)
+                top_scorers = top_scorers[which_selection * offset : which_selection * offset + offset].id
+                fig = px.line(df[df.id.isin(top_scorers) & df.date.isin(datetimes)], x="date", y="wave", color="real_name", markers=True)
+                st.plotly_chart(fig)
+            else:
+                offset = st.slider("Offset?", min_value=0, max_value=20, value=10)
+                which_selection = st.slider("Which part of players?", min_value=0, max_value=10, value=0)
+                top_scorers = to_be_displayed[which_selection * offset : which_selection * offset + offset].id
+                fig = px.line(df[df.id.isin(top_scorers) & df.date.isin(datetimes)], x="date", y="wave", color="real_name", markers=True)
+                st.plotly_chart(fig)
 
     if not hidden_features and options.congrats_toggle:
         new_role_rows = []

@@ -1,7 +1,8 @@
 from cachetools import TTLCache, cached
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from pretty_html_table import build_table
 
+from dtower.sus.models import PlayerId
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
 
@@ -27,3 +28,23 @@ def plaintext_results(request):
 def plaintext_results__history(request, tourney_date):
     df = get_data(tourney_date)[["position", "tourney_name", "real_name", "wave"]]
     return HttpResponse(build_table(df, "green_light"))
+
+
+# def user_role(request, user):
+#     if user == "Skye-8263":
+#         user = "Skye"
+
+#     df = get_data()
+#     role = df[df.real_name == user].name_role.iloc[0]
+
+#     data = {
+#         "user": user,
+#         "player_ids": list(PlayerId.objects.filter(player__name=user).values_list("id", flat=True)),
+#         "role": {
+#             "league": role.league,
+#             "wave": role.wave_bottom,
+#             "color": role.color,
+#         },
+#     }
+
+#     return JsonResponse(data)

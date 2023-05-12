@@ -16,7 +16,11 @@ def compute_winners(df, options=None):
     if isinstance(patch, Patch):
         df = df[df.patch == patch]
 
-    how_many = st.slider("How many past tournaments?", min_value=1, max_value=len(df[df.position == 1]), value=len(df[df.position == 1]))
+    how_col, hole_col = st.columns([1, 1])
+
+    how_many = how_col.slider("How many past tournaments?", min_value=1, max_value=len(df[df.position == 1]), value=len(df[df.position == 1]))
+    hole = hole_col.slider("Hole size?", min_value=0.0, max_value=1.0, value=0.3)
+
     dates = sorted(df.date.unique(), reverse=True)[:how_many]
     df = df[df.date.isin(dates)]
 
@@ -24,7 +28,7 @@ def compute_winners(df, options=None):
 
     skye_scoring = {1: 10, 2: 5, 3: 3, 4: 2, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1}
 
-    additional_options = {}
+    additional_options = {"hole": hole}
 
     if scoring == "Only winners":
         winner_score = {1: 1, **dict(zip(range(2, 11), [0] * 9))}

@@ -23,4 +23,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("text/<str:tourney_date>/", plaintext_results__history),
     path("text/", plaintext_results),
+    # path("role/<str:user>/", user_role),
 ]

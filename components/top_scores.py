@@ -1,3 +1,4 @@
+import plotly.express as px
 import streamlit as st
 
 from dtower.tourney_results.constants import Options
@@ -31,6 +32,10 @@ def compute_top(df, options: Options):
         .applymap(color_position__top, subset=["position"])
         .apply(lambda row: [None, format_(row=row, df=condensed_df, column="name_role_color"), None, None, None], axis=1)
     )
+
+    fig = px.bar(condensed_df[:40], x="real_name", y="wave")
+    fig.update_yaxes(range=[min([condensed_df.iloc[40].wave - 20, 2000]), condensed_df.iloc[0].wave + 20])
+    st.plotly_chart(fig)
 
     if options.links_toggle:
         condensed_tbd = condensed_tbd.format(make_url, subset=["real_name"]).to_html(escape=False)
