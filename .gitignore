@@ -1,3 +1,13 @@
 SECRET_KEY
 dtower.egg-info
+components.egg-info
 db.sqlite3*
+test
+test2
+test3
+test4
+test5
+uploads
+results_cache
+backups
+unrelated_scripts
