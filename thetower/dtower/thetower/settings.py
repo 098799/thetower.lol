@@ -29,7 +29,7 @@ with open("SECRET_KEY", "r") as infile:
     SECRET_KEY = infile.read()
 
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "thetower.lol", "towerfans.lol"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "thetower.lol", "towerfans.lol", "65.109.4.244"]
 
 
 # Application definition
