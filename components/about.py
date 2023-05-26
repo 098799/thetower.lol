@@ -21,7 +21,7 @@ def compute_about(*args, **kwargs):
 
     st.write("Currently, sus people are:")
 
-    st.write(pd.DataFrame(get_sus_data()))
+    st.write(pd.DataFrame(get_sus_data()).to_html(escape=False), unsafe_allow_html=True)
 
     # st.header("Vindicated")
     # st.write("Previously on the sus list but vindicated by the tower staff:")

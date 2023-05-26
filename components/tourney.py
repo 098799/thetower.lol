@@ -163,9 +163,8 @@ compute_results_copper = compute_results
 function_string = f"compute_{'_'.join(functionality.lower().split())}"
 
 if function_string == "compute_search_all_leagues":
-    leagues = sorted(league_to_folder.items())
-
     my_bar = st.progress(0)
+    leagues = sorted(league_to_folder.items())
 
     dfs = []
 

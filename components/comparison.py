@@ -9,7 +9,7 @@ import streamlit as st
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
 from dtower.tourney_results.data import get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_top_18, make_url
-from dtower.tourney_results.models import Patch
+from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_comparison(df, options: Options):
@@ -119,7 +119,7 @@ def compute_comparison(df, options: Options):
             + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in last_5_tourneys]
             for data in datas
         ],
-        columns=["User", *last_5_tourneys],
+        columns=["User", *[datetime.datetime.fromtimestamp(int(date) / 1e9).date() for date in last_5_tourneys]],
     ).style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
 
     if options.links_toggle:

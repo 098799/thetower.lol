@@ -9,7 +9,7 @@ from streamlit_js_eval import get_page_location
 from dtower.tourney_results.constants import Options, sus_person
 from dtower.tourney_results.data import get_sus_ids
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
-from dtower.tourney_results.models import Patch
+from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_results(df, options: Options):
@@ -106,14 +106,17 @@ def compute_results(df, options: Options):
             if new_wave_string:
                 st.write(f"Congratulations for new PBs:<br>{new_wave_string}", unsafe_allow_html=True)
 
-    to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
+    if not hidden_features:
+        to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
 
     if show_hist:
         to_be_displayed = to_be_displayed[["id", "position", "tourney_name", "real_name", "wave"]]
         to_be_displayed = to_be_displayed.rename({"wave": tourney_file_name}, axis=1)
 
-        current_date_index = dates.index(tourney_file_name)
-        previous_4_dates = dates[current_date_index - 4 : current_date_index][::-1]
+        common_data = dates + datetimes
+
+        current_date_index = common_data.index(tourney_file_name)
+        previous_4_dates = common_data[current_date_index - 4 : current_date_index][::-1]
 
         prev_dfs = {date: df[df["date"] == date].reset_index(drop=True) for date in previous_4_dates}
 
@@ -156,13 +159,24 @@ def compute_results(df, options: Options):
             .applymap(am_i_sus, subset=["real_name"])
         )
     else:
-        to_be_displayed = (
-            to_be_displayed[["position", "tourney_name", "real_name", "wave"]]
-            .style.apply(lambda row: [None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None, None], axis=1)
-            .apply(lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}"], axis=1)
-            .applymap(color_position__top, subset=["position"])
-            .applymap(am_i_sus, subset=["real_name"])
-        )
+        if hidden_features:
+            to_be_displayed = (
+                to_be_displayed[["position", "tourney_name", "real_name", "wave", "id"]]
+                .style.apply(
+                    lambda row: [None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None, None, None], axis=1
+                )
+                .apply(lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}", None], axis=1)
+                .applymap(color_position__top, subset=["position"])
+                .applymap(am_i_sus, subset=["real_name"])
+            )
+        else:
+            to_be_displayed = (
+                to_be_displayed[["position", "tourney_name", "real_name", "wave"]]
+                .style.apply(lambda row: [None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None, None], axis=1)
+                .apply(lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}"], axis=1)
+                .applymap(color_position__top, subset=["position"])
+                .applymap(am_i_sus, subset=["real_name"])
+            )
 
     if options.links_toggle:
         try:

@@ -5,9 +5,9 @@ import plotly.express as px
 import streamlit as st
 
 from dtower.tourney_results.data import get_patches, load_tourney_results
-from dtower.tourney_results.models import Patch
+from dtower.tourney_results.models import PatchNew as Patch
 
-patches = sorted(get_patches(), key=lambda patch: patch.start_date, reverse=True)
+patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
 
 
 def compute_winners(df, options=None):

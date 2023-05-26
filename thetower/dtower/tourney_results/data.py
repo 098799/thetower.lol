@@ -21,7 +21,8 @@ import streamlit as st
 from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import champ, data_folder_name_mapping
 from dtower.tourney_results.formatting import color_position_barebones
-from dtower.tourney_results.models import Patch, Role, TourneyResult
+from dtower.tourney_results.models import PatchNew as Patch
+from dtower.tourney_results.models import Role, TourneyResult
 
 
 @lru_cache
@@ -31,7 +32,7 @@ def get_patches():
 
 def date_to_patch(date: datetime.datetime) -> Optional[Patch]:
     for patch in get_patches():
-        if date >= patch.start_date and date <= patch.end_date:
+        if date.date() >= patch.start_date and date.date() <= patch.end_date:
             return patch
 
 
@@ -231,8 +232,9 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
         key=lambda x: x[1],
     )
 
-    additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
-    result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
+    if hidden_features:
+        additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
+        result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
 
     return _load_tourney_results(result_files, league)
 
@@ -256,11 +258,22 @@ def get_player_list(df):
 
 
 def get_sus_data():
-    return SusPerson.objects.filter(sus=True).values("name", "player_id").order_by("name")
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
+
+    if hidden_features:
+        qs = SusPerson.objects.filter(sus=True).values("name", "player_id", "sus", "banned", "notes").order_by("name")
+    else:
+        qs = SusPerson.objects.filter(sus=True).values("name", "player_id").order_by("name")
+
+    return qs
 
 
 def get_sus_ids():
     return set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
+
+
+def get_banned_ids():
+    return set(SusPerson.objects.filter(banned=True).values_list("player_id", flat=True))
 
 
 if __name__ == "__main__":

@@ -6,9 +6,9 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
-from dtower.tourney_results.data import get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
+from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position
-from dtower.tourney_results.models import Patch
+from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_player_lookup(df, options: Options):
@@ -63,6 +63,9 @@ def compute_player_lookup(df, options: Options):
     current_role_color = player_df.iloc[0].name_role.color
 
     patches_active = player_df.patch.unique()
+
+    if id_ in get_banned_ids():
+        st.warning("This player is banned by Pog.")
 
     if id_ in sus_ids:
         st.error("This player is considered sus.")
@@ -192,7 +195,7 @@ def compute_player_lookup(df, options: Options):
     st.dataframe(to_be_displayed, use_container_width=True)
 
     for patch in patches_active[::-1]:
-        st.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}")
+        st.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + ("" if not patch.beta else " beta"))
         patch_df = player_df[player_df.patch == patch]
 
         patch_role_color = patch_df.iloc[-1].name_role.color

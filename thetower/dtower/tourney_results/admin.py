@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
-from dtower.tourney_results.models import Patch, Role, TourneyResult
+from dtower.tourney_results.models import PatchNew, Role, TourneyResult
 
 
 @admin.action(description="Restart the public app")
@@ -15,6 +15,11 @@ def restart_public_app(modeladmin, request, queryset):
 @admin.action(description="Restart the hidden app instance (thetower.lol:8502)")
 def restart_hidden_app(modeladmin, request, queryset):
     subprocess.call("systemctl restart streamlit", shell=True)
+
+
+@admin.action(description="Restart django")
+def restart_django(modeladmin, request, queryset):
+    subprocess.call("systemctl restart django", shell=True)
 
 
 @admin.register(TourneyResult)
@@ -37,13 +42,14 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
 
     list_filter = ["date", "league", "public"]
 
-    actions = [restart_public_app, restart_hidden_app]
+    actions = [restart_public_app, restart_hidden_app, restart_django]
 
 
-@admin.register(Patch)
-class PatchAdmin(SimpleHistoryAdmin):
+@admin.register(PatchNew)
+class PatchNewAdmin(SimpleHistoryAdmin):
     list_display = (
         "version_minor",
+        "beta",
         "start_date",
         "end_date",
     )

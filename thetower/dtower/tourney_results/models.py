@@ -5,19 +5,23 @@ from simple_history.models import HistoricalRecords
 from dtower.tourney_results.constants import leagues_choices, wave_border_choices
 
 
-class Patch(models.Model):
-    version_minor = models.IntegerField(primary_key=True, help_text="The xx in 0.xx version.")
+class PatchNew(models.Model):
+    class Meta:
+        verbose_name_plural = "pathes"
+
+    version_minor = models.SmallIntegerField(blank=False, null=False, help_text="The xx in 0.xx version.")
+    beta = models.BooleanField(blank=False, null=False, default=False, help_text="Maybe it's just a beta version of this patch?")
     start_date = models.DateField(blank=False, null=False, help_text="First tourney when patch was enforced.")
     end_date = models.DateField(blank=False, null=False, help_text="Last tourney when patch was in use.")
 
     def __str__(self):
-        return f"0.{self.version_minor}"
+        return f"0.{self.version_minor}{'' if not self.beta else ' beta'}"
 
 
 class Role(models.Model):
-    wave_bottom = models.IntegerField(blank=False, null=False, choices=[(wave, wave) for wave in wave_border_choices])
-    wave_top = models.IntegerField(blank=False, null=False, choices=[(wave, wave) for wave in wave_border_choices])
-    patch = models.ForeignKey(Patch, null=False, blank=False, related_name="roles", on_delete=models.CASCADE, help_text="Patch related to a given role.")
+    wave_bottom = models.SmallIntegerField(blank=False, null=False, choices=[(wave, wave) for wave in wave_border_choices])
+    wave_top = models.SmallIntegerField(blank=False, null=False, choices=[(wave, wave) for wave in wave_border_choices])
+    patch = models.ForeignKey(PatchNew, null=True, blank=True, related_name="roles", on_delete=models.CASCADE, help_text="Patch related to a given role.")
     league = models.CharField(blank=False, null=False, choices=leagues_choices, help_text="Which league are those results from?", max_length=16)
     color = ColorField(max_length=255, null=False, blank=False)
 
@@ -47,3 +51,12 @@ class TourneyResult(models.Model):
 
     def __str__(self):
         return f"({self.pk}): {self.league} {self.date.isoformat()}"
+
+
+# class TourneyRow(models.Model):
+#     player = models.ForeignKey(
+#         KnownPlayer, null=False, blank=False, related_name="results", on_delete=models.CASCADE, help_text="Player achieving a given result."
+#     )
+#     nickname = models.CharField(max_length=32, null=False, blank=False, help_text="Tourney name")
+#     wave = models.SmallIntegerField(null=False, blank=False, help_text="Tourney score")
+#     result = models.ForeignKey(TourneyResult, null=False, blank=False, related_name="rows", on_delete=models.CASCADE, help_text="Full results file")

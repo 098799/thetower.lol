@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
@@ -7,16 +8,24 @@ from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 
 @admin.register(SusPerson)
 class SusPersonAdmin(SimpleHistoryAdmin):
+    def _link(self, obj):
+        return format_html(f"<a href='http://thetower.lol:8502/?player={obj.player_id}'>http://thetower.lol:8502/?player={obj.player_id}</a>")
+
+    _link.short_description = "link"
+
     list_display = (
         "player_id",
         "name",
-        "notes",
         "sus",
+        "banned",
+        "_link",
+        "notes",
     )
 
     list_editable = (
         "notes",
         "sus",
+        "banned",
     )
 
     search_fields = (
@@ -25,7 +34,11 @@ class SusPersonAdmin(SimpleHistoryAdmin):
         "notes",
     )
 
-    list_filter = ("sus",)
+    list_filter = (
+        "sus",
+        "banned",
+        "notes",
+    )
 
 
 class IdInline(admin.TabularInline):
@@ -35,7 +48,7 @@ class IdInline(admin.TabularInline):
 
 
 @admin.register(KnownPlayer)
-class SusPersonAdmin(SimpleHistoryAdmin):
+class KnownPlayerAdmin(SimpleHistoryAdmin):
     def _ids(self, obj):
         return mark_safe("<br>".join(obj.ids.all().values_list("id", flat=True)))
 
