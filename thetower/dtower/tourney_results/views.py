@@ -1,3 +1,4 @@
+import os
 from functools import partial
 
 from cachetools import TTLCache, cached
@@ -10,6 +11,8 @@ from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
 @cached(cache=TTLCache(maxsize=10, ttl=600))
 def get_data(league, tourney_date=None):
+    os.environ["LEAGUE_SWITCHER"] = "True"
+
     df = load_tourney_results(league)
     df = df[~df.id.isin(get_sus_ids())]
 

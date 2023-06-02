@@ -22,6 +22,11 @@ def restart_django(modeladmin, request, queryset):
     subprocess.call("systemctl restart django", shell=True)
 
 
+@admin.action(description="Publicize")
+def publicize(modeladmin, request, queryset):
+    queryset.update(public=True)
+
+
 @admin.register(TourneyResult)
 class TourneyResultAdmin(SimpleHistoryAdmin):
     list_display = (
@@ -42,7 +47,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
 
     list_filter = ["date", "league", "public"]
 
-    actions = [restart_public_app, restart_hidden_app, restart_django]
+    actions = [publicize, restart_public_app, restart_hidden_app, restart_django]
 
 
 @admin.register(PatchNew)

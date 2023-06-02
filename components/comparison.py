@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 from statistics import median, stdev
 from urllib.parse import urlencode
 
@@ -109,6 +110,24 @@ def compute_comparison(df, options: Options):
         st.dataframe(summary, use_container_width=True)
 
     pd_datas = pd.concat(datas)
+
+    if len(users) == 2 and "Obligatory" in users and any("rival" in user.lower() for user in users):
+        mapping = defaultdict(list)
+
+        for _, row in pd_datas.iterrows():
+            mapping[row.date].append((row.real_name, row.wave))
+
+        betters = []
+
+        for value in mapping.values():
+            if len(value) == 2:
+                better = max(value, key=lambda x: x[1])
+                betters.append(better)
+
+        st.write(
+            f"Oh the great rivalry! Out of all the times they clashed, Obligatory came out ahead {len([better for better in betters if better[0].startswith('Obli')])} times while rival prevailed {len([better for better in betters if better[0].startswith('Char')])} times."
+        )
+        st.write("May they clash again soon.")
 
     last_5_tourneys = sorted(pd_datas.date.unique())[-5:][::-1]
     last_results = pd.DataFrame(

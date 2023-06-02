@@ -37,7 +37,7 @@ while True:
             with open(file_name, "rb") as infile:
                 contents = infile.read()
         except FileNotFoundError:
-            print("File not found, maybe later")
+            print(f"{file_name=} not found, maybe later")
             continue
 
         print("Creating file object")

@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 
 import pandas as pd
@@ -6,6 +7,7 @@ import streamlit as st
 
 from dtower.tourney_results.constants import Options
 from dtower.tourney_results.data import get_sus_ids
+from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
@@ -16,9 +18,12 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
         unique_roles = sorted(non_sus_df.wave_role.unique(), key=lambda role: role.wave_bottom)
         unique_dates = pd.to_datetime(non_sus_df.date.unique())
 
-        counts_data = {role: {date: 0 for date in unique_dates} for role in unique_roles}
-
         counts_per_date = non_sus_df.groupby(["date", "wave_role"])
+
+        date_counts = non_sus_df.groupby("date").count()
+        total_per_date = {date: count for date, count in zip(date_counts.index, date_counts.id)}
+
+        counts_data = {role: {date: 0 for date in unique_dates} for role in unique_roles}
 
         for (date, role), counts in counts_per_date:
             count = counts.count()[0] if not counts.empty else 0
@@ -41,6 +46,25 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
     fig = go.Figure(data=list(plot_data.values()))
     fig.update_layout(barmode="stack", title="Role counts per tournament (non-sus), courtesy of ObsUK")
+
+    st.plotly_chart(fig)
+
+    glory_patch = Patch.objects.get(version_minor=16)
+
+    plot_data = {
+        role: go.Bar(
+            name=f"{role.wave_bottom} v{role.patch.version_minor}",
+            x=[date for date in dates if date >= glory_patch.start_date and date <= glory_patch.end_date],
+            y=[value for date, value in count_data.items() if date >= glory_patch.start_date and date <= glory_patch.end_date],
+            marker_color=role.color,
+            opacity=0.8,
+        )
+        for role, count_data in counts_data.items()
+        if role.patch.version_minor == glory_patch.version_minor
+    }
+
+    fig = go.Figure(data=list(plot_data.values()))
+    fig.update_layout(barmode="stack", title="Glory days of 0.16-0.17")
 
     st.plotly_chart(fig)
 

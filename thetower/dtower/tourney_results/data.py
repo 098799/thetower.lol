@@ -154,6 +154,9 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> 
         if not hidden_features:
             if league_switcher:
                 cutoff = 500
+
+                if league != champ:
+                    cutoff = 100
             else:
                 cutoff = 200
 
