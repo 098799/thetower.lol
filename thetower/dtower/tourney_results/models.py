@@ -7,7 +7,7 @@ from dtower.tourney_results.constants import leagues_choices, wave_border_choice
 
 class PatchNew(models.Model):
     class Meta:
-        verbose_name_plural = "pathes"
+        verbose_name_plural = "patches"
 
     version_minor = models.SmallIntegerField(blank=False, null=False, help_text="The xx in 0.xx version.")
     beta = models.BooleanField(blank=False, null=False, default=False, help_text="Maybe it's just a beta version of this patch?")

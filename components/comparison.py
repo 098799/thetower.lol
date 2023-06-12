@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
-from dtower.tourney_results.data import get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
+from dtower.tourney_results.data import get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_top_18, make_url
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -29,14 +29,11 @@ def compute_comparison(df, options: Options):
 
     datas = []
 
-    graph_options = [options.default_graph.value] + [value for value in Graph.__members__.keys() if value != options.default_graph.value]
+    patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
+    graph_options = [options.default_graph.value] + [
+        value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
+    ]
     patch = st.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
-
-    if patch.startswith("patch"):
-        version = int(patch.split("_")[1])
-        patch = Patch.objects.get(version_minor=version)
-
-    patch_018 = Patch.objects.get(version_minor=18)
 
     id_mapping = get_id_lookup()
 
@@ -66,7 +63,7 @@ def compute_comparison(df, options: Options):
         if isinstance(patch, Patch):
             patch_df = player_df[player_df.patch == patch]
 
-            if patch == patch_018:
+            if patch.version_minor >= 18:
                 colors, stratas = colors_018, stratas_boundaries_018
             else:
                 colors, stratas = colors_017, stratas_boundaries
@@ -139,7 +136,9 @@ def compute_comparison(df, options: Options):
             for data in datas
         ],
         columns=["User", *[datetime.datetime.fromtimestamp(int(date) / 1e9).date() for date in last_5_tourneys]],
-    ).style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
+    )
+
+    last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
 
     if options.links_toggle:
         to_be_displayed = last_results.format(make_url, subset=["User"]).to_html(escape=False)
@@ -161,18 +160,18 @@ def compute_comparison(df, options: Options):
                 opacity=0.4,
             )
 
-    start_16 = Patch.objects.get(version_minor=16).start_date - datetime.timedelta(days=1)
-    start_18 = Patch.objects.get(version_minor=18).start_date - datetime.timedelta(days=1)
+    for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
+        name = f"0.{version_minor}"
+        beta = " beta" if beta else ""
 
-    for start, name in [(start_16, "0.16"), (start_18, "0.18")]:
         if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(days=3):
             continue
 
         fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
         fig.add_annotation(
             x=start,
-            y=pd_datas.wave.max() - 100,
-            text=f"Patch {name} start",
+            y=tbdf.wave.max() - 300 * (index % 2 + 1),
+            text=f"Patch {name}{beta} start",
             showarrow=True,
             arrowhead=1,
         )

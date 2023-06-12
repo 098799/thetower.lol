@@ -4,6 +4,7 @@ from simple_history.models import HistoricalRecords
 
 class KnownPlayer(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True, help_text="Player's friendly name, e.g. common discord handle")
+    discord_id = models.CharField(max_length=50, blank=True, null=True, help_text="Discord numeric id")
 
     def __str__(self):
         return f"{self.name}"

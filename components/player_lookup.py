@@ -6,7 +6,7 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
-from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_player_list, get_sus_ids, load_tourney_results
+from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -75,21 +75,18 @@ def compute_player_lookup(df, options: Options):
         unsafe_allow_html=True,
     )
 
-    graph_options = [options.default_graph.value] + [value for value in Graph.__members__.keys() if value != options.default_graph.value]
+    patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
+    graph_options = [options.default_graph.value] + [
+        value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
+    ]
     patch_col, average_col = st.columns([1, 1])
     patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
     rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
 
-    if patch.startswith("patch"):
-        version = int(patch.split("_")[1])
-        patch = Patch.objects.get(version_minor=version)
-
-    patch_018 = Patch.objects.get(version_minor=18)
-
     if isinstance(patch, Patch):
         patch_df = player_df[player_df.patch == patch]
 
-        if patch == patch_018:
+        if patch.version_minor >= 18:
             colors, stratas = colors_018, stratas_boundaries_018
         else:
             colors, stratas = colors_017, stratas_boundaries
@@ -103,9 +100,6 @@ def compute_player_lookup(df, options: Options):
     tbdf = patch_df.reset_index(drop=True)
     tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
     tbdf["position_average"] = tbdf.position.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
-
-    start_16 = Patch.objects.get(version_minor=16).start_date - datetime.timedelta(days=1)
-    start_18 = Patch.objects.get(version_minor=18).start_date - datetime.timedelta(days=1)
 
     if len(tbdf) > 1:
         graph_position_instead = st.checkbox("Graph position instead")
@@ -162,15 +156,18 @@ def compute_player_lookup(df, options: Options):
             )
             fig.update_yaxes(secondary_y=True, range=[200, 0])
 
-        for start, name in [(start_16, "0.16"), (start_18, "0.18")]:
+        for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
+            name = f"0.{version_minor}"
+            beta = " beta" if beta else ""
+
             if start < tbdf.date.min() - datetime.timedelta(days=2) or start > tbdf.date.max() + datetime.timedelta(days=3):
                 continue
 
             fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
             fig.add_annotation(
                 x=start,
-                y=tbdf.position.min() if graph_position_instead else (tbdf.wave.max() - 100),
-                text=f"Patch {name} start",
+                y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (tbdf.wave.max() - 300 * (index % 2 + 1)),
+                text=f"Patch {name}{beta} start",
                 showarrow=True,
                 arrowhead=1,
             )

@@ -22,9 +22,11 @@ def compute_results(df, options: Options):
     tourneys = sorted(datetimes + dates, reverse=True)
     sus_ids = get_sus_ids()
 
-    tourney_col, debug_col = st.columns([5, 1])
+    tourney_col, results_col, debug_col = st.columns([3, 2, 1])
     tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
-    show_hist = debug_col.checkbox("Historical data?", value=False)
+
+    show_hist = debug_col.checkbox("Hist. data?", value=False)
+    congrats_toggle = debug_col.checkbox("Congrats?", value=options.congrats_toggle)
 
     filtered_df = df[df["date"] == tourney_file_name].reset_index(drop=True)
     filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (
@@ -36,6 +38,8 @@ def compute_results(df, options: Options):
     filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] = (
         filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] + " 🥉"
     )
+    prefilter_results = results_col.slider("Show how many results?", min_value=50, max_value=len(filtered_df), value=100, step=50)
+    filtered_df = filtered_df.iloc[:prefilter_results]
 
     to_be_displayed = filtered_df.copy()
     to_be_displayed["real_name"] = [sus_person if id_ in sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
@@ -61,7 +65,7 @@ def compute_results(df, options: Options):
                 fig = px.line(df[df.id.isin(top_scorers) & df.date.isin(datetimes)], x="date", y="wave", color="real_name", markers=True)
                 st.plotly_chart(fig)
 
-    if not hidden_features and options.congrats_toggle:
+    if not hidden_features and congrats_toggle:
         new_role_rows = []
         new_pbs = []
 

@@ -54,6 +54,6 @@ class KnownPlayerAdmin(SimpleHistoryAdmin):
 
     _ids.short_description = "Ids"
 
-    list_display = ("name", "_ids")
-    search_fields = ("name",)
+    list_display = ("name", "discord_id", "_ids")
+    search_fields = ("name", "discord_id")
     inlines = (IdInline,)

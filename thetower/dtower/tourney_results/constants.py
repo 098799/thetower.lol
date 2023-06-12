@@ -63,9 +63,6 @@ strata_to_color_018 = dict(zip(stratas_boundaries_018, colors_018))
 class Graph(Enum):
     all = "all"
     last_16 = "last_16"
-    patch_018 = "patch_018"
-    patch_016 = "patch_016"
-    patch_015 = "patch_015"
 
 
 class Options(BaseModel):
@@ -105,4 +102,4 @@ us_to_jim = {
 }
 
 
-wave_border_choices = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3500, 4000, 100000]
+wave_border_choices = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3500, 4000, 4500, 5000, 100000, 1000000]
