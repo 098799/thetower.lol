@@ -99,12 +99,14 @@ def load_data(folder):
 
 
 def get_player_id_lookup():
-    return dict(PlayerId.objects.all().values_list("id", "player__name"))
+    return dict(PlayerId.objects.filter(player__approved=True).values_list("id", "player__name"))
 
 
 def get_id_lookup():
-    player_primary_id = {name: id_ for id_, name, primary in PlayerId.objects.all().values_list("id", "player__name", "primary") if primary}
-    return {id_: player_primary_id[name] for id_, name in PlayerId.objects.all().values_list("id", "player__name")}
+    player_primary_id = {
+        name: id_ for id_, name, primary in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name", "primary") if primary
+    }
+    return {id_: player_primary_id[name] for id_, name in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name")}
 
 
 def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[str, str]:
@@ -196,6 +198,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> 
     load_data_bar.progress(0.6)
 
     df["real_name"] = df.id.map(lambda id_: id_to_real_name[id_])
+
     df["patch"] = df.date.map(date_to_patch)
     df["patch_version"] = df.patch.map(lambda x: x.version_minor)
 
@@ -219,6 +222,10 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> 
 
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def load_tourney_results(folder: str) -> pd.DataFrame:
+    return load_tourney_results__uncached(folder)
+
+
+def load_tourney_results__uncached(folder: str) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
 
@@ -235,7 +242,7 @@ def load_tourney_results(folder: str) -> pd.DataFrame:
         key=lambda x: x[1],
     )
 
-    if hidden_features:
+    if hidden_features and league == champ:
         additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
         result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
 

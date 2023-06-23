@@ -1,19 +1,20 @@
-import asyncio
 import logging
 import os
+from collections import defaultdict
 
 import discord
 import django
 from asgiref.sync import sync_to_async
+from tqdm import tqdm
 
-from dtower.tourney_results.constants import champ, league_to_folder
-from dtower.tourney_results.data import load_tourney_results
+from dtower.tourney_results.constants import league_to_folder, leagues
+from dtower.tourney_results.data import load_tourney_results__uncached
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
 django.setup()
 
-from dtower.sus.models import KnownPlayer
+from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.models import PatchNew as Patch
 
 intents = discord.Intents.default()
@@ -23,34 +24,68 @@ intents.members = True
 
 client = discord.Client(intents=intents)
 
-handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
-handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
-logger = logging.getLogger("discord")
-logger.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+
+handle_outside = bool(os.getenv("GO"))
 
 
-@client.event
-async def on_ready():
-    logger.info(f"We have logged in as {client.user}")
+async def get_member(guild, discord_id, message=None):
+    try:
+        return await guild.fetch_member(discord_id)
+    except discord.errors.NotFound as exc:
+        logging.info(f"Failed to fetch {discord_id=}")
+
+        if message:
+            await message.channel.send(f"😱😱😱 Failed to fetch data for discord_id {discord_id}, please review.")
+
+            raise exc
 
 
-@client.event
-async def on_message(message):
-    if message.channel.id == 930105733998080062 and message.content.startswith("!add_roles"):
-        league = champ
-        df = load_tourney_results(league_to_folder[league])
+async def handle_adding(limit, message=None, verbose=False):
+    skipped = 0
+    unchanged = defaultdict(int)
+    changed = defaultdict(int)
 
-        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(discord_id__isnull=False)
-        patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=19, beta=False)
-        tower = await client.fetch_guild(850137217828388904)
-        roles = await tower.fetch_roles()
-        champ_roles = dict(sorted([(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith("Champ")], reverse=True))
+    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
 
-        for player in players:
-            logger.info(f"Checking {player=}")
-            discord_player = await tower.fetch_member(int(player.discord_id))
+    if verbose:
+        await message.channel.send(f"Starting the processing of {players.count() if not limit else limit} users... :rocket:")
+
+    all_leagues = leagues
+
+    dfs = {league: load_tourney_results__uncached(league_to_folder[league]) for league in all_leagues}
+
+    patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=19, beta=False)
+    tower = await client.fetch_guild(850137217828388904)
+    roles = await tower.fetch_roles()
+
+    player_iter = players.order_by("-id")[:limit] if limit else players.order_by("-id")
+
+    player_id_present_role_id = 1119950199209611274
+    player_id_present_role = [role for role in roles if role.id == player_id_present_role_id][0]
+
+    added_role = 0
+    had_role = 0
+
+    for player in tqdm(player_iter):
+        ids = await sync_to_async(player.ids.all().values_list, thread_sensitive=True)("id", flat=True)
+        discord_player = None
+
+        for league in all_leagues:
+            safe_league_prefix = league[:-1]
+            league_roles = dict(
+                sorted(
+                    [
+                        (int(role.name.split()[-1]), role)
+                        for role in roles
+                        if role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
+                    ],
+                    reverse=True,
+                )
+            )
+            df = dfs[league]
+
             player_df = df[df["real_name"] == player.name]
+            player_df = player_df[player_df["id"].isin(ids)]
             patch_df = player_df[player_df["patch"] == patch]
 
             if patch_df.empty:
@@ -58,9 +93,13 @@ async def on_message(message):
 
             wave_bottom = patch_df.iloc[-1].name_role.wave_bottom
 
-            rightful_role = champ_roles[wave_bottom]
+            if wave_bottom == 0:
+                continue
 
-            current_champ_roles = [role for role in discord_player.roles if role.name.startswith("Champ")]
+            rightful_role = league_roles[wave_bottom]
+
+            discord_player = await get_member(tower, int(player.discord_id), message=message)
+            current_champ_roles = [role for role in discord_player.roles if role.name.startswith(safe_league_prefix) and role.name.strip().endswith("0")]
             current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
 
             if all(wave_bottom > wave for wave in current_champ_waves):
@@ -68,91 +107,94 @@ async def on_message(message):
                     await discord_player.remove_roles(champ_role)
 
                 await discord_player.add_roles(rightful_role)
-                logger.info(f"Added {rightful_role=} to {discord_player=}")
+                changed[league] += 1
+                logging.info(f"Added {rightful_role=} to {discord_player=}")
 
-    if message.channel.id == 930105733998080062 and message.content.startswith("!remove_all_roles"):
-        tower = await client.fetch_guild(850137217828388904)
-        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(discord_id__isnull=False)
-        roles = await tower.fetch_roles()
-        champ_roles = dict(sorted([(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith("Champ")], reverse=True))
+            else:
+                unchanged[league] += 1
 
-        for player in players:
-            logger.info(f"Checking {player=}")
-            discord_player = await tower.fetch_member(int(player.discord_id))
+            break
 
-            current_champ_roles = [role for role in discord_player.roles if role.name.startswith("Champ")]
+        else:
+            skipped += 1
 
-            for champ_role in current_champ_roles:
-                await discord_player.remove_roles(champ_role)
+        if discord_player is None:
+            discord_player = await get_member(tower, int(player.discord_id), message=message)
 
-            await discord_player.add_roles(champ_roles[500])
-            logger.info(f"Removed roles for {player=}")
+        has_player_id_present_role = [role for role in discord_player.roles if role.id == player_id_present_role_id]
 
-    if message.channel.id == 930105733998080062 and message.content.startswith("!remove_role"):
-        discord_player = message.author
+        if not has_player_id_present_role:
+            await discord_player.add_roles(player_id_present_role)
+            added_role += 1
+        else:
+            had_role += 1
 
-        tower = await client.fetch_guild(850137217828388904)
-        current_champ_roles = [role for role in discord_player.roles if role.name.startswith("Champ")]
+    logging.info(f"{skipped=}")
 
-        for champ_role in current_champ_roles:
-            await discord_player.remove_roles(champ_role)
-
-    # if message.channel.id == 930105733998080062 and message.content.startswith("!remove_roles"):
-    #     tower = await client.fetch_guild(850137217828388904)
-    #     breakpoint()
-    #     discord_player = await tower.fetch_member(message)
-    # elif message.channel.id == 930105733998080062 and message.content.startswith("!add_roles"):
-    #     tower = await client.fetch_guild(850137217828388904)
-
-    #     roles = await tower.fetch_roles()
-
-    #     champ_roles = [role for role in roles if role.name.strip().startswith("Champ")]
-    #     breakpoint()
-    #     ...
-
-    # if message.author.id == 177504210177228801 and message.content.startswith("!remove_roles"):
-    #     guild = await client.fetch_guild(1117480385010466886)
-
-    #     for role in guild.roles:
-    #         if role.name == "foo":
-    #             async for member in guild.fetch_members():
-    #                 if role in member.roles:
-    #                     await member.remove_roles(role)
-    #                     logger.info(f"Removed {role=} to {member=}")
-
-    # elif message.author.id == 177504210177228801 and message.content.startswith("!add_roles"):
-    #     guild = await client.fetch_guild(1117480385010466886)
-
-    #     for role in guild.roles:
-    #         if role.name == "foo":
-    #             async for member in guild.fetch_members():
-    #                 if role not in member.roles:
-    #                     await member.add_roles(role)
-    #                     logger.info(f"Added {role=} to {member=}")
+    if verbose:
+        await message.channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged=}, \n{changed=}.")
+        await message.channel.send(f"special Pog role: {had_role=}, {added_role=}")
+    logging.info("**********Done**********")
 
 
-# @client.event
-# async def on_message(message):
-#     breakpoint()
-#     if message.author.id == 177504210177228801 and message.content.startswith("!remove_roles"):
-#         guild = await client.fetch_guild(1117480385010466886)
+@client.event
+async def on_ready():
+    if handle_outside:
+        await handle_adding(limit=None, message=None, verbose=False)
+        exit()
 
-#         for role in guild.roles:
-#             if role.name == "foo":
-#                 async for member in guild.fetch_members():
-#                     if role in member.roles:
-#                         await member.remove_roles(role)
-#                         logger.info(f"Removed {role=} to {member=}")
+    logging.info(f"We have logged in as {client.user}")
 
-#     elif message.author.id == 177504210177228801 and message.content.startswith("!add_roles"):
-#         guild = await client.fetch_guild(1117480385010466886)
 
-#         for role in guild.roles:
-#             if role.name == "foo":
-#                 async for member in guild.fetch_members():
-#                     if role not in member.roles:
-#                         await member.add_roles(role)
-#                         logger.info(f"Added {role=} to {member=}")
+@client.event
+async def on_message(message):
+    try:
+        if message.channel.id == 930105733998080062 and message.content.startswith("!add_roles"):
+            try:
+                limit = int(message.content.split()[1])
+            except Exception:
+                limit = None
+
+            await handle_adding(limit, message, verbose=True)
+
+        # elif message.channel.id == 930105733998080062 and message.author.id != 1117480944153145364:
+        elif message.channel.id == 1117867265375879259 and message.author.id != 1117480944153145364:
+            try:
+                if 17 > len(message.content) > 12 and message.attachments:
+                    player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
+                        discord_id=message.author.id, defaults=dict(approved=False, name=message.author.name)
+                    )
+                    await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(
+                        id=message.content, player_id=player.id, defaults=dict(primary=True)
+                    )
+                    await message.add_reaction("✅")
+                else:
+                    await message.add_reaction("⁉️")
+            except Exception as exc:
+                await message.channel.send(f"Something went terribly wrong, please debug me. \n\n {exc}")
+                raise exc
+
+        elif message.channel.id == 930105733998080062 and message.content.startswith("!remove_all_roles"):
+            tower = await client.fetch_guild(850137217828388904)
+            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
+            roles = await tower.fetch_roles()
+            champ_roles = dict(sorted([(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith("Champ")], reverse=True))
+
+            for player in players:
+                logging.info(f"Checking {player=}")
+                discord_player = await tower.fetch_member(int(player.discord_id))
+
+                current_champ_roles = [role for role in discord_player.roles if role.name.startswith("Champ")]
+
+                for champ_role in current_champ_roles:
+                    await discord_player.remove_roles(champ_role)
+
+                await discord_player.add_roles(champ_roles[500])
+                logging.info(f"Removed roles for {player=}")
+
+    except Exception as exc:
+        await message.channel.send(f"😱😱😱 Something went terribly wrong, please debug me. \n\n {exc}")
+        raise exc
 
 
 client.run(os.getenv("DISCORD_TOKEN"), log_level=logging.INFO)

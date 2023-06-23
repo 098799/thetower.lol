@@ -19,10 +19,10 @@ def compute_about(*args, **kwargs):
         """It is important to note that **not all people listed here are confirmed hackers**!! In fact, Pog has explicitly stated that some of them may not be hackers, or at least it cannot be proven at this point."""
     )
 
-    st.write("Currently, sus people are:")
+    # st.write("Currently, sus people are:")
 
-    st.write(pd.DataFrame(get_sus_data()).to_html(escape=False), unsafe_allow_html=True)
+    # st.write(pd.DataFrame(get_sus_data()).to_html(escape=False), unsafe_allow_html=True)
 
-    # st.header("Vindicated")
-    # st.write("Previously on the sus list but vindicated by the tower staff:")
-    # st.write(sorted([nickname for nickname, id_ in rehabilitated]))
+    # # st.header("Vindicated")
+    # # st.write("Previously on the sus list but vindicated by the tower staff:")
+    # # st.write(sorted([nickname for nickname, id_ in rehabilitated]))

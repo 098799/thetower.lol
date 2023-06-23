@@ -1,10 +1,12 @@
 import datetime
+import os
 from urllib.parse import urlencode
 
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
+from dtower.sus.models import SusPerson
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
 from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position
@@ -12,10 +14,16 @@ from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_player_lookup(df, options: Options):
-    sus_ids = get_sus_ids()
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
 
     first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
+
+    sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
+
+    if not hidden_features:
+        sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
+        player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
 
     if options.current_player is not None:
         player_list = [options.current_player] + player_list

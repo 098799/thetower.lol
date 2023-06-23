@@ -12,8 +12,8 @@ colors = ["#FFF", "#992d22", "#e390dc", "#ff65b8", "#d69900", "#06d68a", "#3970e
 
 strata_to_color = dict(zip(stratas, colors))
 
-position_stratas = [0, 10, 50, 100, 200][::-1]
-position_colors = ["#333333", "#5555FF", "green", the_color, "red"][::-1]
+position_stratas = [0, 10, 50, 100, 200, 2000][::-1]
+position_colors = ["#333333", "#5555FF", "green", the_color, "red", "#CCCCCC"][::-1]
 
 champ = "Champions"
 plat = "Platinum"

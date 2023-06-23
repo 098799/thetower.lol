@@ -8,36 +8,48 @@ django.setup()
 
 
 import datetime
+import subprocess
 import time
+from glob import glob
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from dtower.tourney_results.constants import leagues, us_to_jim
-from dtower.tourney_results.get_results import get_file_name, get_file_path, get_last_date
+from dtower.tourney_results.constants import champ, leagues, us_to_jim
+from dtower.tourney_results.get_results import get_file_name, get_last_date
 from dtower.tourney_results.models import TourneyResult
 
 while True:
     for league in leagues:
         print(f"{datetime.datetime.now()} Trying to upload results for {league=} and {get_last_date()=}")
 
-        if "T" in get_last_date():
+        current_datetime = get_last_date()
+
+        if "T" in current_datetime:
             print("Tourney day, continuing...")
-            continue
 
-        last_results = TourneyResult.objects.filter(date=get_last_date(), league=league)
+            continue  # change me
 
-        if last_results:
-            print("Nothing new")
-            continue
+            if league != champ:
+                continue
+
+            current_date = current_datetime.split("T")[0]
+        else:
+            last_results = TourneyResult.objects.filter(date=get_last_date(), league=league)
+
+            if last_results:
+                print("Nothing new")
+                continue
+
+            current_date = current_datetime
 
         print("Something new")
-        file_name = get_file_path(us_to_jim[league])
+        last_file = sorted(glob(f"/root/tourney/results_cache/{us_to_jim[league]}/{current_date}*"))[-1]
 
         try:
-            with open(file_name, "rb") as infile:
+            with open(last_file, "rb") as infile:
                 contents = infile.read()
         except FileNotFoundError:
-            print(f"{file_name=} not found, maybe later")
+            print(f"{last_file=} not found, maybe later")
             continue
 
         print("Creating file object")
@@ -48,9 +60,14 @@ while True:
         )
         print("Creating tourney_result")
         TourneyResult.objects.update_or_create(
-            date=get_last_date(),
+            date=current_date,
             league=league,
-            result_file=csv_file,
+            defaults=dict(
+                result_file=csv_file,
+            ),
         )
+
+        if "T" not in current_datetime:
+            subprocess.call("systemctl restart streamlit", shell=True)
 
     time.sleep(3600)

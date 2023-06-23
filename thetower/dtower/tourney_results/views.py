@@ -8,8 +8,10 @@ from pretty_html_table import build_table
 from dtower.tourney_results.constants import champ, league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
+cache = TTLCache(maxsize=10, ttl=600)
 
-@cached(cache=TTLCache(maxsize=10, ttl=600))
+
+@cached(cache=cache)
 def get_data(league, tourney_date=None):
     os.environ["LEAGUE_SWITCHER"] = "True"
 
@@ -31,23 +33,3 @@ def plaintext_results(request, league, tourney_date=None):
 
 
 plaintext_results__champ = partial(plaintext_results, league=champ)
-
-
-# def user_role(request, user):
-#     if user == "Skye-8263":
-#         user = "Skye"
-
-#     df = get_data()
-#     role = df[df.real_name == user].name_role.iloc[0]
-
-#     data = {
-#         "user": user,
-#         "player_ids": list(PlayerId.objects.filter(player__name=user).values_list("id", flat=True)),
-#         "role": {
-#             "league": role.league,
-#             "wave": role.wave_bottom,
-#             "color": role.color,
-#         },
-#     }
-
-#     return JsonResponse(data)

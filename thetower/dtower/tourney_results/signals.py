@@ -15,7 +15,8 @@ def recalculate_results(sender, instance, signal, created, update_fields, raw, u
         return
 
     if instance.public == False:
-        subprocess.call("systemctl restart streamlit", shell=True)
+        # subprocess.call("systemctl restart streamlit", shell=True)
+        ...
     else:
         if instance.league == champ:
             subprocess.call("systemctl restart streamlit2", shell=True)

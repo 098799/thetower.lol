@@ -134,23 +134,7 @@ def compute_results(df, options: Options):
                     None,
                     None,
                     f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}",
-                    *([None] * (len(previous_4_dates) + 2)),
-                ],
-                axis=1,
-            )
-            .apply(
-                lambda row: [
-                    None,
-                    None,
-                    None,
                     f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
-                    *([None] * (len(previous_4_dates) + 1)),
-                ],
-                axis=1,
-            )
-            .apply(
-                lambda row: [
-                    *([None] * 4),
                     *[
                         f"color: {mini_df.wave_role_color.iloc[0] if not (mini_df := prev_df[prev_df.id==row.id]).empty else '#FFF'}"
                         for prev_df in prev_dfs.values()
@@ -167,17 +151,30 @@ def compute_results(df, options: Options):
             to_be_displayed = (
                 to_be_displayed[["position", "tourney_name", "real_name", "wave", "id"]]
                 .style.apply(
-                    lambda row: [None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None, None, None], axis=1
+                    lambda row: [
+                        None,
+                        f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}",
+                        None,
+                        f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
+                        None,
+                    ],
+                    axis=1,
                 )
-                .apply(lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}", None], axis=1)
                 .applymap(color_position__top, subset=["position"])
                 .applymap(am_i_sus, subset=["real_name"])
             )
         else:
             to_be_displayed = (
                 to_be_displayed[["position", "tourney_name", "real_name", "wave"]]
-                .style.apply(lambda row: [None, f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}", None, None], axis=1)
-                .apply(lambda row: [None, None, None, f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}"], axis=1)
+                .style.apply(
+                    lambda row: [
+                        None,
+                        f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}",
+                        None,
+                        f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
+                    ],
+                    axis=1,
+                )
                 .applymap(color_position__top, subset=["position"])
                 .applymap(am_i_sus, subset=["real_name"])
             )

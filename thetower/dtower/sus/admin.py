@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
@@ -50,10 +50,26 @@ class IdInline(admin.TabularInline):
 @admin.register(KnownPlayer)
 class KnownPlayerAdmin(SimpleHistoryAdmin):
     def _ids(self, obj):
-        return mark_safe("<br>".join(obj.ids.all().values_list("id", flat=True)))
+        id_data = obj.ids.all().values_list("id", "primary")
+
+        info = ""
+
+        for id_, primary in id_data:
+            primary_string = " primary" if primary else ""
+            info += f"{id_}{primary_string}<br>"
+
+        return mark_safe(info)
 
     _ids.short_description = "Ids"
 
-    list_display = ("name", "discord_id", "_ids")
-    search_fields = ("name", "discord_id")
+    list_display = ("name", "approved", "discord_id", "_ids")
+    list_editable = ("approved",)
+    search_fields = ("name", "discord_id", "ids__id")
     inlines = (IdInline,)
+
+    # def save_model(self, request, obj, form, change):
+    #     if form.data.get("ids-0-primary") != "on":
+    #         messages.error(request, "The first ID should be primary!")
+    #         raise ValueError("The first ID should be primary!")
+
+    #     return super().save_model(request, obj, form, change)
