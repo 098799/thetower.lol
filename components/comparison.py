@@ -77,7 +77,17 @@ def compute_comparison(df, options: Options):
 
     pd_datas = pd.concat(datas)
 
-    last_results = rival_vs_obligatory(datas, pd_datas, users)
+    last_5_tourneys = sorted(pd_datas.date.unique())[-5:][::-1]
+    last_results = pd.DataFrame(
+        [
+            [
+                data.real_name.unique()[0],
+            ]
+            + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in last_5_tourneys]
+            for data in datas
+        ],
+        columns=["User", *[datetime.datetime.fromtimestamp(int(date) / 1e9).date() for date in last_5_tourneys]],
+    )
 
     last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
 
@@ -129,39 +139,6 @@ def add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, data
         if len(tbdf) >= 2:
             datas.append(tbdf)
     return colors, stratas, tbdf
-
-
-def rival_vs_obligatory(datas, pd_datas, users):
-    if len(users) == 2 and "Obligatory" in users and any("rival" in user.lower() for user in users):
-        mapping = defaultdict(list)
-
-        for _, row in pd_datas.iterrows():
-            mapping[row.date].append((row.real_name, row.wave))
-
-        betters = []
-
-        for value in mapping.values():
-            if len(value) == 2:
-                better = max(value, key=lambda x: x[1])
-                betters.append(better)
-
-        st.write(
-            f"Oh the great rivalry! Out of all the times they clashed, Obligatory came out ahead {len([better for better in betters if better[0].startswith('Obli')])} times while rival prevailed {len([better for better in betters if better[0].startswith('Char')])} times."
-        )
-        st.write("May they clash again soon.")
-    last_5_tourneys = sorted(pd_datas.date.unique())[-5:][::-1]
-    last_results = pd.DataFrame(
-        [
-            [
-                data.real_name.unique()[0],
-            ]
-            + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in
-               last_5_tourneys]
-            for data in datas
-        ],
-        columns=["User", *[datetime.datetime.fromtimestamp(int(date) / 1e9).date() for date in last_5_tourneys]],
-    )
-    return last_results
 
 
 def not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf):
