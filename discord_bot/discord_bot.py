@@ -32,13 +32,11 @@ handle_outside = bool(os.getenv("GO"))
 async def get_member(guild, discord_id, message=None):
     try:
         return await guild.fetch_member(discord_id)
-    except discord.errors.NotFound as exc:
+    except discord.errors.NotFound:
         logging.info(f"Failed to fetch {discord_id=}")
 
         if message:
             await message.channel.send(f"😱😱😱 Failed to fetch data for discord_id {discord_id}, please review.")
-
-            raise exc
 
 
 async def handle_adding(limit, message=None, verbose=False):
@@ -119,13 +117,7 @@ async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message
 
         rightful_role = league_roles[wave_bottom]
         # this should be extracted into a method
-        try:
-            discord_player = await get_member(tower, int(player.discord_id), message=message)
-        except Exception:
-            if verbose:
-                await message.channel.send(f"Failed to fetch discord data for discord id {player.discord_id}. Please fix the database.")
-                discord_player = "unknown"
-            break
+        discord_player = await get_member(tower, int(player.discord_id), message=message)
 
         if discord_player is None:
             return None, skipped + 1
