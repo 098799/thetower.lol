@@ -25,7 +25,7 @@ def compute_player_lookup(df, options: Options):
 
     user = st.selectbox("Which user would you like to lookup?", player_list)
 
-    #lol
+    # lol
     if user == "Soelent":
         st.image("towerfans.jpg")
 
@@ -38,7 +38,7 @@ def compute_player_lookup(df, options: Options):
 
     player_df = find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
 
-    #todo should be extracted
+    # todo should be extracted
     if len(player_df.id.unique()) >= 2:
         potential_ids = player_df.id.unique().tolist()
         aggreg = player_df.groupby("id").count()
@@ -125,18 +125,13 @@ def compute_player_lookup(df, options: Options):
 
 def write_for_each_patch(patches_active, player_df, real_name):
     for patch in patches_active[::-1]:
-        st.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + (
-            "" if not patch.beta else " beta"))
+        st.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + ("" if not patch.beta else " beta"))
         patch_df = player_df[player_df.patch == patch]
 
         patch_role_color = patch_df.iloc[-1].name_role.color
 
         max_wave = patch_df.wave.max()
-        # avg_wave = patch_df.wave.mean()
-        # stdev_wave = patch_df.wave.std()
         max_pos = patch_df.position.min()
-        # avg_position = patch_df.position.mean()
-        # stdev_position = patch_df.position.std()
 
         max_data = patch_df[patch_df.wave == max_wave].iloc[0]
         max_pos_data = patch_df[patch_df.position == max_pos].iloc[0]
@@ -149,8 +144,7 @@ def write_for_each_patch(patches_active, player_df, real_name):
 
 
 def handle_start_date_loop(fig, graph_position_instead, tbdf):
-    for index, (start, version_minor, beta) in enumerate(
-            Patch.objects.all().values_list("start_date", "version_minor", "beta")):
+    for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
         name = f"0.{version_minor}"
         beta = " beta" if beta else ""
 
@@ -160,8 +154,7 @@ def handle_start_date_loop(fig, graph_position_instead, tbdf):
         fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
         fig.add_annotation(
             x=start,
-            y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (
-                        tbdf.wave.max() - 300 * (index % 2 + 1)),
+            y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (tbdf.wave.max() - 300 * (index % 2 + 1)),
             text=f"Patch {name}{beta} start",
             showarrow=True,
             arrowhead=1,

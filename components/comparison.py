@@ -45,8 +45,7 @@ def compute_comparison(df, options: Options):
 
     id_mapping = get_id_lookup()
 
-    colors, stratas, tbdf = add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df,
-                                                   first_choices, id_mapping, patch, sus_ids, users)
+    colors, stratas, tbdf = add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch, sus_ids, users)
 
     if not datas:
         return
@@ -111,11 +110,9 @@ def compute_comparison(df, options: Options):
     st.plotly_chart(fig)
 
 
-def add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch,
-                           sus_ids, users):
+def add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch, sus_ids, users):
     for user in users:
-        player_df = loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df,
-                                                      first_choices, id_mapping, user)
+        player_df = loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
 
         if len(player_df.id.unique()) >= 2:
             aggreg = player_df.groupby("id").count()
@@ -150,13 +147,11 @@ def not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf)
                 line_dash="dash",
                 opacity=0.4,
             )
-    for index, (start, version_minor, beta) in enumerate(
-            Patch.objects.all().values_list("start_date", "version_minor", "beta")):
+    for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
         name = f"0.{version_minor}"
         beta = " beta" if beta else ""
 
-        if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(
-                days=3):
+        if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(days=3):
             continue
 
         fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
@@ -186,8 +181,7 @@ def handle_patch_colors(df, patch, player_df):
     return colors, patch_df, stratas
 
 
-def loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping,
-                                      user):
+def loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
     if user in (set(first_choices) | all_real_names | all_tourney_names):
         player_df = df[(df.real_name == user) | (df.tourney_name == user)]
     elif user in all_user_ids:

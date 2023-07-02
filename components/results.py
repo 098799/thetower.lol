@@ -51,8 +51,7 @@ class Results:
             if person_row.id in self.sus_ids:
                 continue
 
-            players_df = self.df[(self.df["id"] == person_row["id"]) & (
-                        self.df["patch_version"] == person_row["patch_version"])].reset_index(drop=True)
+            players_df = self.df[(self.df["id"] == person_row["id"]) & (self.df["patch_version"] == person_row["patch_version"])].reset_index(drop=True)
 
             current_date = person_row.date
             current_wave = person_row.wave
@@ -68,10 +67,7 @@ class Results:
             previous_best_role = previous_results.wave_role.max()
 
             if current_wave > previous_best_wave or len(players_df) == 1:
-                new_pbs.append(
-                    (current_wave, current_wave_role, current_date,
-                     previous_results[previous_results["wave"] == previous_best_wave].iloc[0])
-                )
+                new_pbs.append((current_wave, current_wave_role, current_date, previous_results[previous_results["wave"] == previous_best_wave].iloc[0]))
 
             if current_role > previous_best_role or len(players_df) == 1:
                 new_role_rows.append(person_row)

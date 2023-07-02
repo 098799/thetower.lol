@@ -71,16 +71,16 @@ async def handle_adding(limit, message=None, verbose=False):
         ids = await sync_to_async(player.ids.all().values_list, thread_sensitive=True)("id", flat=True)
         discord_player = None
 
-        discord_player, skipped = await handle_leagues(all_leagues, changed, dfs, discord_player, ids, message, patch,
-                                                       player, roles, skipped, tower, unchanged, verbose)
+        discord_player, skipped = await handle_leagues(
+            all_leagues, changed, dfs, discord_player, ids, message, patch, player, roles, skipped, tower, unchanged, verbose
+        )
 
         if discord_player is None:
             discord_player = await get_member(tower, int(player.discord_id), message=message)
         elif discord_player == "unknown":
             break
 
-        added_role, had_role = await handle_role_present(added_role, discord_player, had_role, player_id_present_role,
-                                                         player_id_present_role_id)
+        added_role, had_role = await handle_role_present(added_role, discord_player, had_role, player_id_present_role, player_id_present_role_id)
 
     logging.info(f"{skipped=}")
 
@@ -90,17 +90,12 @@ async def handle_adding(limit, message=None, verbose=False):
     logging.info("**********Done**********")
 
 
-async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message, patch, player, roles, skipped, tower,
-                         unchanged, verbose):
+async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message, patch, player, roles, skipped, tower, unchanged, verbose):
     for league in all_leagues:
         safe_league_prefix = league[:-1]
         league_roles = dict(
             sorted(
-                [
-                    (int(role.name.split()[-1]), role)
-                    for role in roles
-                    if role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
-                ],
+                [(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")],
                 reverse=True,
             )
         )
@@ -119,22 +114,19 @@ async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message
             continue
 
         rightful_role = league_roles[wave_bottom]
-        #this should be extracted into a method
+        # this should be extracted into a method
         try:
             discord_player = await get_member(tower, int(player.discord_id), message=message)
         except Exception:
             if verbose:
-                await message.channel.send(
-                    f"Failed to fetch discord data for discord id {player.discord_id}. Please fix the database.")
+                await message.channel.send(f"Failed to fetch discord data for discord id {player.discord_id}. Please fix the database.")
                 discord_player = "unknown"
             break
 
-        current_champ_roles = [role for role in discord_player.roles if
-                               role.name.startswith(safe_league_prefix) and role.name.strip().endswith("0")]
+        current_champ_roles = [role for role in discord_player.roles if role.name.startswith(safe_league_prefix) and role.name.strip().endswith("0")]
         current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
 
-        await iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league,
-                                          rightful_role, unchanged, wave_bottom)
+        await iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league, rightful_role, unchanged, wave_bottom)
 
         break
 
@@ -143,8 +135,7 @@ async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message
     return discord_player, skipped
 
 
-async def iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league,
-                                      rightful_role, unchanged, wave_bottom):
+async def iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league, rightful_role, unchanged, wave_bottom):
     if all(wave_bottom > wave for wave in current_champ_waves):
         for champ_role in current_champ_roles:
             await discord_player.remove_roles(champ_role)
@@ -220,9 +211,7 @@ async def validate_player_id(message):
             player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
                 discord_id=message.author.id, defaults=dict(approved=False, name=message.author.name)
             )
-            await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(
-                id=message.content, player_id=player.id, defaults=dict(primary=True)
-            )
+            await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(id=message.content, player_id=player.id, defaults=dict(primary=True))
             await message.add_reaction("✅")
         else:
             await message.add_reaction("⁉️")
