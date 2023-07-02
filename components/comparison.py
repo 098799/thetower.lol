@@ -45,47 +45,8 @@ def compute_comparison(df, options: Options):
 
     id_mapping = get_id_lookup()
 
-    for user in users:
-        if user in (set(first_choices) | all_real_names | all_tourney_names):
-            player_df = df[(df.real_name == user) | (df.tourney_name == user)]
-        elif user in all_user_ids:
-            player_df = df[df.id == id_mapping.get(user, user)]
-        else:
-            raise ValueError("Incorrect user, don't be a smartass.")
-
-        if len(player_df.id.unique()) >= 2:
-            aggreg = player_df.groupby("id").count()
-            most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
-            player_df = df[df.id == most_common_id]
-        else:
-            player_df = df[df.id == player_df.iloc[0].id]
-
-        player_df = player_df.sort_values("date", ascending=False)
-
-        real_name = player_df.iloc[0].real_name
-        id_ = player_df.iloc[0].id
-
-        if id_ in sus_ids:
-            st.error(f"Player {real_name} is considered sus.")
-
-        if isinstance(patch, Patch):
-            patch_df = player_df[player_df.patch == patch]
-
-            if patch.version_minor >= 18:
-                colors, stratas = colors_018, stratas_boundaries_018
-            else:
-                colors, stratas = colors_017, stratas_boundaries
-        elif patch == Graph.last_16.value:
-            patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
-            colors, stratas = colors_018, stratas_boundaries_018
-        else:
-            patch_df = player_df
-            colors, stratas = colors_018, stratas_boundaries_018
-
-        tbdf = patch_df.reset_index(drop=True)
-
-        if len(tbdf) >= 2:
-            datas.append(tbdf)
+    colors, stratas, tbdf = add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df,
+                                                   first_choices, id_mapping, patch, sus_ids, users)
 
     if not datas:
         return
@@ -116,6 +77,61 @@ def compute_comparison(df, options: Options):
 
     pd_datas = pd.concat(datas)
 
+    last_results = rival_vs_obligatory(datas, pd_datas, users)
+
+    last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
+
+    if options.links_toggle:
+        to_be_displayed = last_results.format(make_url, subset=["User"]).to_html(escape=False)
+        st.write(to_be_displayed, unsafe_allow_html=True)
+    else:
+        st.dataframe(last_results, use_container_width=True)
+
+    fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True)
+
+    min_ = min(pd_datas.wave)
+    max_ = max(pd_datas.wave)
+
+    not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf)
+
+    st.plotly_chart(fig)
+
+    fig = px.line(pd_datas, x="date", y="position", color="real_name", markers=True)
+    fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
+    st.plotly_chart(fig)
+
+
+def add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch,
+                           sus_ids, users):
+    for user in users:
+        player_df = loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df,
+                                                      first_choices, id_mapping, user)
+
+        if len(player_df.id.unique()) >= 2:
+            aggreg = player_df.groupby("id").count()
+            most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
+            player_df = df[df.id == most_common_id]
+        else:
+            player_df = df[df.id == player_df.iloc[0].id]
+
+        player_df = player_df.sort_values("date", ascending=False)
+
+        real_name = player_df.iloc[0].real_name
+        id_ = player_df.iloc[0].id
+
+        if id_ in sus_ids:
+            st.error(f"Player {real_name} is considered sus.")
+
+        colors, patch_df, stratas = handle_patch_colors(df, patch, player_df)
+
+        tbdf = patch_df.reset_index(drop=True)
+
+        if len(tbdf) >= 2:
+            datas.append(tbdf)
+    return colors, stratas, tbdf
+
+
+def rival_vs_obligatory(datas, pd_datas, users):
     if len(users) == 2 and "Obligatory" in users and any("rival" in user.lower() for user in users):
         mapping = defaultdict(list)
 
@@ -133,32 +149,22 @@ def compute_comparison(df, options: Options):
             f"Oh the great rivalry! Out of all the times they clashed, Obligatory came out ahead {len([better for better in betters if better[0].startswith('Obli')])} times while rival prevailed {len([better for better in betters if better[0].startswith('Char')])} times."
         )
         st.write("May they clash again soon.")
-
     last_5_tourneys = sorted(pd_datas.date.unique())[-5:][::-1]
     last_results = pd.DataFrame(
         [
             [
                 data.real_name.unique()[0],
             ]
-            + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in last_5_tourneys]
+            + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in
+               last_5_tourneys]
             for data in datas
         ],
         columns=["User", *[datetime.datetime.fromtimestamp(int(date) / 1e9).date() for date in last_5_tourneys]],
     )
+    return last_results
 
-    last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
 
-    if options.links_toggle:
-        to_be_displayed = last_results.format(make_url, subset=["User"]).to_html(escape=False)
-        st.write(to_be_displayed, unsafe_allow_html=True)
-    else:
-        st.dataframe(last_results, use_container_width=True)
-
-    fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True)
-
-    min_ = min(pd_datas.wave)
-    max_ = max(pd_datas.wave)
-
+def not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf):
     for color_, strata in zip(colors, stratas):
         if max_ > strata > min_:
             fig.add_hline(
@@ -167,12 +173,13 @@ def compute_comparison(df, options: Options):
                 line_dash="dash",
                 opacity=0.4,
             )
-
-    for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
+    for index, (start, version_minor, beta) in enumerate(
+            Patch.objects.all().values_list("start_date", "version_minor", "beta")):
         name = f"0.{version_minor}"
         beta = " beta" if beta else ""
 
-        if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(days=3):
+        if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(
+                days=3):
             continue
 
         fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
@@ -184,11 +191,33 @@ def compute_comparison(df, options: Options):
             arrowhead=1,
         )
 
-    st.plotly_chart(fig)
 
-    fig = px.line(pd_datas, x="date", y="position", color="real_name", markers=True)
-    fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
-    st.plotly_chart(fig)
+def handle_patch_colors(df, patch, player_df):
+    if isinstance(patch, Patch):
+        patch_df = player_df[player_df.patch == patch]
+
+        if patch.version_minor >= 18:
+            colors, stratas = colors_018, stratas_boundaries_018
+        else:
+            colors, stratas = colors_017, stratas_boundaries
+    elif patch == Graph.last_16.value:
+        patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
+        colors, stratas = colors_018, stratas_boundaries_018
+    else:
+        patch_df = player_df
+        colors, stratas = colors_018, stratas_boundaries_018
+    return colors, patch_df, stratas
+
+
+def loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping,
+                                      user):
+    if user in (set(first_choices) | all_real_names | all_tourney_names):
+        player_df = df[(df.real_name == user) | (df.tourney_name == user)]
+    elif user in all_user_ids:
+        player_df = df[df.id == id_mapping.get(user, user)]
+    else:
+        raise ValueError("Incorrect user, don't be a smartass.")
+    return player_df
 
 
 if __name__ == "__main__":

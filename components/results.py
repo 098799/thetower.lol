@@ -27,32 +27,7 @@ class Results:
             new_pbs = []
 
             with st.expander("Congrats! 🎉"):
-                for index, person_row in filtered_df.iterrows():
-                    if person_row.id in self.sus_ids:
-                        continue
-
-                    players_df = self.df[(self.df["id"] == person_row["id"]) & (self.df["patch_version"] == person_row["patch_version"])].reset_index(drop=True)
-
-                    current_date = person_row.date
-                    current_wave = person_row.wave
-                    current_role = person_row.name_role
-                    current_wave_role = person_row.wave_role
-
-                    previous_results = players_df[players_df["date"] < person_row["date"]]
-
-                    if previous_results.empty:
-                        continue
-
-                    previous_best_wave = previous_results.wave.max()
-                    previous_best_role = previous_results.wave_role.max()
-
-                    if current_wave > previous_best_wave or len(players_df) == 1:
-                        new_pbs.append(
-                            (current_wave, current_wave_role, current_date, previous_results[previous_results["wave"] == previous_best_wave].iloc[0])
-                        )
-
-                    if current_role > previous_best_role or len(players_df) == 1:
-                        new_role_rows.append(person_row)
+                self.handle_current_results(filtered_df, new_pbs, new_role_rows)
 
                 new_role_string = ", ".join(
                     [f"<font color='{row.wave_role.color}'>{self.df[self.df.id == row.id].iloc[0].real_name}</font>" for row in new_role_rows]
@@ -70,6 +45,36 @@ class Results:
 
                 if new_wave_string:
                     st.write(f"Congratulations for new PBs:<br>{new_wave_string}", unsafe_allow_html=True)
+
+    def handle_current_results(self, filtered_df, new_pbs, new_role_rows):
+        for index, person_row in filtered_df.iterrows():
+            if person_row.id in self.sus_ids:
+                continue
+
+            players_df = self.df[(self.df["id"] == person_row["id"]) & (
+                        self.df["patch_version"] == person_row["patch_version"])].reset_index(drop=True)
+
+            current_date = person_row.date
+            current_wave = person_row.wave
+            current_role = person_row.name_role
+            current_wave_role = person_row.wave_role
+
+            previous_results = players_df[players_df["date"] < person_row["date"]]
+
+            if previous_results.empty:
+                continue
+
+            previous_best_wave = previous_results.wave.max()
+            previous_best_role = previous_results.wave_role.max()
+
+            if current_wave > previous_best_wave or len(players_df) == 1:
+                new_pbs.append(
+                    (current_wave, current_wave_role, current_date,
+                     previous_results[previous_results["wave"] == previous_best_wave].iloc[0])
+                )
+
+            if current_role > previous_best_role or len(players_df) == 1:
+                new_role_rows.append(person_row)
 
     def _hidden_time_series(self, df):
         if len(self.datetimes) > 3:
