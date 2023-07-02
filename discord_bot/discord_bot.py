@@ -209,7 +209,7 @@ async def validate_player_id(message):
     try:
         if 17 > len(message.content) > 12 and message.attachments:
             player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
-                discord_id=message.author.id, defaults=dict(approved=False, name=message.author.name)
+                discord_id=message.author.id, defaults=dict(approved=True, name=message.author.name)
             )
             await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(id=message.content, player_id=player.id, defaults=dict(primary=True))
             await message.add_reaction("✅")
