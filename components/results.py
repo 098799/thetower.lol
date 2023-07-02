@@ -23,11 +23,8 @@ class Results:
 
     def congrats(self, filtered_df):
         if not self.hidden_features and self.congrats_toggle:
-            new_role_rows = []
-            new_pbs = []
-
             with st.expander("Congrats! 🎉"):
-                self.handle_current_results(filtered_df, new_pbs, new_role_rows)
+                new_pbs, new_role_rows = self.handle_current_results(filtered_df)
 
                 new_role_string = ", ".join(
                     [f"<font color='{row.wave_role.color}'>{self.df[self.df.id == row.id].iloc[0].real_name}</font>" for row in new_role_rows]
@@ -46,7 +43,10 @@ class Results:
                 if new_wave_string:
                     st.write(f"Congratulations for new PBs:<br>{new_wave_string}", unsafe_allow_html=True)
 
-    def handle_current_results(self, filtered_df, new_pbs, new_role_rows):
+    def handle_current_results(self, filtered_df):
+        new_pbs = []
+        new_role_rows = []
+
         for index, person_row in filtered_df.iterrows():
             if person_row.id in self.sus_ids:
                 continue
@@ -75,6 +75,8 @@ class Results:
 
             if current_role > previous_best_role or len(players_df) == 1:
                 new_role_rows.append(person_row)
+
+        return new_pbs, new_role_rows
 
     def _hidden_time_series(self, df):
         if len(self.datetimes) > 3:
