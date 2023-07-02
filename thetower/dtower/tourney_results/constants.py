@@ -66,7 +66,6 @@ class Graph(Enum):
 
 
 class Options(BaseModel):
-    congrats_toggle: bool
     links_toggle: bool
     current_player: Optional[str]
     compare_players: Optional[List[str]]

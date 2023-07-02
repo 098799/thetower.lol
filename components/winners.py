@@ -11,10 +11,9 @@ patches = sorted([patch for patch in get_patches() if patch.version_minor], key=
 
 
 def compute_winners(df, options=None):
-    patch = st.selectbox("Limit results to a patch?", ["no", *patches])
+    selected_patches = st.multiselect("Limit results to a patch?", patches, default=patches)
 
-    if isinstance(patch, Patch):
-        df = df[df.patch == patch]
+    df = df[df.patch.isin(selected_patches)]
 
     how_col, hole_col = st.columns([1, 1])
 

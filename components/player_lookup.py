@@ -110,7 +110,10 @@ def compute_player_lookup(df, options: Options):
     tbdf["position_average"] = tbdf.position.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
 
     if len(tbdf) > 1:
-        graph_position_instead = st.checkbox("Graph position instead")
+        pos_col, tweak_col = st.columns([1, 1])
+
+        graph_position_instead = pos_col.checkbox("Graph position instead")
+        average_foreground = tweak_col.checkbox("Average in the foreground?", value=True)
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         if not graph_position_instead:
@@ -122,7 +125,7 @@ def compute_player_lookup(df, options: Options):
                     x=tbdf.date,
                     y=tbdf.wave,
                     name="Wave (left axis)",
-                    **foreground_kwargs if not options.average_foreground else background_kwargs,
+                    **foreground_kwargs if not average_foreground else background_kwargs,
                 )
             )
             fig.add_trace(
@@ -130,7 +133,7 @@ def compute_player_lookup(df, options: Options):
                     x=tbdf.date,
                     y=tbdf.average,
                     name=f"{rolling_average} tourney moving average",
-                    **foreground_kwargs if options.average_foreground else background_kwargs,
+                    **foreground_kwargs if average_foreground else background_kwargs,
                 )
             )
 
@@ -149,7 +152,7 @@ def compute_player_lookup(df, options: Options):
                     x=tbdf.date,
                     y=tbdf.position,
                     name="Tourney position",
-                    **foreground_kwargs if not options.average_foreground else background_kwargs,
+                    **foreground_kwargs if not average_foreground else background_kwargs,
                 ),
                 secondary_y=True,
             )
@@ -158,7 +161,7 @@ def compute_player_lookup(df, options: Options):
                     x=tbdf.date,
                     y=tbdf.position_average,
                     name=f"{rolling_average} tourney moving average",
-                    **foreground_kwargs if options.average_foreground else background_kwargs,
+                    **foreground_kwargs if average_foreground else background_kwargs,
                 ),
                 secondary_y=True,
             )
@@ -226,4 +229,4 @@ def compute_player_lookup(df, options: Options):
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-    compute_player_lookup(df, options=Options(congrats_toggle=True, links_toggle=True, default_graph=Graph("all")))
+    compute_player_lookup(df, options=Options(links_toggle=True, default_graph=Graph("all")))

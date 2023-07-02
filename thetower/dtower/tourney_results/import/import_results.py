@@ -43,7 +43,13 @@ while True:
             current_date = current_datetime
 
         print("Something new")
-        last_file = sorted(glob(f"/root/tourney/results_cache/{us_to_jim[league]}/{current_date}*"))[-1]
+        last_files = sorted(glob(f"/root/tourney/results_cache/{us_to_jim[league]}/{current_date}*"))
+
+        if not last_files:
+            print("maybe later")
+            continue
+
+        last_file = last_files[-1]
 
         try:
             with open(last_file, "rb") as infile:

@@ -134,13 +134,13 @@ def get_row_to_role(df: pd.DataFrame, league):
     return df
 
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load_tourney_results__prev(folder: str) -> pd.DataFrame:
     result_files = sorted(glob(f"{folder}/*"))
     return _load_tourney_results([(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in result_files])
 
 
-def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> pd.DataFrame:
+def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, result_cutoff: Optional[int] = None) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     league_switcher = os.environ.get("LEAGUE_SWITCHER")
 
@@ -153,7 +153,9 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> 
     for index, (result_file, date) in enumerate(result_files, 1):
         df = pd.read_csv(result_file, header=None)
 
-        if not hidden_features:
+        if result_cutoff:
+            cutoff = result_cutoff
+        elif not hidden_features:
             if league_switcher:
                 cutoff = 500
 
@@ -161,8 +163,10 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> 
                     cutoff = 100
             else:
                 cutoff = 200
+        else:
+            cutoff = 10000
 
-            df = df.iloc[:cutoff]
+        df = df.iloc[:cutoff]
 
         df.columns = ["id", "tourney_name", "wave"]
 
@@ -220,12 +224,12 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ) -> 
     return df
 
 
-@st.cache(allow_output_mutation=True, suppress_st_warning=True)
-def load_tourney_results(folder: str) -> pd.DataFrame:
-    return load_tourney_results__uncached(folder)
+@st.cache_data
+def load_tourney_results(folder: str, result_cutoff: Optional[int] = None) -> pd.DataFrame:
+    return load_tourney_results__uncached(folder, result_cutoff=result_cutoff)
 
 
-def load_tourney_results__uncached(folder: str) -> pd.DataFrame:
+def load_tourney_results__uncached(folder: str, result_cutoff: Optional[int] = None) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
 
@@ -246,15 +250,10 @@ def load_tourney_results__uncached(folder: str) -> pd.DataFrame:
         additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
         result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
 
-    return _load_tourney_results(result_files, league)
+    return _load_tourney_results(result_files, league, result_cutoff=result_cutoff)
 
 
-@st.cache(allow_output_mutation=True)
-def get_manager():
-    return stx.CookieManager()
-
-
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def get_player_list(df):
     last_date = df.date.unique()[-1]
     sus_ids = get_sus_ids()

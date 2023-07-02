@@ -7,7 +7,7 @@ from dtower.tourney_results.data import get_sus_data
 
 def compute_about(*args, **kwargs):
     st.title("About")
-    st.markdown("My discord id is `098799#0707`.")
+    st.markdown("My discord id is `098799`.")
     st.markdown("Thanks to `Milamber33` for a lot of help with css and other things.")
     st.markdown("Thanks to `Jim808` and `ObsUK` for a graph ideas and encouragement.")
 

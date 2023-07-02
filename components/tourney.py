@@ -17,13 +17,14 @@ from components.about import compute_about
 from components.breakdown import compute_breakdown
 from components.comparison import compute_comparison
 from components.namechangers import compute_namechangers
+from components.overview import compute_overview
 from components.player_lookup import compute_player_lookup
 from components.results import compute_results
 from components.search_all_leagues import compute_search_all_leagues
 from components.top_scores import compute_top
 from components.winners import compute_winners
 from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
-from dtower.tourney_results.data import get_manager, load_tourney_results
+from dtower.tourney_results.data import load_tourney_results
 
 st.set_page_config(
     page_title="The Tower top200 tourney results",
@@ -62,35 +63,27 @@ st.write(
 )
 
 
-# st.error("This site is currently suspended until the hacker situation is resolved.")
-
-
 with st.sidebar:
     st.write("Toggles")
 
-    links = st.checkbox("Links to users? (will make dataframe ugly)", value=get_manager().get("links"))
+    links = st.checkbox("Links to users? (will make dataframe ugly)", value=False)
+    options = Options(links_toggle=links, default_graph=Graph.last_16.value, average_foreground=True)
 
-    congrats_cookie_value = get_manager().get("congrats")
-    default_graph_value = get_manager().get("default_graph")
-    average_foreground_value = get_manager().get("average_foreground")
+#     default_graph_value = get_manager().get("default_graph")
+#     average_foreground_value = get_manager().get("average_foreground")
 
-    congrats_toggle = st.checkbox("Do you like seeing congratulations?", value=congrats_cookie_value if congrats_cookie_value is not None else True)
+#     graph_choices: List[str] = list(Graph.__members__.keys())
+#     default_graph = st.radio(
+#         "How should the player data be presented by default?",
+#         graph_choices,
+#         index=graph_choices.index(default_graph_value if default_graph_value is not None else "all"),
+#     )
 
-    graph_choices: List[str] = list(Graph.__members__.keys())
-    default_graph = st.radio(
-        "How should the player data be presented by default?",
-        graph_choices,
-        index=graph_choices.index(default_graph_value if default_graph_value is not None else "all"),
-    )
+#     average_foreground = st.checkbox("Rolling averages as default in graphs?", value=average_foreground_value if average_foreground_value is not None else True)
 
-    average_foreground = st.checkbox("Rolling averages as default in graphs?", value=average_foreground_value if average_foreground_value is not None else True)
-
-    get_manager().set("links", links, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="links")
-    get_manager().set("congrats", bool(congrats_toggle), expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="congrats")
-    get_manager().set("default_graph", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="default_graph")
-    get_manager().set("average_foreground", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="average_foreground")
-
-    options = Options(congrats_toggle=congrats_toggle, links_toggle=links, default_graph=default_graph, average_foreground=average_foreground)
+#     get_manager().set("links", links, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="links")
+#     get_manager().set("default_graph", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="default_graph")
+#     get_manager().set("average_foreground", default_graph, expires_at=datetime.datetime.now() + datetime.timedelta(days=30), key="average_foreground")
 
 
 pd.set_option("display.max_rows", None)
@@ -132,6 +125,7 @@ common_tabs = ["Player lookup", "Winners", "Comparison", "Top", "Breakdown", "Na
 
 if league_switcher:
     tabs = [f"Results {league}" for league in list(league_to_folder.keys())] + common_tabs
+    tabs = ["Overview"] + tabs
 else:
     tabs = ["Results"] + common_tabs
 
@@ -151,6 +145,7 @@ def keep():
     compute_about
     compute_namechangers
     compute_search_all_leagues
+    compute_overview
 
 
 compute_results_champions = compute_results
@@ -179,6 +174,8 @@ if function_string == "compute_search_all_leagues":
 
     df = pd.concat(dfs)
     my_bar.empty()
+elif function_string == "compute_overview":
+    df = [load_tourney_results(league, result_cutoff=20) for league in league_to_folder.values()]
 else:
     if functionality.startswith("Results "):
         league = functionality.split()[1]

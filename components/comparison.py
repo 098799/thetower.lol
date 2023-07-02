@@ -193,4 +193,4 @@ def compute_comparison(df, options: Options):
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-    compute_comparison(df, options=Options(congrats_toggle=True, links_toggle=True, default_graph=Graph("all"), average_foreground=True))
+    compute_comparison(df, options=Options(links_toggle=True, default_graph=Graph("all"), average_foreground=True))

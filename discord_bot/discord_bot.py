@@ -22,6 +22,7 @@ intents.presences = True
 intents.message_content = True
 intents.members = True
 
+
 client = discord.Client(intents=intents)
 
 
@@ -98,7 +99,14 @@ async def handle_adding(limit, message=None, verbose=False):
 
             rightful_role = league_roles[wave_bottom]
 
-            discord_player = await get_member(tower, int(player.discord_id), message=message)
+            try:
+                discord_player = await get_member(tower, int(player.discord_id), message=message)
+            except Exception:
+                if verbose:
+                    await message.channel.send(f"Failed to fetch discord data for discord id {player.discord_id}. Please fix the database.")
+                    discord_player = "unknown"
+                break
+
             current_champ_roles = [role for role in discord_player.roles if role.name.startswith(safe_league_prefix) and role.name.strip().endswith("0")]
             current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
 
@@ -120,6 +128,8 @@ async def handle_adding(limit, message=None, verbose=False):
 
         if discord_player is None:
             discord_player = await get_member(tower, int(player.discord_id), message=message)
+        elif discord_player == "unknown":
+            break
 
         has_player_id_present_role = [role for role in discord_player.roles if role.id == player_id_present_role_id]
 
