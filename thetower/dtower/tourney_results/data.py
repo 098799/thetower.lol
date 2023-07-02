@@ -153,18 +153,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
     for index, (result_file, date) in enumerate(result_files, 1):
         df = pd.read_csv(result_file, header=None)
 
-        if result_cutoff:
-            cutoff = result_cutoff
-        elif not hidden_features:
-            if league_switcher:
-                cutoff = 500
-
-                if league != champ:
-                    cutoff = 100
-            else:
-                cutoff = 200
-        else:
-            cutoff = 10000
+        cutoff = handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff)
 
         df = df.iloc[:cutoff]
 
@@ -222,6 +211,22 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
 
     load_data_bar.empty()
     return df
+
+
+def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff):
+    if result_cutoff:
+        cutoff = result_cutoff
+    elif not hidden_features:
+        if league_switcher:
+            cutoff = 500
+
+            if league != champ:
+                cutoff = 100
+        else:
+            cutoff = 200
+    else:
+        cutoff = 10000
+    return cutoff
 
 
 @st.cache_data

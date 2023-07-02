@@ -21,15 +21,11 @@ def compute_player_lookup(df, options: Options):
 
     sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 
-    if not hidden_features:
-        sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
-        player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
-
-    if options.current_player is not None:
-        player_list = [options.current_player] + player_list
+    player_list = handle_initial_choices(hidden_features, options, player_list, sus_ids)
 
     user = st.selectbox("Which user would you like to lookup?", player_list)
 
+    # lol
     if user == "Soelent":
         st.image("towerfans.jpg")
 
@@ -40,13 +36,9 @@ def compute_player_lookup(df, options: Options):
 
     id_mapping = get_id_lookup()
 
-    if user in (set(first_choices) | all_real_names | all_tourney_names):
-        player_df = df[(df.real_name == user) | (df.tourney_name == user)]
-    elif user in all_user_ids:
-        player_df = df[df.id == id_mapping.get(user, user)]
-    else:
-        raise ValueError("Incorrect user, don't be a smartass.")
+    player_df = find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
 
+    # todo should be extracted
     if len(player_df.id.unique()) >= 2:
         potential_ids = player_df.id.unique().tolist()
         aggreg = player_df.groupby("id").count()
@@ -72,11 +64,7 @@ def compute_player_lookup(df, options: Options):
 
     patches_active = player_df.patch.unique()
 
-    if id_ in get_banned_ids():
-        st.warning("This player is banned by Pog.")
-
-    if id_ in sus_ids:
-        st.error("This player is considered sus.")
+    handle_sus_or_banned_ids(id_, sus_ids)
 
     st.write(
         f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
@@ -91,19 +79,7 @@ def compute_player_lookup(df, options: Options):
     patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
     rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
 
-    if isinstance(patch, Patch):
-        patch_df = player_df[player_df.patch == patch]
-
-        if patch.version_minor >= 18:
-            colors, stratas = colors_018, stratas_boundaries_018
-        else:
-            colors, stratas = colors_017, stratas_boundaries
-    elif patch == Graph.last_16.value:
-        patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
-        colors, stratas = colors_018, stratas_boundaries_018
-    else:
-        patch_df = player_df
-        colors, stratas = colors_018, stratas_boundaries_018
+    colors, patch_df, stratas = handle_colors_dependant_on_patch(df, patch, player_df)
 
     tbdf = patch_df.reset_index(drop=True)
     tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
@@ -117,71 +93,11 @@ def compute_player_lookup(df, options: Options):
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         if not graph_position_instead:
-            foreground_kwargs = {}
-            background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
-
-            fig.add_trace(
-                go.Scatter(
-                    x=tbdf.date,
-                    y=tbdf.wave,
-                    name="Wave (left axis)",
-                    **foreground_kwargs if not average_foreground else background_kwargs,
-                )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x=tbdf.date,
-                    y=tbdf.average,
-                    name=f"{rolling_average} tourney moving average",
-                    **foreground_kwargs if average_foreground else background_kwargs,
-                )
-            )
-
-            min_ = min(tbdf.wave)
-            max_ = max(tbdf.wave)
-
-            for color_, strata in zip(colors, stratas):
-                if max_ > strata > min_:
-                    fig.add_hline(y=strata, line_color=color_, line_dash="dash", opacity=0.4, line_width=3)
+            handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf)
         else:
-            foreground_kwargs = {}
-            background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+            handle_is_graph_position(average_foreground, fig, rolling_average, tbdf)
 
-            fig.add_trace(
-                go.Scatter(
-                    x=tbdf.date,
-                    y=tbdf.position,
-                    name="Tourney position",
-                    **foreground_kwargs if not average_foreground else background_kwargs,
-                ),
-                secondary_y=True,
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x=tbdf.date,
-                    y=tbdf.position_average,
-                    name=f"{rolling_average} tourney moving average",
-                    **foreground_kwargs if average_foreground else background_kwargs,
-                ),
-                secondary_y=True,
-            )
-            fig.update_yaxes(secondary_y=True, range=[200, 0])
-
-        for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
-            name = f"0.{version_minor}"
-            beta = " beta" if beta else ""
-
-            if start < tbdf.date.min() - datetime.timedelta(days=2) or start > tbdf.date.max() + datetime.timedelta(days=3):
-                continue
-
-            fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
-            fig.add_annotation(
-                x=start,
-                y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (tbdf.wave.max() - 300 * (index % 2 + 1)),
-                text=f"Patch {name}{beta} start",
-                showarrow=True,
-                arrowhead=1,
-            )
+        handle_start_date_loop(fig, graph_position_instead, tbdf)
 
         st.plotly_chart(fig)
 
@@ -202,6 +118,12 @@ def compute_player_lookup(df, options: Options):
     )
     st.dataframe(to_be_displayed, use_container_width=True)
 
+    write_for_each_patch(patches_active, player_df, real_name)
+
+    st.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+
+
+def write_for_each_patch(patches_active, player_df, real_name):
     for patch in patches_active[::-1]:
         st.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + ("" if not patch.beta else " beta"))
         patch_df = player_df[player_df.patch == patch]
@@ -209,11 +131,7 @@ def compute_player_lookup(df, options: Options):
         patch_role_color = patch_df.iloc[-1].name_role.color
 
         max_wave = patch_df.wave.max()
-        # avg_wave = patch_df.wave.mean()
-        # stdev_wave = patch_df.wave.std()
         max_pos = patch_df.position.min()
-        # avg_position = patch_df.position.mean()
-        # stdev_position = patch_df.position.std()
 
         max_data = patch_df[patch_df.wave == max_wave].iloc[0]
         max_pos_data = patch_df[patch_df.position == max_pos].iloc[0]
@@ -224,7 +142,116 @@ def compute_player_lookup(df, options: Options):
             unsafe_allow_html=True,
         )
 
-    st.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+
+def handle_start_date_loop(fig, graph_position_instead, tbdf):
+    for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
+        name = f"0.{version_minor}"
+        beta = " beta" if beta else ""
+
+        if start < tbdf.date.min() - datetime.timedelta(days=2) or start > tbdf.date.max() + datetime.timedelta(days=3):
+            continue
+
+        fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
+        fig.add_annotation(
+            x=start,
+            y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (tbdf.wave.max() - 300 * (index % 2 + 1)),
+            text=f"Patch {name}{beta} start",
+            showarrow=True,
+            arrowhead=1,
+        )
+
+
+def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
+    foreground_kwargs = {}
+    background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+    fig.add_trace(
+        go.Scatter(
+            x=tbdf.date,
+            y=tbdf.position,
+            name="Tourney position",
+            **foreground_kwargs if not average_foreground else background_kwargs,
+        ),
+        secondary_y=True,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=tbdf.date,
+            y=tbdf.position_average,
+            name=f"{rolling_average} tourney moving average",
+            **foreground_kwargs if average_foreground else background_kwargs,
+        ),
+        secondary_y=True,
+    )
+    fig.update_yaxes(secondary_y=True, range=[200, 0])
+
+
+def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf):
+    foreground_kwargs = {}
+    background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+    fig.add_trace(
+        go.Scatter(
+            x=tbdf.date,
+            y=tbdf.wave,
+            name="Wave (left axis)",
+            **foreground_kwargs if not average_foreground else background_kwargs,
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=tbdf.date,
+            y=tbdf.average,
+            name=f"{rolling_average} tourney moving average",
+            **foreground_kwargs if average_foreground else background_kwargs,
+        )
+    )
+    min_ = min(tbdf.wave)
+    max_ = max(tbdf.wave)
+    for color_, strata in zip(colors, stratas):
+        if max_ > strata > min_:
+            fig.add_hline(y=strata, line_color=color_, line_dash="dash", opacity=0.4, line_width=3)
+
+
+def handle_colors_dependant_on_patch(df, patch, player_df):
+    if isinstance(patch, Patch):
+        patch_df = player_df[player_df.patch == patch]
+
+        if patch.version_minor >= 18:
+            colors, stratas = colors_018, stratas_boundaries_018
+        else:
+            colors, stratas = colors_017, stratas_boundaries
+    elif patch == Graph.last_16.value:
+        patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
+        colors, stratas = colors_018, stratas_boundaries_018
+    else:
+        patch_df = player_df
+        colors, stratas = colors_018, stratas_boundaries_018
+    return colors, patch_df, stratas
+
+
+def handle_sus_or_banned_ids(id_, sus_ids):
+    if id_ in get_banned_ids():
+        st.warning("This player is banned by Pog.")
+    if id_ in sus_ids:
+        st.error("This player is considered sus.")
+
+
+def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
+    if user in (set(first_choices) | all_real_names | all_tourney_names):
+        player_df = df[(df.real_name == user) | (df.tourney_name == user)]
+    elif user in all_user_ids:
+        player_df = df[df.id == id_mapping.get(user, user)]
+    else:
+        raise ValueError("Incorrect user, don't be a smartass.")
+    return player_df
+
+
+def handle_initial_choices(hidden_features, options, player_list, sus_ids):
+    if not hidden_features:
+        sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
+        player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
+    if options.current_player is not None:
+        player_list = [options.current_player] + player_list
+    return player_list
 
 
 if __name__ == "__main__":

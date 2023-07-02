@@ -71,73 +71,16 @@ async def handle_adding(limit, message=None, verbose=False):
         ids = await sync_to_async(player.ids.all().values_list, thread_sensitive=True)("id", flat=True)
         discord_player = None
 
-        for league in all_leagues:
-            safe_league_prefix = league[:-1]
-            league_roles = dict(
-                sorted(
-                    [
-                        (int(role.name.split()[-1]), role)
-                        for role in roles
-                        if role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
-                    ],
-                    reverse=True,
-                )
-            )
-            df = dfs[league]
-
-            player_df = df[df["real_name"] == player.name]
-            player_df = player_df[player_df["id"].isin(ids)]
-            patch_df = player_df[player_df["patch"] == patch]
-
-            if patch_df.empty:
-                continue
-
-            wave_bottom = patch_df.iloc[-1].name_role.wave_bottom
-
-            if wave_bottom == 0:
-                continue
-
-            rightful_role = league_roles[wave_bottom]
-
-            try:
-                discord_player = await get_member(tower, int(player.discord_id), message=message)
-            except Exception:
-                if verbose:
-                    await message.channel.send(f"Failed to fetch discord data for discord id {player.discord_id}. Please fix the database.")
-                    discord_player = "unknown"
-                break
-
-            current_champ_roles = [role for role in discord_player.roles if role.name.startswith(safe_league_prefix) and role.name.strip().endswith("0")]
-            current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
-
-            if all(wave_bottom > wave for wave in current_champ_waves):
-                for champ_role in current_champ_roles:
-                    await discord_player.remove_roles(champ_role)
-
-                await discord_player.add_roles(rightful_role)
-                changed[league] += 1
-                logging.info(f"Added {rightful_role=} to {discord_player=}")
-
-            else:
-                unchanged[league] += 1
-
-            break
-
-        else:
-            skipped += 1
+        discord_player, skipped = await handle_leagues(
+            all_leagues, changed, dfs, discord_player, ids, message, patch, player, roles, skipped, tower, unchanged, verbose
+        )
 
         if discord_player is None:
             discord_player = await get_member(tower, int(player.discord_id), message=message)
         elif discord_player == "unknown":
             break
 
-        has_player_id_present_role = [role for role in discord_player.roles if role.id == player_id_present_role_id]
-
-        if not has_player_id_present_role:
-            await discord_player.add_roles(player_id_present_role)
-            added_role += 1
-        else:
-            had_role += 1
+        added_role, had_role = await handle_role_present(added_role, discord_player, had_role, player_id_present_role, player_id_present_role_id)
 
     logging.info(f"{skipped=}")
 
@@ -145,6 +88,74 @@ async def handle_adding(limit, message=None, verbose=False):
         await message.channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged=}, \n{changed=}.")
         await message.channel.send(f"special Pog role: {had_role=}, {added_role=}")
     logging.info("**********Done**********")
+
+
+async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message, patch, player, roles, skipped, tower, unchanged, verbose):
+    for league in all_leagues:
+        safe_league_prefix = league[:-1]
+        league_roles = dict(
+            sorted(
+                [(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")],
+                reverse=True,
+            )
+        )
+        df = dfs[league]
+
+        player_df = df[df["real_name"] == player.name]
+        player_df = player_df[player_df["id"].isin(ids)]
+        patch_df = player_df[player_df["patch"] == patch]
+
+        if patch_df.empty:
+            continue
+
+        wave_bottom = patch_df.iloc[-1].name_role.wave_bottom
+
+        if wave_bottom == 0:
+            continue
+
+        rightful_role = league_roles[wave_bottom]
+        # this should be extracted into a method
+        try:
+            discord_player = await get_member(tower, int(player.discord_id), message=message)
+        except Exception:
+            if verbose:
+                await message.channel.send(f"Failed to fetch discord data for discord id {player.discord_id}. Please fix the database.")
+                discord_player = "unknown"
+            break
+
+        current_champ_roles = [role for role in discord_player.roles if role.name.startswith(safe_league_prefix) and role.name.strip().endswith("0")]
+        current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
+
+        await iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league, rightful_role, unchanged, wave_bottom)
+
+        break
+
+    else:
+        skipped += 1
+    return discord_player, skipped
+
+
+async def iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league, rightful_role, unchanged, wave_bottom):
+    if all(wave_bottom > wave for wave in current_champ_waves):
+        for champ_role in current_champ_roles:
+            await discord_player.remove_roles(champ_role)
+
+        await discord_player.add_roles(rightful_role)
+        changed[league] += 1
+        logging.info(f"Added {rightful_role=} to {discord_player=}")
+
+    else:
+        unchanged[league] += 1
+
+
+async def handle_role_present(added_role, discord_player, had_role, player_id_present_role, player_id_present_role_id):
+    has_player_id_present_role = [role for role in discord_player.roles if role.id == player_id_present_role_id]
+    if not has_player_id_present_role:
+        await discord_player.add_roles(player_id_present_role)
+        added_role += 1
+    else:
+        had_role += 1
+    return added_role, had_role
 
 
 @client.event
@@ -169,20 +180,7 @@ async def on_message(message):
 
         # elif message.channel.id == 930105733998080062 and message.author.id != 1117480944153145364:
         elif message.channel.id == 1117867265375879259 and message.author.id != 1117480944153145364:
-            try:
-                if 17 > len(message.content) > 12 and message.attachments:
-                    player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
-                        discord_id=message.author.id, defaults=dict(approved=False, name=message.author.name)
-                    )
-                    await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(
-                        id=message.content, player_id=player.id, defaults=dict(primary=True)
-                    )
-                    await message.add_reaction("✅")
-                else:
-                    await message.add_reaction("⁉️")
-            except Exception as exc:
-                await message.channel.send(f"Something went terribly wrong, please debug me. \n\n {exc}")
-                raise exc
+            await validate_player_id(message)
 
         elif message.channel.id == 930105733998080062 and message.content.startswith("!remove_all_roles"):
             tower = await client.fetch_guild(850137217828388904)
@@ -204,6 +202,21 @@ async def on_message(message):
 
     except Exception as exc:
         await message.channel.send(f"😱😱😱 Something went terribly wrong, please debug me. \n\n {exc}")
+        raise exc
+
+
+async def validate_player_id(message):
+    try:
+        if 17 > len(message.content) > 12 and message.attachments:
+            player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
+                discord_id=message.author.id, defaults=dict(approved=False, name=message.author.name)
+            )
+            await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(id=message.content, player_id=player.id, defaults=dict(primary=True))
+            await message.add_reaction("✅")
+        else:
+            await message.add_reaction("⁉️")
+    except Exception as exc:
+        await message.channel.send(f"Something went terribly wrong, please debug me. \n\n {exc}")
         raise exc
 
 
