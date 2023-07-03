@@ -43,8 +43,8 @@ class SusPersonAdmin(SimpleHistoryAdmin):
 
 class IdInline(admin.TabularInline):
     model = PlayerId
-    verbose_name = "Annotation Pipeline User"
-    verbose_name_plural = "Annotation Pipeline Users"
+    verbose_name = "The Tower Player ID"
+    verbose_name_plural = "The Tower Player IDs"
 
 
 @admin.register(KnownPlayer)
