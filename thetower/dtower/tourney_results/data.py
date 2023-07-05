@@ -181,6 +181,8 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
 
     df = pd.concat(dfs)
 
+    df["tourney_name"] = df.tourney_name.map(lambda name: name.split("#")[0])
+
     lookup = get_player_id_lookup()
     id_to_real_name = get_id_real_name_mapping(df, lookup)
 
