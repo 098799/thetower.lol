@@ -31,7 +31,7 @@ while True:
             continue
 
         print("Something new")
-        last_files = sorted(glob(f"/root/tourney/results_cache/{us_to_jim[league]}/{last_date}*"))
+        last_files = sorted([file_name for file_name in glob(f"/root/tourney/results_cache/{us_to_jim[league]}/{last_date}*") if "csv_raw" not in file_name])
 
         if not last_files:
             print("Apparently we're checking the files before the download script could get them, try later.")
