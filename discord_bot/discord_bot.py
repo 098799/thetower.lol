@@ -94,7 +94,7 @@ async def handle_adding(limit, message=None, verbose=False):
 
 async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message, patch, player, roles, skipped, tower, unchanged, verbose):
     for league in all_leagues:
-        safe_league_prefix = league[:-1]
+        safe_league_prefix = get_safe_league_prefix(league)
         league_roles = dict(
             sorted(
                 [(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")],
@@ -122,7 +122,7 @@ async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, message
         if discord_player is None:
             return None, skipped + 1
 
-        current_champ_roles = [role for role in discord_player.roles if role.name.startswith(safe_league_prefix) and role.name.strip().endswith("0")]
+        current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, safe_league_prefix)]
         current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
 
         await iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league, rightful_role, unchanged, wave_bottom)
@@ -162,7 +162,6 @@ async def on_ready():
     if handle_outside:
         await handle_adding(limit=None, message=None, verbose=False)
         exit()
-
     logging.info(f"We have logged in as {client.user}")
 
 
@@ -198,6 +197,9 @@ async def on_message(message):
 
                 await discord_player.add_roles(champ_roles[500])
                 logging.info(f"Removed roles for {player=}")
+        elif message.channel.id == 930105733998080062 and message.content.startswith("!purge_all_tourney_roles"):
+            await purge_all_tourney_roles(message)
+            logging.info("Purged all tournaments roles")
 
     except Exception as exc:
         await message.channel.send(f"😱😱😱 Something went terribly wrong, please debug me. \n\n {exc}")
@@ -217,6 +219,52 @@ async def validate_player_id(message):
     except Exception as exc:
         await message.channel.send(f"Something went terribly wrong, please debug me. \n\n {exc}")
         raise exc
+
+
+@client.event
+async def purge_all_tourney_roles(message):
+    purged = 0
+    try:
+        tower = await client.fetch_guild(850137217828388904)
+        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
+        discord_players = []
+
+        for player in players:
+            try:
+                current_player = await tower.fetch_member(int(player.discord_id))
+                discord_players.append(current_player)
+            except Exception as exc:
+                logging.info(f"Player {player.name} could not be found. \n\n {exc}")
+                continue
+
+        logging.info(f"Retrieved {len(discord_players)} players")
+        await message.channel.send(f"Found {len(discord_players)} players")
+
+        for league in leagues:
+            safe_league_prefix = await get_safe_league_prefix(league)
+            for discord_player in discord_players:
+                current_league_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, safe_league_prefix)]
+
+                if len(current_league_roles) > 0:
+                    await discord_player.remove_roles(*current_league_roles)
+                    purged += 1
+                else:
+                    logging.info(f"name: {discord_player.name} roles that should have been removed: {current_league_roles}")
+
+        await message.channel.send(f"🔥🔥🔥 Purged {purged} tournament roles 🔥🔥🔥")
+
+    except Exception as exc:
+        await message.channel.send(f"😱😱😱 Something went terribly wrong, please debug me. \n\n {exc}")
+        raise exc
+
+
+async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
+    return role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
+
+
+async def get_safe_league_prefix(league):
+    safe_league_prefix = league[:-1]
+    return safe_league_prefix
 
 
 client.run(os.getenv("DISCORD_TOKEN"), log_level=logging.INFO)
