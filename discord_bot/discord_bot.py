@@ -221,7 +221,6 @@ async def validate_player_id(message):
         raise exc
 
 
-@client.event
 async def purge_all_tourney_roles(message):
     purged = 0
     try:
