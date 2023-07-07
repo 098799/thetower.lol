@@ -240,7 +240,7 @@ async def purge_all_tourney_roles(message):
         await message.channel.send(f"Found {len(discord_players)} players")
 
         for league in leagues:
-            safe_league_prefix = await get_safe_league_prefix(league)
+            safe_league_prefix = get_safe_league_prefix(league)
             for discord_player in discord_players:
                 current_league_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, safe_league_prefix)]
 
@@ -261,9 +261,8 @@ async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
     return role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
 
 
-async def get_safe_league_prefix(league):
-    safe_league_prefix = league[:-1]
-    return safe_league_prefix
+def get_safe_league_prefix(league):
+    return league[:-1]
 
 
 client.run(os.getenv("DISCORD_TOKEN"), log_level=logging.INFO)
