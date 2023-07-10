@@ -319,7 +319,7 @@ async def handle_roles_scheduled():
     channel = await tower.fetch_channel(testing_room_id)
 
     try:
-        await handle_adding(limit=10, channel=channel)
+        await handle_adding(limit=None, channel=channel)
     except Exception as e:
         logging.exception(e)
 
