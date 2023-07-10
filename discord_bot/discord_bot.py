@@ -79,7 +79,9 @@ async def handle_adding(limit, channel=None):
 
     logging.info(f"{skipped=}")
 
-    await channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{len(unchanged)=}, \n{changed=}.")
+    unchanged_summary = {league: len(unchanged_data) for league, unchanged_data in unchanged.items()}
+
+    await channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
     logging.info("**********Done**********")
 
 
@@ -131,7 +133,7 @@ async def iterate_waves_and_add_roles(changed, current_champ_roles, current_cham
             await discord_player.remove_roles(champ_role)
 
         await discord_player.add_roles(rightful_role)
-        changed[league].append((discord_player, rightful_role))
+        changed[league].append((discord_player.name, rightful_role.name))
         logging.info(f"Added {rightful_role=} to {discord_player=}")
 
     else:
