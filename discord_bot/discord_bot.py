@@ -2,10 +2,13 @@ import logging
 import os
 from collections import defaultdict
 
+
 import discord
 import django
+
 from asgiref.sync import sync_to_async
 from tqdm import tqdm
+from discord.ext import tasks, commands
 
 from dtower.tourney_results.constants import league_to_folder, leagues
 from dtower.tourney_results.data import load_tourney_results__uncached
@@ -25,9 +28,7 @@ intents.members = True
 
 client = discord.Client(intents=intents)
 
-
 handle_outside = bool(os.getenv("GO"))
-
 
 async def get_member(guild, discord_id, message=None):
     try:
@@ -59,9 +60,6 @@ async def handle_adding(limit, message=None, verbose=False):
 
     player_iter = players.order_by("-id")[:limit] if limit else players.order_by("-id")
 
-    player_id_present_role_id = 1119950199209611274
-    player_id_present_role = [role for role in roles if role.id == player_id_present_role_id][0]
-
     added_role = 0
     had_role = 0
 
@@ -81,8 +79,6 @@ async def handle_adding(limit, message=None, verbose=False):
 
         elif discord_player == "unknown":
             break
-
-        added_role, had_role = await handle_role_present(added_role, discord_player, had_role, player_id_present_role, player_id_present_role_id)
 
     logging.info(f"{skipped=}")
 
@@ -147,14 +143,10 @@ async def iterate_waves_and_add_roles(changed, current_champ_roles, current_cham
         unchanged[league] += 1
 
 
-async def handle_role_present(added_role, discord_player, had_role, player_id_present_role, player_id_present_role_id):
+async def handle_role_present(discord_player, player_id_present_role, player_id_present_role_id):
     has_player_id_present_role = [role for role in discord_player.roles if role.id == player_id_present_role_id]
     if not has_player_id_present_role:
         await discord_player.add_roles(player_id_present_role)
-        added_role += 1
-    else:
-        had_role += 1
-    return added_role, had_role
 
 
 async def remove_nicknames(channel=None):
@@ -189,7 +181,8 @@ async def on_ready():
         await handle_adding(limit=None, message=None, verbose=False)
         exit()
     logging.info(f"We have logged in as {client.user}")
-
+    if not handle_roles_scheduled.is_running():
+        handle_roles_scheduled.start()
 
 @client.event
 async def on_message(message):
@@ -205,26 +198,31 @@ async def on_message(message):
             await handle_adding(limit, message, verbose=True)
 
         # elif message.channel.id == 930105733998080062 and message.author.id != 1117480944153145364:
-        elif message.channel.id == 1117867265375879259 and message.author.id != 1117480944153145364:
-            await validate_player_id(message)
-
-        elif message.channel.id == 930105733998080062 and message.content.startswith("!remove_all_roles"):
+        elif message.channel.id == 930105733998080062 and message.author.id != 1117480944153145364 and message.author.id == 181859318801498113:
             tower = await client.fetch_guild(850137217828388904)
-            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
             roles = await tower.fetch_roles()
-            champ_roles = dict(sorted([(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith("Champ")], reverse=True))
+            verified_role_id = 1119950199209611274
+            verified_role = [role for role in roles if role.id == verified_role_id][0]
+            await validate_player_id(message, verified_role, verified_role_id)
 
-            for player in players:
-                logging.info(f"Checking {player=}")
-                discord_player = await tower.fetch_member(int(player.discord_id))
+        elif message.channel.id == 930105733998080062 and message.content.startswith("!remove_all_roles") and message.author.id == 181859318801498113:
+            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
+            tower = await client.fetch_guild(850137217828388904)
+            roles = await tower.fetch_roles()
+            for league in leagues:
+                league_roles = await get_current_league_roles(roles, league)
 
-                current_champ_roles = [role for role in discord_player.roles if role.name.startswith("Champ")]
+                for player in players:
+                    logging.info(f"Checking {player=}")
+                    discord_player = await tower.fetch_member(int(player.discord_id))
 
-                for champ_role in current_champ_roles:
-                    await discord_player.remove_roles(champ_role)
+                    current_league_roles = [role for role in discord_player.roles if role.name.startswith("Champ")]
+                    if player.id == 181859318801498113:
+                        for champ_role in current_league_roles:
+                            await discord_player.remove_roles(champ_role)
 
-                await discord_player.add_roles(champ_roles[500])
-                logging.info(f"Removed roles for {player=}")
+                        await discord_player.add_roles(league_roles[500])
+                    logging.info(f"Removed roles for {player=}")
         elif message.channel.id == 930105733998080062 and message.content.startswith("!purge_all_tourney_roles"):
             await purge_all_tourney_roles(message)
             logging.info("Purged all tournaments roles")
@@ -234,13 +232,18 @@ async def on_message(message):
         raise exc
 
 
-async def validate_player_id(message):
+async def get_current_league_roles(roles, league):
+    return dict(sorted([(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith(league)], reverse=True))
+
+
+async def validate_player_id(message, verified_role, verified_role_id):
     try:
         if 17 > len(message.content) > 12 and message.attachments:
             player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
                 discord_id=message.author.id, defaults=dict(approved=True, name=message.author.name)
             )
             await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(id=message.content, player_id=player.id, defaults=dict(primary=True))
+            await handle_role_present(player, verified_role, verified_role_id)
             await message.add_reaction("✅")
         else:
             await message.add_reaction("⁉️")
@@ -292,5 +295,14 @@ async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
 def get_safe_league_prefix(league):
     return league[:-1]
 
+@tasks.loop(hours=10.0)
+async def handle_roles_scheduled():
+    tower = await client.fetch_guild(850137217828388904)
+    channel = await tower.fetch_channel(930105733998080062)
+    message = await channel.send(f"Handling roles...")
+    try:
+        await handle_adding(limit=None, message=None, verbose=False)
+    except Exception as e:
+        logging.debug(f"Something went wrong please debug me {e}")
 
 client.run(os.getenv("DISCORD_TOKEN"), log_level=logging.INFO)
