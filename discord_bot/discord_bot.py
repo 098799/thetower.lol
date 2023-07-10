@@ -157,6 +157,32 @@ async def handle_role_present(added_role, discord_player, had_role, player_id_pr
     return added_role, had_role
 
 
+async def remove_nicknames(channel=None):
+    tower = await client.fetch_guild(850137217828388904)
+    channel = channel if channel else client.fetch_channel(930105733998080062)
+
+    success = 0
+    failure = 0
+
+    await channel.send("Starting to remove nicknames from people...")
+
+    async for member in tower.fetch_members():
+        try:
+            await member.edit(nick=None)
+            success += 1
+        except Exception:
+            await channel.send(f"😱😱😱 Failed to remove nickname from {member}, continuing...")
+            failure += 1
+
+        if (success + failure) % 500 == 0:
+            await channel.send(f"Removed {success=} {failure=}")
+
+        if (success + failure) % 10 == 0:
+            logging.info(f"{success=} {failure=}")
+
+    await channel.send(f"Finished removing nicknames from people, {success=}, {failure=}")
+
+
 @client.event
 async def on_ready():
     if handle_outside:
@@ -168,7 +194,9 @@ async def on_ready():
 @client.event
 async def on_message(message):
     try:
-        if message.channel.id == 930105733998080062 and message.content.startswith("!add_roles"):
+        if message.channel.id == 930105733998080062 and message.content.startswith("!remove_all_nicknames"):
+            await remove_nicknames(message.channel)
+        elif message.channel.id == 930105733998080062 and message.content.startswith("!add_roles"):
             try:
                 limit = int(message.content.split()[1])
             except Exception:
