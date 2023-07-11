@@ -6,6 +6,10 @@ import django
 from asgiref.sync import sync_to_async
 from discord.ext import tasks
 
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
+django.setup()
+
 from discord_bot.add_roles import handle_adding
 from discord_bot.purge_roles import purge_all_tourney_roles
 from discord_bot.remove_nicknames import remove_nicknames
@@ -20,11 +24,6 @@ from discord_bot.util import (
     verified_role_id,
 )
 from discord_bot.validate_id import handle_role_present, validate_player_id
-
-os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
-django.setup()
-
 from dtower.sus.models import KnownPlayer, PlayerId
 
 intents = discord.Intents.default()
