@@ -80,7 +80,7 @@ async def on_message(message):
         #     await validate_player_id(client, message)
 
         elif is_testing_room(message.channel) and message.content.startswith("!purge_all_tourney_roles"):
-            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False, discord_id=id_098799)
+            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
             await purge_all_tourney_roles(client, message.channel, players)
             logging.info("Purged all tournaments roles")
 
@@ -92,7 +92,7 @@ async def on_message(message):
 @tasks.loop(hours=1.0)
 async def handle_roles_scheduled():
     tower = await get_tower(client)
-    channel = await tower.fetch_channel(role_log_room_id)
+    channel = client.get_channel(role_log_room_id)
 
     try:
         await handle_adding(client, limit=None, channel=channel, verbose=False)

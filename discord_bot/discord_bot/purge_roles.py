@@ -1,5 +1,7 @@
 import logging
 
+from tqdm import tqdm
+
 from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check
 from dtower.tourney_results.constants import leagues
 
@@ -7,10 +9,11 @@ from dtower.tourney_results.constants import leagues
 async def purge_all_tourney_roles(client, channel, players):
     purged = 0
     try:
+        await channel.send("Starting carnage...")
         tower = await get_tower(client)
         discord_players = []
 
-        for player in players:
+        for player in tqdm(players):
             try:
                 current_player = await tower.fetch_member(int(player.discord_id))
                 discord_players.append(current_player)
