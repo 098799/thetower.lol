@@ -4,6 +4,7 @@
 
 - `pip install -e .` to install the app,
 - `pip install -e thetower` to install the django stuff,
+- `pip install -e discord_bot` to install the discord bot,
 
 - run with: `streamlit run components/tourney.py`
 - django admin run with: `cd thetower/dtower && DEBUG=true python manage.py runserver`
