@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from math import ceil
 
 import discord
 from asgiref.sync import sync_to_async
@@ -12,14 +13,15 @@ from dtower.tourney_results.data import load_tourney_results__uncached
 from dtower.tourney_results.models import PatchNew as Patch
 
 
-async def handle_adding(client, limit, channel=None):
+async def handle_adding(client, limit, channel=None, verbose=None):
     skipped = 0
     unchanged = defaultdict(list)
     changed = defaultdict(list)
 
     players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
 
-    await channel.send(f"Starting the processing of {players.count() if not limit else limit} users... :rocket:")
+    if verbose:
+        await channel.send(f"Starting the processing of {players.count() if not limit else limit} users... :rocket:")
 
     all_leagues = leagues
 
@@ -50,7 +52,18 @@ async def handle_adding(client, limit, channel=None):
 
     unchanged_summary = {league: len(unchanged_data) for league, unchanged_data in unchanged.items()}
 
-    await channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
+    if verbose:
+        await channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
+    else:
+        # the only thing bot outputs in the continuous mode, should be easy to review in the channel, not exceed the limit of the message etc.
+        added_roles = [f"{name}: {league}" for league, contents in changed.items() for name, league in contents]
+
+        chunk_by = 10
+
+        for chunk in ceil(len(added_roles) / chunk_by):
+            added_roles_message = "\n".join(added_roles[chunk * chunk_by : (chunk + 1) * chunk_by])
+            await channel.send(added_roles_message)
+
     logging.info("**********Done**********")
 
 

@@ -44,7 +44,7 @@ async def on_ready():
         channel = client.get_channel(1117480385941618800)
 
         # those are the top level functionalities one may want to test
-        # await handle_adding(client, limit=5, channel=channel)
+        # await handle_adding(client, limit=5, channel=channel, verbose=True)
         # await remove_nicknames(client, channel)
         # await purge_all_tourney_roles(
         #     client=client,
@@ -71,7 +71,7 @@ async def on_message(message):
             except Exception:
                 limit = None
 
-            await handle_adding(client, limit, message)
+            await handle_adding(client, limit, message, verbose=True)
 
         elif is_player_id_please_room(message.channel) and message.author.id != 1117480944153145364:
             await validate_player_id(client, message)
@@ -95,7 +95,7 @@ async def handle_roles_scheduled():
     channel = await tower.fetch_channel(testing_room_id)
 
     try:
-        await handle_adding(client, limit=None, channel=channel)
+        await handle_adding(client, limit=None, channel=channel, verbose=False)
     except Exception as e:
         logging.exception(e)
 
