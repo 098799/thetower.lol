@@ -20,6 +20,7 @@ from discord_bot.util import (
     id_098799,
     is_player_id_please_room,
     is_testing_room,
+    role_log_room_id,
     testing_room_id,
     verified_role_id,
 )
@@ -70,7 +71,7 @@ async def on_message(message):
             except Exception:
                 limit = None
 
-            await handle_adding(client, limit, message, verbose=True)
+            await handle_adding(client, limit, message.channel, verbose=True)
 
         elif is_player_id_please_room(message.channel) and message.author.id != 1117480944153145364:
             await validate_player_id(client, message)
@@ -91,7 +92,7 @@ async def on_message(message):
 @tasks.loop(hours=1.0)
 async def handle_roles_scheduled():
     tower = await get_tower(client)
-    channel = await tower.fetch_channel(testing_room_id)
+    channel = await tower.fetch_channel(role_log_room_id)
 
     try:
         await handle_adding(client, limit=None, channel=channel, verbose=False)
