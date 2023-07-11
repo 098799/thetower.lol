@@ -97,6 +97,8 @@ async def handle_roles_scheduled():
     try:
         await handle_adding(client, limit=None, channel=channel, verbose=False)
     except Exception as e:
+        test_channel = await tower.fetch_channel(testing_room_id)
+        await test_channel.send(f"😱😱😱 \n\n {e}")
         logging.exception(e)
 
 
