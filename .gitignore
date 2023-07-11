@@ -1,12 +1,9 @@
 SECRET_KEY
 dtower.egg-info
 components.egg-info
+discord_bot.egg-info
+data
 db.sqlite3*
-test
-test2
-test3
-test4
-test5
 uploads
 results_cache
 backups
