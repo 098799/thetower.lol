@@ -60,7 +60,7 @@ async def handle_adding(client, limit, channel=None, verbose=None):
 
         chunk_by = 10
 
-        for chunk in ceil(len(added_roles) / chunk_by):
+        for chunk in range(ceil(len(added_roles) / chunk_by)):
             added_roles_message = "\n".join(added_roles[chunk * chunk_by : (chunk + 1) * chunk_by])
             await channel.send(added_roles_message)
 
