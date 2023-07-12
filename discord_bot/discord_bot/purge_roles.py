@@ -26,7 +26,7 @@ async def purge_all_tourney_roles(client, channel, players):
 
         for league in leagues:
             safe_league_prefix = get_safe_league_prefix(league)
-            for discord_player in discord_players:
+            for discord_player in tqdm(discord_players):
                 current_league_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, safe_league_prefix)]
 
                 if len(current_league_roles) > 0:
