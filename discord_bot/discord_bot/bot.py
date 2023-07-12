@@ -93,11 +93,11 @@ async def on_message(message):
 async def handle_roles_scheduled():
     tower = await get_tower(client)
     channel = client.get_channel(role_log_room_id)
+    test_channel = await tower.fetch_channel(testing_room_id)
 
     try:
-        await handle_adding(client, limit=None, channel=channel, verbose=False)
+        await handle_adding(client, limit=None, channel=channel, debug_channel=test_channel, verbose=False)
     except Exception as e:
-        test_channel = await tower.fetch_channel(testing_room_id)
         await test_channel.send(f"😱😱😱 \n\n {e}")
         logging.exception(e)
 

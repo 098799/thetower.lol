@@ -13,10 +13,13 @@ from dtower.tourney_results.data import load_tourney_results__uncached
 from dtower.tourney_results.models import PatchNew as Patch
 
 
-async def handle_adding(client, limit, channel=None, verbose=None):
+async def handle_adding(client, limit, channel=None, debug_channel=None, verbose=None):
     skipped = 0
     unchanged = defaultdict(list)
     changed = defaultdict(list)
+
+    if debug_channel is None:
+        debug_channel = channel
 
     players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
 
@@ -37,7 +40,9 @@ async def handle_adding(client, limit, channel=None, verbose=None):
         ids = await sync_to_async(player.ids.all().values_list, thread_sensitive=True)("id", flat=True)
         discord_player = None
 
-        discord_player, skipped = await handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel, patch, player, roles, skipped, tower, unchanged)
+        discord_player, skipped = await handle_leagues(
+            all_leagues, changed, dfs, discord_player, ids, channel, patch, player, roles, skipped, tower, unchanged, debug_channel
+        )
 
         if discord_player is None:
             discord_player = await get_member(tower, int(player.discord_id), channel=channel)
@@ -77,7 +82,7 @@ async def get_member(guild, discord_id, channel=None):
             await channel.send(f"😱😱😱 Failed to fetch data for discord_id {discord_id}, please review.")
 
 
-async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel, patch, player, roles, skipped, tower, unchanged):
+async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel, patch, player, roles, skipped, tower, unchanged, debug_channel):
     for league in all_leagues:
         safe_league_prefix = get_safe_league_prefix(league)
         league_roles = dict(
@@ -102,7 +107,7 @@ async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel
 
         rightful_role = league_roles[wave_bottom]
         # this should be extracted into a method
-        discord_player = await get_member(tower, int(player.discord_id), channel=channel)
+        discord_player = await get_member(tower, int(player.discord_id), channel=debug_channel)
 
         if discord_player is None:
             return None, skipped + 1
