@@ -146,7 +146,7 @@ class Results:
             to_be_displayed[date_iter] = [mini_df.iloc[0].wave if not (mini_df := prev_df[prev_df.id == id_]).empty else 0 for id_ in to_be_displayed.id]
 
         to_be_displayed = (
-            to_be_displayed[["position", "tourney_name", "real_name", *[date, *previous_4_dates], "id"]]
+            to_be_displayed[["position", "tourney_name", "real_name", *[date, *previous_4_dates], "verified", "id"]]
             .style.apply(
                 lambda row: [
                     None,
@@ -157,6 +157,7 @@ class Results:
                         f"color: {mini_df.wave_role_color.iloc[0] if not (mini_df := prev_df[prev_df.id==row.id]).empty else '#FFF'}"
                         for prev_df in prev_dfs.values()
                     ],
+                    "color: #5555FF",
                     None,
                 ],
                 axis=1,
@@ -170,13 +171,14 @@ class Results:
     def regular_preparation(self, to_be_displayed, filtered_df):
         if self.hidden_features:
             to_be_displayed = (
-                to_be_displayed[["position", "tourney_name", "real_name", "wave", "id"]]
+                to_be_displayed[["position", "tourney_name", "real_name", "wave", "verified", "id"]]
                 .style.apply(
                     lambda row: [
                         None,
                         f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}",
                         None,
                         f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
+                        "color: #5555FF",
                         None,
                     ],
                     axis=1,
@@ -186,13 +188,14 @@ class Results:
             )
         else:
             to_be_displayed = (
-                to_be_displayed[["position", "tourney_name", "real_name", "wave"]]
+                to_be_displayed[["position", "tourney_name", "real_name", "wave", "verified"]]
                 .style.apply(
                     lambda row: [
                         None,
                         f"color: {filtered_df[filtered_df['position']==row.position].name_role_color.iloc[0]}",
                         None,
                         f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
+                        "color: #5555FF",
                     ],
                     axis=1,
                 )

@@ -189,6 +189,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
     df["raw_id"] = df.id
     id_mapping = get_id_lookup()
     df["id"] = df.id.map(lambda id_: id_mapping.get(id_, id_))  # id renormalization
+    df["verified"] = df.id.map(lambda id_: "✓" if lookup.get(id_) else "")
 
     load_data_bar.progress(0.6)
 
