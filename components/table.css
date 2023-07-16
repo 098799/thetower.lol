@@ -1,0 +1,12 @@
+a {
+  text-decoration: none;
+}
+
+/* td:has(a):hover { */
+/*   background-color: yellow; */
+/* } */
+
+
+.hovered {
+    background-color: lightblue;
+}
