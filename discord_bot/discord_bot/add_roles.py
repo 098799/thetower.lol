@@ -45,7 +45,7 @@ async def handle_adding(client, limit, channel=None, debug_channel=None, verbose
         )
 
         if discord_player is None:
-            discord_player = await get_member(tower, int(player.discord_id), channel=channel)
+            discord_player = await get_member(tower, int(player.discord_id), channel=debug_channel)
 
             if discord_player is None:
                 continue
