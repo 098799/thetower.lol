@@ -197,7 +197,7 @@ class Results:
 
         to_be_displayed = self.prepare_data(filtered_df, how_many=prefilter_results)
 
-        self.congrats(filtered_df)
+        self.congrats(to_be_displayed)
 
         if self.show_hist:
             to_be_displayed_styler = self.show_hist_preparation(to_be_displayed, filtered_df, date)
