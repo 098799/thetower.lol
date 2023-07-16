@@ -1,6 +1,5 @@
 import datetime
 import os
-from collections import defaultdict
 from statistics import median, stdev
 from urllib.parse import urlencode
 
@@ -8,10 +7,10 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.util import links_toggle
+from components.util import get_options
 from dtower.sus.models import SusPerson
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
-from dtower.tourney_results.data import get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
+from dtower.tourney_results.data import get_id_lookup, get_patches, get_player_list, load_tourney_results
 from dtower.tourney_results.formatting import color_top_18, make_url
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -194,4 +193,5 @@ def loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_use
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-    compute_comparison(df, options=Options(links_toggle=links_toggle(), default_graph=Graph("all"), average_foreground=True))
+    options = get_options(links=False)
+    compute_comparison(df, options=options)

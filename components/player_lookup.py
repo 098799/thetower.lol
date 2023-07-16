@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
+from components.util import get_options
 from dtower.sus.models import SusPerson
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
 from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
@@ -264,5 +265,5 @@ def handle_initial_choices(hidden_features, options, player_list, sus_ids):
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-    options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
+    options = get_options(links=False)
     compute_player_lookup(df, options=options)
