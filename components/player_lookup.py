@@ -32,7 +32,9 @@ def compute_player_lookup(df, options: Options):
     if not user:
         return
 
-    st.code("http://thetower.lol?" + urlencode({"player": user}, doseq=True))
+    info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["General information", "Tourney performance graph", "Results data", "Patch best"])
+
+    info_tab.code("http://thetower.lol?" + urlencode({"player": user}, doseq=True))
 
     id_mapping = get_id_lookup()
 
@@ -43,7 +45,7 @@ def compute_player_lookup(df, options: Options):
         potential_ids = player_df.id.unique().tolist()
         aggreg = player_df.groupby("id").count()
         most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
-        user_ids = st.multiselect(
+        user_ids = graph_tab.multiselect(
             "Since multiple players had the same username, please choose id. If you are confident the same user used multiple ids, you can select multiple. If it's different users, data below won't make much sense",
             potential_ids,
             default=most_common_id,
@@ -64,9 +66,9 @@ def compute_player_lookup(df, options: Options):
 
     patches_active = player_df.patch.unique()
 
-    handle_sus_or_banned_ids(id_, sus_ids)
+    handle_sus_or_banned_ids(info_tab, id_, sus_ids)
 
-    st.write(
+    info_tab.write(
         f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
         unsafe_allow_html=True,
     )
@@ -75,7 +77,7 @@ def compute_player_lookup(df, options: Options):
     graph_options = [options.default_graph.value] + [
         value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
     ]
-    patch_col, average_col = st.columns([1, 1])
+    patch_col, average_col = graph_tab.columns([1, 1])
     patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
     rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
 
@@ -86,7 +88,7 @@ def compute_player_lookup(df, options: Options):
     tbdf["position_average"] = tbdf.position.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
 
     if len(tbdf) > 1:
-        pos_col, tweak_col = st.columns([1, 1])
+        pos_col, tweak_col = graph_tab.columns([1, 1])
 
         graph_position_instead = pos_col.checkbox("Graph position instead")
         average_foreground = tweak_col.checkbox("Average in the foreground?", value=True)
@@ -99,33 +101,39 @@ def compute_player_lookup(df, options: Options):
 
         handle_start_date_loop(fig, graph_position_instead, tbdf)
 
-        st.plotly_chart(fig)
+        graph_tab.plotly_chart(fig)
 
     additional_column = ["league"] if "league" in tbdf.columns else []
     additional_format = [None] if "league" in tbdf.columns else []
 
+    player_df["average"] = player_df.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
+    player_df = player_df.reset_index(drop=True)
+
     to_be_displayed = (
-        tbdf[["date", "tourney_name", "wave", "position", "average"] + additional_column]
+        player_df[["date", "tourney_name", "wave", "position", "average"] + additional_column]
         .style.apply(
-            lambda row: [None, f"color: {tbdf[tbdf['date']==row.date].name_role_color.iloc[0]}", None, None, None] + additional_format,
+            lambda row: [None, f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None] + additional_format,
             axis=1,
         )
         .apply(
-            lambda row: [None, None, f"color: {tbdf[tbdf['date']==row.date].wave_role_color.iloc[0]}", None, None] + additional_format,
+            lambda row: [None, None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None] + additional_format,
             axis=1,
         )
         .applymap(color_position, subset=["position"])
     )
-    st.dataframe(to_be_displayed, use_container_width=True)
+    raw_data_tab.dataframe(to_be_displayed, use_container_width=True, height=800)
 
-    write_for_each_patch(patches_active, player_df, real_name)
+    write_for_each_patch(patch_tab, patches_active, player_df, real_name)
 
-    st.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+    info_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+    graph_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+    raw_data_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+    patch_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
 
 
-def write_for_each_patch(patches_active, player_df, real_name):
-    for patch in patches_active[::-1]:
-        st.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + ("" if not patch.beta else " beta"))
+def write_for_each_patch(patch_tab, patches_active, player_df, real_name):
+    for patch in patches_active:
+        patch_tab.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + ("" if not patch.beta else " beta"))
         patch_df = player_df[player_df.patch == patch]
 
         patch_role_color = patch_df.iloc[-1].name_role.color
@@ -136,7 +144,7 @@ def write_for_each_patch(patches_active, player_df, real_name):
         max_data = patch_df[patch_df.wave == max_wave].iloc[0]
         max_pos_data = patch_df[patch_df.position == max_pos].iloc[0]
 
-        st.write(
+        patch_tab.write(
             f"Max wave for <font color='{patch_role_color}'>{real_name}</font> in champ during patch 0.{patch.version_minor}: <font color='{patch_role_color}'>**{max_wave}**</font>, as {max_data.tourney_name} on {max_data.date}"
             f"<br>Best position for <font color='{patch_role_color}'>{real_name}</font> in champ during patch 0.{patch.version_minor}: <font color='{max_pos_data.position_role_color}'>**{max_pos}**</font>, as {max_pos_data.tourney_name} on {max_pos_data.date}",
             unsafe_allow_html=True,
@@ -228,11 +236,11 @@ def handle_colors_dependant_on_patch(df, patch, player_df):
     return colors, patch_df, stratas
 
 
-def handle_sus_or_banned_ids(id_, sus_ids):
+def handle_sus_or_banned_ids(info_tab, id_, sus_ids):
     if id_ in get_banned_ids():
-        st.warning("This player is banned by Pog.")
+        info_tab.warning("This player is banned by Pog.")
     if id_ in sus_ids:
-        st.error("This player is considered sus.")
+        info_tab.error("This player is considered sus.")
 
 
 def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
