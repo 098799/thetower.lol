@@ -264,4 +264,5 @@ def handle_initial_choices(hidden_features, options, player_list, sus_ids):
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-    compute_player_lookup(df, options=Options(links_toggle=True, default_graph=Graph("all")))
+    options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
+    compute_player_lookup(df, options=options)

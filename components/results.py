@@ -7,8 +7,9 @@ import plotly.express as px
 import streamlit as st
 from streamlit_js_eval import get_page_location
 
-from dtower.tourney_results.constants import Options, sus_person
-from dtower.tourney_results.data import get_sus_ids
+from components.util import links_toggle
+from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder, sus_person
+from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -238,6 +239,12 @@ class Results:
 
 def compute_results(df, options: Options):
     Results(df, options).compute_results()
+
+
+if __name__ == "__main__":
+    options = Options(links_toggle=links_toggle(), default_graph=Graph.last_16.value, average_foreground=True)
+    df = load_tourney_results(league_to_folder[champ])
+    compute_results(df, options)
 
 
 # import cProfile

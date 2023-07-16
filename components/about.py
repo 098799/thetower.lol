@@ -7,9 +7,10 @@ from dtower.tourney_results.data import get_sus_data
 
 def compute_about(*args, **kwargs):
     st.title("About")
-    st.markdown("My discord id is `098799`.")
+    st.markdown("Site is operated by `098799` and `andreasjn` on discord.")
     st.markdown("Thanks to `Milamber33` for a lot of help with css and other things.")
     st.markdown("Thanks to `Jim808` and `ObsUK` for a graph ideas and encouragement.")
+    st.markdown("Thanks to `Pog` and the discord mods for all the work on sus reports.")
 
     st.header("Sus people")
     st.write(
@@ -26,3 +27,7 @@ def compute_about(*args, **kwargs):
     # # st.header("Vindicated")
     # # st.write("Previously on the sus list but vindicated by the tower staff:")
     # # st.write(sorted([nickname for nickname, id_ in rehabilitated]))
+
+
+if __name__ == "__main__":
+    compute_about()

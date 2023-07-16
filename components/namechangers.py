@@ -1,7 +1,8 @@
 import pandas as pd
 import streamlit as st
 
-from dtower.tourney_results.data import get_sus_ids
+from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
+from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
 
 def compute_namechangers(df, options=None):
@@ -33,3 +34,9 @@ def compute_namechangers(df, options=None):
     to_be_displayed = new_df.style.apply(lambda row: [f"color: {df[df.real_name == row.real_name].iloc[-1].name_role_color}", None, None, None], axis=1)
 
     st.dataframe(to_be_displayed, use_container_width=True, height=800)
+
+
+if __name__ == "__main__":
+    options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
+    df = load_tourney_results(league_to_folder[champ])
+    compute_namechangers(df, options)

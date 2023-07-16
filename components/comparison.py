@@ -8,6 +8,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from components.util import links_toggle
 from dtower.sus.models import SusPerson
 from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
 from dtower.tourney_results.data import get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
@@ -193,4 +194,4 @@ def loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_use
 
 if __name__ == "__main__":
     df = load_tourney_results("data")
-    compute_comparison(df, options=Options(links_toggle=True, default_graph=Graph("all"), average_foreground=True))
+    compute_comparison(df, options=Options(links_toggle=links_toggle(), default_graph=Graph("all"), average_foreground=True))

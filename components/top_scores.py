@@ -1,8 +1,8 @@
 import plotly.express as px
 import streamlit as st
 
-from dtower.tourney_results.constants import Options
-from dtower.tourney_results.data import get_patches, get_sus_ids
+from dtower.tourney_results.constants import Graph, Options
+from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position__top, make_url
 
 patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
@@ -57,3 +57,9 @@ def compute_top(df, options: Options):
         st.write(overall_tbd, unsafe_allow_html=True)
     else:
         st.dataframe(overall_tbd, use_container_width=True, height=400)
+
+
+if __name__ == "__main__":
+    df = load_tourney_results("data")
+    options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
+    compute_top(df, options)

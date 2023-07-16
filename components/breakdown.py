@@ -5,8 +5,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dtower.tourney_results.constants import Options
-from dtower.tourney_results.data import get_sus_ids
+from components.results import compute_results
+from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
+from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.models import PatchNew as Patch
 
 
@@ -79,3 +80,8 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 # stats = pstats.Stats(pr)
 # stats.sort_stats("cumtime")
 # stats.print_stats(50)
+
+if __name__ == "__main__":
+    options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
+    df = load_tourney_results(league_to_folder[champ], result_cutoff=200)
+    compute_breakdown(df, options)
