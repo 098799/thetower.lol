@@ -197,9 +197,6 @@ class Results:
 
         to_be_displayed = self.prepare_data(filtered_df, how_many=prefilter_results)
 
-        if self.hidden_features:
-            self._hidden_time_series(to_be_displayed)
-
         self.congrats(filtered_df)
 
         if self.show_hist:
@@ -208,13 +205,11 @@ class Results:
             to_be_displayed_styler = self.regular_preparation(to_be_displayed, filtered_df)
 
         if self.options.links_toggle:
-            try:
-                page_location_data = get_page_location()
-                base_url = page_location_data["host"]
-            except Exception:
-                base_url = "thetower.lol"
+            base_url = "thetower.lol"
 
-            to_be_displayed_styler = to_be_displayed_styler.format(partial(make_url, base_url=base_url), subset=["real_name"]).to_html(escape=False)
+            to_be_displayed_styler = (
+                to_be_displayed_styler.format(partial(make_url, base_url=base_url), subset=["real_name"]).hide(axis="index").to_html(escape=False)
+            )
             st.write(to_be_displayed_styler, unsafe_allow_html=True)
         else:
             st.dataframe(to_be_displayed_styler, use_container_width=True, height=800)
