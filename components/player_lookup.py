@@ -131,13 +131,13 @@ def draw_info_tab(info_tab, user, player_df):
     avatar_col, name_col, relic_col = info_tab.columns([1, 4, 1])
 
     if (avatar := player_df.iloc[0].avatar) != -1:
-        avatar_col.image(glob.glob(f"Tower_Skins/{avatar}*.png")[0], width=100)
+        avatar_col.image(glob.glob(f"Tower_Skins/{avatar}-*.png")[0], width=100)
 
     name_col.write(f"<div style='font-size: 30px; color: {current_role_color}'>{real_name}</div>", unsafe_allow_html=True)
     name_col.write(f"<div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div>", unsafe_allow_html=True)
 
     if (relic := player_df.iloc[0].relic) != -1:
-        relic_col.image(glob.glob(f"Tower_Relics/{relic}*.png")[0], width=100)
+        relic_col.image(glob.glob(f"Tower_Relics/{relic}-*.png")[0], width=100)
 
     info_tab.write(
         f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
