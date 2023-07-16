@@ -21,11 +21,12 @@ class Results:
         self.hidden_features = os.environ.get("HIDDEN_FEATURES")
         self.sus_ids = get_sus_ids()
         self.show_hist: Optional[bool] = None
+        self.congrats_toggle = False
 
     def congrats(self, filtered_df):
         if not self.hidden_features and self.congrats_toggle:
             with st.expander("Congrats! 🎉"):
-                new_pbs, new_role_rows = self.handle_current_results(filtered_df)
+                new_pbs, new_role_rows = self.populate_pbs(filtered_df)
 
                 new_role_string = ", ".join(
                     [f"<font color='{row.wave_role.color}'>{self.df[self.df.id == row.id].iloc[0].real_name}</font>" for row in new_role_rows]
@@ -44,7 +45,7 @@ class Results:
                 if new_wave_string:
                     st.write(f"Congratulations for new PBs:<br>{new_wave_string}", unsafe_allow_html=True)
 
-    def handle_current_results(self, filtered_df):
+    def populate_pbs(self, filtered_df):
         new_pbs = []
         new_role_rows = []
 
@@ -52,7 +53,7 @@ class Results:
             if person_row.id in self.sus_ids:
                 continue
 
-            players_df = self.df[(self.df["id"] == person_row["id"]) & (self.df["patch_version"] == person_row["patch_version"])].reset_index(drop=True)
+            players_df = self.df[(self.df["id"] == person_row["id"]) & (self.df["patch"] == person_row["patch"])].reset_index(drop=True)
 
             current_date = person_row.date
             current_wave = person_row.wave
@@ -75,26 +76,6 @@ class Results:
 
         return new_pbs, new_role_rows
 
-    def _hidden_time_series(self, df):
-        if len(self.datetimes) > 3:
-            today = st.checkbox("Overall?", value=True)
-
-            if today:
-                offset = st.slider("Offset for?", min_value=0, max_value=20, value=10)
-                which_selection = st.slider("Which part of players for?", min_value=0, max_value=30, value=0)
-                non_sus_df = self.df[~self.df["id"].isin(self.sus_ids)]
-                patch_df = non_sus_df[non_sus_df["patch"] == Patch.objects.get(version_minor=19, beta=False)]
-                top_scorers = patch_df.sort_values("wave", ascending=False).drop_duplicates("id").reset_index(drop=True)
-                top_scorers = top_scorers[which_selection * offset : which_selection * offset + offset].id
-                fig = px.line(self.df[self.df.id.isin(top_scorers) & self.df.date.isin(self.datetimes)], x="date", y="wave", color="real_name", markers=True)
-                st.plotly_chart(fig)
-            else:
-                offset = st.slider("Offset?", min_value=0, max_value=20, value=10)
-                which_selection = st.slider("Which part of players?", min_value=0, max_value=10, value=0)
-                top_scorers = df[which_selection * offset : which_selection * offset + offset].id
-                fig = px.line(self.df[self.df.id.isin(top_scorers) & self.df.date.isin(self.datetimes)], x="date", y="wave", color="real_name", markers=True)
-                st.plotly_chart(fig)
-
     def top_of_results(self) -> str:
         unique_date_candidates = self.df["date"].unique()
         self.datetimes = [str(item) for item in unique_date_candidates if datetime.datetime.fromisoformat(str(item).rsplit(".", 1)[0]).hour]
@@ -106,7 +87,9 @@ class Results:
         tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
 
         self.show_hist = debug_col.checkbox("Hist. data?", value=False)
-        self.congrats_toggle = debug_col.checkbox("Congrats?", value=False)
+
+        if not self.hidden_features:
+            self.congrats_toggle = debug_col.checkbox("Congrats?", value=False)
 
         return tourney_file_name
 
