@@ -1,4 +1,5 @@
 import datetime
+import glob
 import os
 from urllib.parse import urlencode
 
@@ -13,14 +14,14 @@ from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patch
 from dtower.tourney_results.formatting import color_position
 from dtower.tourney_results.models import PatchNew as Patch
 
+sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
+
 
 def compute_player_lookup(df, options: Options):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
     first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
-
-    sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 
     player_list = handle_initial_choices(hidden_features, options, player_list, sus_ids)
 
@@ -33,9 +34,7 @@ def compute_player_lookup(df, options: Options):
     if not user:
         return
 
-    info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["General information", "Tourney performance graph", "Results data", "Patch best"])
-
-    info_tab.code("http://thetower.lol?" + urlencode({"player": user}, doseq=True))
+    info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Results data", "Patch best"])
 
     id_mapping = get_id_lookup()
 
@@ -61,18 +60,7 @@ def compute_player_lookup(df, options: Options):
 
     player_df = player_df.sort_values("date", ascending=False)
 
-    real_name = player_df.iloc[0].real_name
-    id_ = player_df.iloc[0].id
-    current_role_color = player_df.iloc[0].name_role.color
-
-    patches_active = player_df.patch.unique()
-
-    handle_sus_or_banned_ids(info_tab, id_, sus_ids)
-
-    info_tab.write(
-        f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
-        unsafe_allow_html=True,
-    )
+    draw_info_tab(info_tab, user, player_df)
 
     patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
     graph_options = [options.default_graph.value] + [
@@ -124,7 +112,7 @@ def compute_player_lookup(df, options: Options):
     )
     raw_data_tab.dataframe(to_be_displayed, use_container_width=True, height=800)
 
-    write_for_each_patch(patch_tab, patches_active, player_df, real_name)
+    write_for_each_patch(patch_tab, player_df)
 
     info_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
     graph_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
@@ -132,8 +120,35 @@ def compute_player_lookup(df, options: Options):
     patch_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
 
 
-def write_for_each_patch(patch_tab, patches_active, player_df, real_name):
-    for patch in patches_active:
+def draw_info_tab(info_tab, user, player_df):
+    info_tab.code("http://thetower.lol?" + urlencode({"player": user}, doseq=True))
+    handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
+
+    real_name = player_df.iloc[0].real_name
+    current_role_color = player_df.iloc[0].name_role.color
+    patches_active = player_df.patch.unique()
+
+    avatar_col, name_col, relic_col = info_tab.columns([1, 4, 1])
+
+    if (avatar := player_df.iloc[0].avatar) != -1:
+        avatar_col.image(glob.glob(f"Tower_Skins/{avatar}*.png")[0], width=100)
+
+    name_col.write(f"<div style='font-size: 30px; color: {current_role_color}'>{real_name}</div>", unsafe_allow_html=True)
+    name_col.write(f"<div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div>", unsafe_allow_html=True)
+
+    if (relic := player_df.iloc[0].relic) != -1:
+        relic_col.image(glob.glob(f"Tower_Relics/{relic}*.png")[0], width=100)
+
+    info_tab.write(
+        f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
+        unsafe_allow_html=True,
+    )
+
+
+def write_for_each_patch(patch_tab, player_df):
+    real_name = player_df.iloc[0].real_name
+
+    for patch in player_df.patch.unique():
         patch_tab.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + ("" if not patch.beta else " beta"))
         patch_df = player_df[player_df.patch == patch]
 

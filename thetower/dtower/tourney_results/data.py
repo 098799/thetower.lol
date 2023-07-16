@@ -7,6 +7,7 @@ django.setup()
 
 import csv
 import datetime
+import re
 from collections import Counter, defaultdict
 from functools import lru_cache
 from glob import glob
@@ -181,6 +182,8 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
 
     df = pd.concat(dfs)
 
+    df["avatar"] = df.tourney_name.map(lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1)
+    df["relic"] = df.tourney_name.map(lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1)
     df["tourney_name"] = df.tourney_name.map(lambda name: name.split("#")[0])
 
     lookup = get_player_id_lookup()
