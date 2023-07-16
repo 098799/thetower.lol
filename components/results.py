@@ -132,7 +132,7 @@ class Results:
         return to_be_displayed
 
     def show_hist_preparation(self, to_be_displayed, filtered_df, date: str):
-        to_be_displayed = to_be_displayed[["id", "position", "tourney_name", "real_name", "wave"]]
+        to_be_displayed = to_be_displayed[["id", "position", "tourney_name", "real_name", "wave", "verified"]]
         to_be_displayed = to_be_displayed.rename({"wave": date}, axis=1)
 
         common_data = self.dates + self.datetimes
