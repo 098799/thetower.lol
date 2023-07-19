@@ -13,9 +13,6 @@ from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
 
-with open("style.css", "r") as infile:
-    table_styling = f"<style>{infile.read()}</style>"
-
 
 class Results:
     def __init__(self, df, options: Options) -> None:
@@ -217,20 +214,20 @@ class Results:
         else:
             to_be_displayed_styler = self.regular_preparation(to_be_displayed, filtered_df)
 
-        # if self.options.links_toggle:
-        st.write(table_styling, unsafe_allow_html=True)
-
         to_be_displayed_styler = (
             to_be_displayed_styler.format(partial(make_url, base_url="thetower.lol/Player Lookup"), subset=["real_name"])
             .hide(axis="index")
             .to_html(escape=False)
         )
         st.write(to_be_displayed_styler, unsafe_allow_html=True)
-        # else:
-        #     st.dataframe(to_be_displayed_styler, use_container_width=True, height=800)
 
 
 def compute_results(df, options: Options):
+    with open("style.css", "r") as infile:
+        table_styling = f"<style>{infile.read()}</style>"
+
+    st.write(table_styling, unsafe_allow_html=True)
+
     Results(df, options).compute_results()
 
 

@@ -9,7 +9,17 @@ from plotly.subplots import make_subplots
 
 from components.util import get_options
 from dtower.sus.models import SusPerson
-from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
+from dtower.tourney_results.constants import (
+    Graph,
+    Options,
+    champ,
+    colors_017,
+    colors_018,
+    league_to_folder,
+    leagues,
+    stratas_boundaries,
+    stratas_boundaries_018,
+)
 from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position
 from dtower.tourney_results.models import PatchNew as Patch
@@ -20,12 +30,19 @@ sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=T
 def compute_player_lookup(df, options: Options):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
+    league_col, user_col = st.columns([1, 2])
+
+    league = league_col.selectbox("League?", leagues)
+
+    if league != champ:
+        df = load_tourney_results(folder=league_to_folder[league])
+
     first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
 
     player_list = handle_initial_choices(hidden_features, options, player_list, sus_ids)
 
-    user = st.selectbox("Which user would you like to lookup?", player_list)
+    user = user_col.selectbox("Which user would you like to lookup?", player_list)
 
     # lol
     if user == "Soelent":
@@ -38,7 +55,7 @@ def compute_player_lookup(df, options: Options):
 
     id_mapping = get_id_lookup()
 
-    player_df = find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
+    df, player_df = find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
 
     # todo should be extracted
     if len(player_df.id.unique()) >= 2:
@@ -140,7 +157,7 @@ def draw_info_tab(info_tab, user, player_df):
         relic_col.image(glob.glob(f"Tower_Relics/{relic}-*.png")[0], width=100)
 
     info_tab.write(
-        f"Player <font color='{current_role_color}'>{real_name}</font> has been active in top200 champ during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
+        f"Player <font color='{current_role_color}'>{real_name}</font> has been noted in tourney results during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
         unsafe_allow_html=True,
     )
 
@@ -260,13 +277,30 @@ def handle_sus_or_banned_ids(info_tab, id_, sus_ids):
 
 
 def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
-    if user in (set(first_choices) | all_real_names | all_tourney_names):
-        player_df = df[(df.real_name == user) | (df.tourney_name == user)]
-    elif user in all_user_ids:
-        player_df = df[df.id == id_mapping.get(user, user)]
+    def _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user):
+        if user in (set(first_choices) | all_real_names | all_tourney_names):
+            player_df = df[(df.real_name == user) | (df.tourney_name == user)]
+        elif user in all_user_ids:
+            player_df = df[df.id == id_mapping.get(user, user)]
+        else:
+            player_df = None
+
+        return player_df
+
+    if (player_df := _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
+        return df, player_df
     else:
-        raise ValueError("Incorrect user, don't be a smartass.")
-    return player_df
+        # expensive branch, maybe we gotta look in another league? Should only happen if the user is passed as query param
+
+        for league in leagues:
+            df = load_tourney_results(folder=league_to_folder[league])
+
+            first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
+
+            if (player_df := _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
+                return df, player_df
+
+        raise ValueError(f"Could not find user {user}.")
 
 
 def handle_initial_choices(hidden_features, options, player_list, sus_ids):

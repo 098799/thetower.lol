@@ -9,7 +9,17 @@ import streamlit as st
 
 from components.util import get_options
 from dtower.sus.models import SusPerson
-from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
+from dtower.tourney_results.constants import (
+    Graph,
+    Options,
+    champ,
+    colors_017,
+    colors_018,
+    league_to_folder,
+    leagues,
+    stratas_boundaries,
+    stratas_boundaries_018,
+)
 from dtower.tourney_results.data import get_id_lookup, get_patches, get_player_list, load_tourney_results
 from dtower.tourney_results.formatting import color_top_18, make_url
 from dtower.tourney_results.models import PatchNew as Patch
@@ -17,6 +27,13 @@ from dtower.tourney_results.models import PatchNew as Patch
 
 def compute_comparison(df, options: Options):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
+
+    league_col, user_col = st.columns([1, 3])
+
+    league = league_col.selectbox("League?", leagues)
+
+    if league != champ:
+        df = load_tourney_results(folder=league_to_folder[league])
 
     first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
@@ -28,7 +45,7 @@ def compute_comparison(df, options: Options):
         player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
 
     default_value = list(options.compare_players) if options.compare_players else []
-    users = st.multiselect("Which players to compare?", player_list, default=default_value)
+    users = user_col.multiselect("Which players to compare?", player_list, default=default_value)
 
     if not users:
         return
