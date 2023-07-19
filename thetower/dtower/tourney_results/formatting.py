@@ -1,7 +1,17 @@
 from functools import partial
 from operator import ge, le
+from urllib.parse import quote
 
-from dtower.tourney_results.constants import colors, colors_018, medals, position_colors, position_stratas, stratas, stratas_boundaries_018, sus_person
+from dtower.tourney_results.constants import (
+    colors,
+    colors_018,
+    medals,
+    position_colors,
+    position_stratas,
+    stratas,
+    stratas_boundaries_018,
+    sus_person,
+)
 
 
 def barebones_format(color):
@@ -73,4 +83,4 @@ def make_url(username, base_url="thetower.lol"):
     for medal in medals:
         username = username.strip(medal)
 
-    return f"<a href='http://{base_url}?player={username.strip()}'>{original_username}</a>"
+    return f"<a href='http://{base_url}?player={quote(username.strip())}'>{original_username}</a>"

@@ -13,7 +13,7 @@ from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
 
-with open("components/table.css", "r") as infile:
+with open("style.css", "r") as infile:
     table_styling = f"<style>{infile.read()}</style>"
 
 
@@ -111,10 +111,10 @@ class Results:
         to_be_displayed["real_name"] = [sus_person if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
         to_be_displayed["tourney_name"] = [strike(name) if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
         to_be_displayed["avatar"] = to_be_displayed.avatar.map(
-            lambda avatar_id: f"<img src='http://thetower.lol:8053/static/admin/img/Tower_Skins/{avatar_id}.png' width='32'>" if avatar_id != -1 else ""
+            lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>" if avatar_id != -1 else ""
         )
         to_be_displayed["relic"] = to_be_displayed.relic.map(
-            lambda relic_id: f"<img src='http://thetower.lol:8053/static/admin/img/Tower_Relics/{relic_id}.png' width='32'>" if relic_id != -1 else ""
+            lambda relic_id: f"<img src='./app/static/Tower_Relics/{relic_id}.png' width='32'>" if relic_id != -1 else ""
         )
 
         if not self.hidden_features:
@@ -150,7 +150,7 @@ class Results:
                         f"color: {mini_df.wave_role_color.iloc[0] if not (mini_df := prev_df[prev_df.id==row.id]).empty else '#FFF'}"
                         for prev_df in prev_dfs.values()
                     ],
-                    "color: #5555FF",
+                    None,
                     None,
                 ],
                 axis=1,
@@ -173,7 +173,7 @@ class Results:
                         None,
                         None,
                         f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
-                        "color: #5555FF",
+                        None,
                         None,
                     ],
                     axis=1,
@@ -192,7 +192,7 @@ class Results:
                         None,
                         None,
                         f"color: {filtered_df[filtered_df['position']==row.position].wave_role_color.iloc[0]}",
-                        "color: #5555FF",
+                        None,
                     ],
                     axis=1,
                 )
@@ -206,7 +206,7 @@ class Results:
         date = self.top_of_results()
 
         filtered_df = self.df[self.df["date"] == date].reset_index(drop=True)
-        prefilter_results = self.results_col.slider("Show how many results?", min_value=50, max_value=len(filtered_df), value=50, step=50)
+        prefilter_results = self.results_col.slider("Show how many results?", min_value=50, max_value=len(filtered_df), value=100, step=50)
 
         to_be_displayed = self.prepare_data(filtered_df, how_many=prefilter_results)
 
@@ -221,7 +221,9 @@ class Results:
         st.write(table_styling, unsafe_allow_html=True)
 
         to_be_displayed_styler = (
-            to_be_displayed_styler.format(partial(make_url, base_url="thetower.lol"), subset=["real_name"]).hide(axis="index").to_html(escape=False)
+            to_be_displayed_styler.format(partial(make_url, base_url="thetower.lol/Player Lookup"), subset=["real_name"])
+            .hide(axis="index")
+            .to_html(escape=False)
         )
         st.write(to_be_displayed_styler, unsafe_allow_html=True)
         # else:
@@ -233,10 +235,7 @@ def compute_results(df, options: Options):
 
 
 if __name__ == "__main__":
-    # links = links_toggle()
-    links = True
-
-    options = Options(links_toggle=links, default_graph=Graph.last_16.value, average_foreground=True)
+    options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
     df = load_tourney_results(league_to_folder[champ])
     compute_results(df, options)
 

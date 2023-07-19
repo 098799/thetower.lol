@@ -1,2 +1,6 @@
 [theme]
 base = "dark"
+
+
+[server]
+enableStaticServing = true

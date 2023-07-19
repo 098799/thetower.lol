@@ -4,6 +4,6 @@ from dtower.tourney_results.constants import Graph, Options, gold, league_to_fol
 from dtower.tourney_results.data import load_tourney_results
 
 if __name__ == "__main__":
-    options = Options(links_toggle=links_toggle(), default_graph=Graph.last_16.value, average_foreground=True)
+    options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
     df = load_tourney_results(league_to_folder[gold])
     compute_results(df, options)

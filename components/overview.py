@@ -10,6 +10,9 @@ def compute_overview(dfs, options: Options):
     overall_df = pd.concat(dfs)
     last_tourney = sorted(overall_df.date.unique())[-1]
 
+    with open("style.css", "r") as infile:
+        st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
+
     for df, league in zip(dfs, leagues):
         st.header(league)
 

@@ -1,0 +1,12 @@
+a {
+  text-decoration: none;
+}
+
+table {
+    width: 100%;
+    padding: 0;
+}
+
+td tr th {
+    padding: 0;
+}

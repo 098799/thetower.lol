@@ -297,6 +297,8 @@ def get_banned_ids():
 
 
 if __name__ == "__main__":
+    os.environ["LEAGUE_SWITCHER"] = "true"
+
     df = load_tourney_results("data")
     breakpoint()
 

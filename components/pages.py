@@ -19,6 +19,7 @@ st.set_page_config(
         "Get Help": "mailto:admin@thetower.lol",
     },
 )
+
 from st_pages import Page, Section, add_page_title, show_pages
 from streamlit.source_util import invalidate_pages_cache
 
@@ -47,8 +48,3 @@ if hidden_features:
     ]
 
 show_pages(pages)
-
-
-# df = [load_tourney_results(league, result_cutoff=20) for league in league_to_folder.values()]
-# options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
-# compute_overview(df, options)
