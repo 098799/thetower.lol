@@ -215,7 +215,7 @@ class Results:
             to_be_displayed_styler = self.regular_preparation(to_be_displayed, filtered_df)
 
         to_be_displayed_styler = (
-            to_be_displayed_styler.format(partial(make_url, base_url="thetower.lol/Player Lookup"), subset=["real_name"])
+            to_be_displayed_styler.format(partial(make_url, base_url="thetower.lol/Player%20Lookup"), subset=["real_name"])
             .hide(axis="index")
             .to_html(escape=False)
         )
