@@ -20,7 +20,15 @@ from dtower.tourney_results.constants import (
     stratas_boundaries,
     stratas_boundaries_018,
 )
-from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patches, get_player_list, get_sus_ids, load_tourney_results
+from dtower.tourney_results.data import (
+    get_banned_ids,
+    get_id_lookup,
+    get_patches,
+    get_player_list,
+    get_soft_banned_ids,
+    get_sus_ids,
+    load_tourney_results,
+)
 from dtower.tourney_results.formatting import color_position
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -271,6 +279,8 @@ def handle_colors_dependant_on_patch(df, patch, player_df):
 
 def handle_sus_or_banned_ids(info_tab, id_, sus_ids):
     if id_ in get_banned_ids():
+        info_tab.warning("This player is banned by the Support team.")
+    if id_ in get_soft_banned_ids():
         info_tab.warning("This player is banned by Pog.")
     if id_ in sus_ids:
         info_tab.error("This player is considered sus.")

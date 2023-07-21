@@ -32,6 +32,7 @@ class SusPerson(models.Model):
     sus = models.BooleanField(
         null=False, blank=False, default=True, help_text="Is the person sus? if checked, they will be removed from the results on the public website."
     )
-    banned = models.BooleanField(null=False, blank=False, default=False, help_text="Banned by Pog. For internal use.")
+    soft_banned = models.BooleanField(null=False, blank=False, default=False, help_text="Soft-banned by Pog. For internal use.")
+    banned = models.BooleanField(null=False, blank=False, default=False, help_text="Banned by support. For internal use.")
 
     history = HistoricalRecords()

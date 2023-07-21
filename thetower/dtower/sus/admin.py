@@ -17,6 +17,7 @@ class SusPersonAdmin(SimpleHistoryAdmin):
         "player_id",
         "name",
         "sus",
+        "soft_banned",
         "banned",
         "_link",
         "notes",
@@ -25,6 +26,7 @@ class SusPersonAdmin(SimpleHistoryAdmin):
     list_editable = (
         "notes",
         "sus",
+        "soft_banned",
         "banned",
     )
 
@@ -36,6 +38,7 @@ class SusPersonAdmin(SimpleHistoryAdmin):
 
     list_filter = (
         "sus",
+        "soft_banned",
         "banned",
         "notes",
     )

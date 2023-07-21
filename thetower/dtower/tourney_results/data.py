@@ -296,6 +296,10 @@ def get_banned_ids():
     return set(SusPerson.objects.filter(banned=True).values_list("player_id", flat=True))
 
 
+def get_soft_banned_ids():
+    return set(SusPerson.objects.filter(soft_banned=True).values_list("player_id", flat=True))
+
+
 if __name__ == "__main__":
     os.environ["LEAGUE_SWITCHER"] = "true"
 
