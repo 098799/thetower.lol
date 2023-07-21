@@ -50,7 +50,7 @@ def compute_comparison(df, options: Options):
     if not users:
         return
 
-    st.code("http://thetower.lol/Player Comparison?" + urlencode({"compare": users}, doseq=True))
+    st.code("https://thetower.lol/Player%20Comparison?" + urlencode({"compare": users}, doseq=True))
 
     datas = []
 
