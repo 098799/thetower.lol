@@ -86,10 +86,10 @@ class Results:
         tourney_col, self.results_col, debug_col = st.columns([3, 2, 1])
         tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
 
-        self.show_hist = debug_col.checkbox("Hist. data?", value=False)
+        self.show_hist = debug_col.checkbox("Hist data", value=False)
 
         if not self.hidden_features:
-            self.congrats_toggle = debug_col.checkbox("Congrats?", value=False)
+            self.congrats_toggle = debug_col.checkbox("Congrats", value=False)
 
         return tourney_file_name
 
