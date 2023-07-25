@@ -164,8 +164,10 @@ def not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf)
                 line_dash="dash",
                 opacity=0.4,
             )
-    for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
-        name = f"0.{version_minor}"
+    for index, (start, version_minor, version_patch, beta) in enumerate(
+        Patch.objects.all().values_list("start_date", "version_minor", "version_patch", "beta")
+    ):
+        name = f"0.{version_minor}{version_patch}"
         beta = " beta" if beta else ""
 
         if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(days=3):

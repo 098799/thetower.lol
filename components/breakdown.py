@@ -36,7 +36,7 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
     plot_data = {
         role: go.Bar(
-            name=f"{role.wave_bottom} v{role.patch.version_minor}",
+            name=f"{role.wave_bottom} v{role.patch.version_minor}{role.patch.version_patch}{'' if not role.beta else ' beta'}",
             x=dates,
             y=list(count_data.values()),
             marker_color=role.color,

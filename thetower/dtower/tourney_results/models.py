@@ -10,12 +10,13 @@ class PatchNew(models.Model):
         verbose_name_plural = "patches"
 
     version_minor = models.SmallIntegerField(blank=False, null=False, help_text="The xx in 0.xx version.")
+    version_patch = models.SmallIntegerField(blank=False, null=False, help_text="The yy in 0.xx.yy version.", default=0)
     beta = models.BooleanField(blank=False, null=False, default=False, help_text="Maybe it's just a beta version of this patch?")
     start_date = models.DateField(blank=False, null=False, help_text="First tourney when patch was enforced.")
     end_date = models.DateField(blank=False, null=False, help_text="Last tourney when patch was in use.")
 
     def __str__(self):
-        return f"0.{self.version_minor}{'' if not self.beta else ' beta'}"
+        return f"0.{self.version_minor}.{self.version_patch}{'' if not self.beta else ' beta'}"
 
 
 class Role(models.Model):

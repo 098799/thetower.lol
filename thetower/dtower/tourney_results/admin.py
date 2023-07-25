@@ -54,6 +54,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
 class PatchNewAdmin(SimpleHistoryAdmin):
     list_display = (
         "version_minor",
+        "version_patch",
         "beta",
         "start_date",
         "end_date",
@@ -61,6 +62,7 @@ class PatchNewAdmin(SimpleHistoryAdmin):
 
     search_fields = (
         "version_minor",
+        "version_patch",
         "start_date",
         "end_date",
     )

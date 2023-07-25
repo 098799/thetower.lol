@@ -21,7 +21,7 @@ async def handle_adding(client, limit, channel=None, debug_channel=None, verbose
     if debug_channel is None:
         debug_channel = channel
 
-    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
+    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False, name="satcheezy")
 
     if verbose:
         await channel.send(f"Starting the processing of {players.count() if not limit else limit} users... :rocket:")
@@ -30,7 +30,7 @@ async def handle_adding(client, limit, channel=None, debug_channel=None, verbose
 
     dfs = {league: load_tourney_results__uncached(league_to_folder[league]) for league in all_leagues}
 
-    patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=20, beta=False)
+    patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=20, version_patch=0, beta=False)
     tower = await get_tower(client)
     roles = await tower.fetch_roles()
 

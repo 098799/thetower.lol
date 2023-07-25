@@ -193,8 +193,10 @@ def write_for_each_patch(patch_tab, player_df):
 
 
 def handle_start_date_loop(fig, graph_position_instead, tbdf):
-    for index, (start, version_minor, beta) in enumerate(Patch.objects.all().values_list("start_date", "version_minor", "beta")):
-        name = f"0.{version_minor}"
+    for index, (start, version_minor, version_patch, beta) in enumerate(
+        Patch.objects.all().values_list("start_date", "version_minor", "version_patch", "beta")
+    ):
+        name = f"0.{version_minor}{version_patch}"
         beta = " beta" if beta else ""
 
         if start < tbdf.date.min() - datetime.timedelta(days=2) or start > tbdf.date.max() + datetime.timedelta(days=3):
