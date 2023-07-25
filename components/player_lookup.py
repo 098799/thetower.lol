@@ -174,7 +174,9 @@ def write_for_each_patch(patch_tab, player_df):
     real_name = player_df.iloc[0].real_name
 
     for patch in player_df.patch.unique():
-        patch_tab.subheader(f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}" + ("" if not patch.beta else " beta"))
+        patch_tab.subheader(
+            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}{patch.version_patch}" + ("" if not patch.beta else " beta")
+        )
         patch_df = player_df[player_df.patch == patch]
 
         patch_role_color = patch_df.iloc[-1].name_role.color
