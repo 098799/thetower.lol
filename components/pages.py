@@ -25,18 +25,18 @@ from streamlit.source_util import invalidate_pages_cache
 
 pages = [
     Page("components/overview.py", "Overview", "🏠"),
-    Page("components/results.py", "Results Champions", "📈"),
+    Page("components/results.py", "Results Champions", "🏆"),
     Page("components/results_plat.py", "Results Platinum", "📉"),
     Page("components/results_gold.py", "Results Gold", "🥇"),
     Page("components/results_silver.py", "Results Silver", "🥈"),
     Page("components/results_copper.py", "Results Copper", "🥉"),
     Page("components/player_lookup.py", "Player Lookup", "🔍"),
-    Page("components/comparison.py", "Player Comparison", "🐶"),
+    Page("components/comparison.py", "Player Comparison", "🔃"),
     Page("components/winners.py", "Winners", "🔥"),
-    Page("components/top_scores.py", "Top Scores", "📊"),
-    Page("components/breakdown.py", "Breakdown", "📶"),
-    Page("components/namechangers.py", "Namechangers", "☹️"),
-    Page("components/about.py", "About", "🌚"),
+    Page("components/top_scores.py", "Top Scores", "🤑"),
+    Page("components/breakdown.py", "Breakdown", "🪁"),
+    Page("components/namechangers.py", "Namechangers", "💩"),
+    Page("components/about.py", "About", "👴"),
 ]
 
 
