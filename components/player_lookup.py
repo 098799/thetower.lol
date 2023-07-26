@@ -175,7 +175,7 @@ def write_for_each_patch(patch_tab, player_df):
 
     for patch in player_df.patch.unique():
         patch_tab.subheader(
-            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}{patch.version_patch}" + ("" if not patch.beta else " beta")
+            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}.{patch.version_patch}" + ("" if not patch.beta else " beta")
         )
         patch_df = player_df[player_df.patch == patch]
 
