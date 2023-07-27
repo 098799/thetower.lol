@@ -21,7 +21,7 @@ async def handle_adding(client, limit, channel=None, debug_channel=None, verbose
     if debug_channel is None:
         debug_channel = channel
 
-    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False, name="satcheezy")
+    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
 
     if verbose:
         await channel.send(f"Starting the processing of {players.count() if not limit else limit} users... :rocket:")
