@@ -216,7 +216,8 @@ def handle_start_date_loop(fig, graph_position_instead, tbdf):
 
 def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
     foreground_kwargs = {}
-    background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+    # background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+    background_kwargs = dict(line_dash="dot", line_color="#FF4B4B", opacity=0.6)
     fig.add_trace(
         go.Scatter(
             x=tbdf.date,
@@ -240,7 +241,8 @@ def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
 
 def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf):
     foreground_kwargs = {}
-    background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+    # background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+    background_kwargs = dict(line_dash="dot", line_color="#FF4B4B", opacity=0.6)
     fig.add_trace(
         go.Scatter(
             x=tbdf.date,

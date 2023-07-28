@@ -1,12 +1,37 @@
+:root {
+    --secondary-background: #262730;
+    --active-element: #FF4B4B;
+}
+
 a {
   text-decoration: none;
 }
 
 table {
     width: 100%;
-    padding: 0;
+    border: 1px var(--active-element) solid !important;
+    border-collapse: collapse;
+}
+tbody {
+    border: 0 !important;
+}
+thead th {
+    background-color: var(--secondary-background);
+    text-align: center;
+    vertical-align: middle;
+    border: 0 !important;
+}
+tfoot {
+    border: 0 !important;
+}
+tr {
+    border: 0 !important;
+}
+th, td {
+    border: 0 !important;
 }
 
-td tr th {
-    padding: 0;
+
+tr:nth-child(even) {
+    background-color: var(--secondary-background);
 }
