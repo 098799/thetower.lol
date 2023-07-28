@@ -1,11 +1,12 @@
 :root {
     --secondary-background: #262730;
     --active-element: #FF4B4B;
+    --text: #FAFAFA;
 }
 
 a {
   text-decoration: none;
-  /* color: var(--active-element) !important; */
+  color: var(--text) !important;
 }
 
 table {
