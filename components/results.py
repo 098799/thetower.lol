@@ -159,43 +159,33 @@ class Results:
         return to_be_displayed
 
     def regular_preparation(self, to_be_displayed, filtered_df):
+        indices = ["#", "⬡", "tourney_name", "real_name", "relic", "wave", "✓"]
+        styling = lambda row: [
+            None,
+            None,
+            f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
+            None,
+            None,
+            f"color: {filtered_df[filtered_df['position']==row['#']].wave_role_color.iloc[0]}",
+            None,
+        ]
+
         if self.hidden_features:
-            to_be_displayed = (
-                to_be_displayed[["#", "⬡", "tourney_name", "real_name", "relic", "wave", "✓", "id"]]
-                .style.apply(
-                    lambda row: [
-                        None,
-                        None,
-                        f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
-                        None,
-                        None,
-                        f"color: {filtered_df[filtered_df['position']==row['#']].wave_role_color.iloc[0]}",
-                        None,
-                        None,
-                    ],
-                    axis=1,
-                )
-                .applymap(color_position__top, subset=["position"])
-                .applymap(am_i_sus, subset=["real_name"])
-            )
-        else:
-            to_be_displayed = (
-                to_be_displayed[["#", "⬡", "tourney_name", "real_name", "relic", "wave", "✓"]]
-                .style.apply(
-                    lambda row: [
-                        None,
-                        None,
-                        f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
-                        None,
-                        None,
-                        f"color: {filtered_df[filtered_df['position']==row['#']].wave_role_color.iloc[0]}",
-                        None,
-                    ],
-                    axis=1,
-                )
-                .applymap(color_position__top, subset=["#"])
-                .applymap(am_i_sus, subset=["real_name"])
-            )
+            indices += ["id"]
+            styling = lambda row: [
+                None,
+                None,
+                f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
+                None,
+                None,
+                f"color: {filtered_df[filtered_df['position']==row['#']].wave_role_color.iloc[0]}",
+                None,
+                None,
+            ]
+
+        to_be_displayed = (
+            to_be_displayed[indices].style.apply(styling, axis=1).applymap(color_position__top, subset=["#"]).applymap(am_i_sus, subset=["real_name"])
+        )
 
         return to_be_displayed
 

@@ -5,6 +5,7 @@
 
 a {
   text-decoration: none;
+  /* color: var(--active-element) !important; */
 }
 
 table {
