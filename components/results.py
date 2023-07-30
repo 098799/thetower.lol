@@ -23,6 +23,12 @@ class Results:
         self.show_hist: Optional[bool] = None
         self.congrats_toggle = False
 
+    def _styler(self):
+        with open("style.css", "r") as infile:
+            table_styling = f"<style>{infile.read()}</style>"
+
+        st.write(table_styling, unsafe_allow_html=True)
+
     def congrats(self, filtered_df):
         if not self.hidden_features and self.congrats_toggle:
             with st.expander("Congrats! 🎉"):
@@ -202,6 +208,7 @@ class Results:
         if self.show_hist:
             to_be_displayed_styler = self.show_hist_preparation(to_be_displayed, filtered_df, date)
         else:
+            self._styler()
             to_be_displayed_styler = self.regular_preparation(to_be_displayed, filtered_df)
 
         to_be_displayed_styler = (
@@ -213,11 +220,6 @@ class Results:
 
 
 def compute_results(df, options: Options):
-    with open("style.css", "r") as infile:
-        table_styling = f"<style>{infile.read()}</style>"
-
-    st.write(table_styling, unsafe_allow_html=True)
-
     Results(df, options).compute_results()
 
 

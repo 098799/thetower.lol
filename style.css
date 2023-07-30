@@ -33,7 +33,25 @@ th, td {
     border: 0 !important;
 }
 
-
 tr:nth-child(even) {
     background-color: var(--secondary-background);
+    border: 0 !important;
+}
+
+/* CSS for smaller screens */
+@media (max-width: 600px) {
+    table, tr {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    td {
+        margin: 5px !important;
+        padding: 5px !important;
+    }
+    table td:nth-of-type(3), table th:nth-of-type(3) {
+        display: none;
+    }
+    table td:nth-of-type(7), table th:nth-of-type(7) {
+        display: none;
+    }
 }
