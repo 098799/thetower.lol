@@ -83,11 +83,8 @@ class Results:
         return new_pbs, new_role_rows
 
     def top_of_results(self) -> str:
-        unique_date_candidates = self.df["date"].unique()
-        self.datetimes = [str(item) for item in unique_date_candidates if datetime.datetime.fromisoformat(str(item).rsplit(".", 1)[0]).hour]
-        self.dates = [str(item).split("T")[0] for item in unique_date_candidates if not datetime.datetime.fromisoformat(str(item).rsplit(".", 1)[0]).hour]
-
-        tourneys = sorted(self.datetimes + self.dates, reverse=True)
+        self.dates = self.df["date"].unique()
+        tourneys = sorted(self.dates, reverse=True)
 
         tourney_col, self.results_col, debug_col = st.columns([3, 2, 1])
         tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
@@ -131,7 +128,7 @@ class Results:
         to_be_displayed = to_be_displayed[["id", "#", "tourney_name", "real_name", "wave", "✓"]]
         to_be_displayed = to_be_displayed.rename({"wave": date}, axis=1)
 
-        common_data = self.dates + self.datetimes
+        common_data = self.dates
 
         current_date_index = common_data.index(date)
         previous_4_dates = common_data[current_date_index - 4 : current_date_index][::-1]

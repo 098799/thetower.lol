@@ -102,7 +102,7 @@ def compute_comparison(df, options: Options):
             + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in last_5_tourneys]
             for data in datas
         ],
-        columns=["User", *[datetime.datetime.fromtimestamp(int(date) / 1e9).date() for date in last_5_tourneys]],
+        columns=["User", *last_5_tourneys],
     )
 
     last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)

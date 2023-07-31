@@ -33,7 +33,7 @@ def get_patches():
 
 def date_to_patch(date: datetime.datetime) -> Optional[Patch]:
     for patch in get_patches():
-        if date.date() >= patch.start_date and date.date() <= patch.end_date:
+        if date >= patch.start_date and date <= patch.end_date:
             return patch
 
 
@@ -160,7 +160,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
 
         df.columns = ["id", "tourney_name", "wave"]
 
-        result_date = datetime.datetime.fromisoformat(date)
+        result_date = datetime.date.fromisoformat(date)
         df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
         df["date"] = [result_date] * len(df)
 
