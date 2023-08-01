@@ -7,8 +7,10 @@ import streamlit as st
 
 from components.results import compute_results
 from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
-from dtower.tourney_results.data import get_sus_ids, load_tourney_results
+from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.models import PatchNew as Patch
+
+patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
 
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
@@ -32,6 +34,9 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
         return unique_dates, counts_data
 
+    selected_patches = st.multiselect("Limit results to a patch?", patches, default=patches)
+    df = df[df.patch.isin(selected_patches)]
+
     dates, counts_data = get_data(df)
 
     plot_data = {
@@ -50,24 +55,24 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
     st.plotly_chart(fig)
 
-    glory_patch = Patch.objects.get(version_minor=16)
+    # glory_patch = Patch.objects.get(version_minor=16)
 
-    plot_data = {
-        role: go.Bar(
-            name=f"{role.wave_bottom} v{role.patch.version_minor}",
-            x=[date for date in dates if date >= glory_patch.start_date and date <= glory_patch.end_date],
-            y=[value for date, value in count_data.items() if date >= glory_patch.start_date and date <= glory_patch.end_date],
-            marker_color=role.color,
-            opacity=0.8,
-        )
-        for role, count_data in counts_data.items()
-        if role.patch.version_minor == glory_patch.version_minor
-    }
+    # plot_data = {
+    #     role: go.Bar(
+    #         name=f"{role.wave_bottom} v{role.patch.version_minor}",
+    #         x=[date for date in dates if date >= glory_patch.start_date and date <= glory_patch.end_date],
+    #         y=[value for date, value in count_data.items() if date >= glory_patch.start_date and date <= glory_patch.end_date],
+    #         marker_color=role.color,
+    #         opacity=0.8,
+    #     )
+    #     for role, count_data in counts_data.items()
+    #     if role.patch.version_minor == glory_patch.version_minor
+    # }
 
-    fig = go.Figure(data=list(plot_data.values()))
-    fig.update_layout(barmode="stack", title="Glory days of 0.16-0.17")
+    # fig = go.Figure(data=list(plot_data.values()))
+    # fig.update_layout(barmode="stack", title="Glory days of 0.16-0.17")
 
-    st.plotly_chart(fig)
+    # st.plotly_chart(fig)
 
 
 # import cProfile
