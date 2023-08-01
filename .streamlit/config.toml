@@ -4,3 +4,4 @@ base = "dark"
 
 [server]
 enableStaticServing = true
+headless = true
