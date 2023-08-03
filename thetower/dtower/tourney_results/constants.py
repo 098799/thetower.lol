@@ -102,3 +102,35 @@ us_to_jim = {
 
 
 wave_border_choices = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3500, 4000, 4500, 5000, 100000, 1000000]
+
+all_relics = {
+    0: ("No Spoon", "2%", "Abs def"),
+    1: ("Red Pill", "5%", "Health"),
+    2: ("Copper Badge", "3%", "Damage"),
+    3: ("Silver Badge", "5%", "Coins"),
+    4: ("Gold Badge", "5%", "Crit"),
+    5: ("Platinum Badge", "5%", "Lab Speed"),
+    6: ("Champion Badge", "10%", "DPM"),
+    7: ("Champion First", "10%", "Health"),
+    8: ("Flux (T1)", "2%", "Coins"),
+    9: ("Lumin (T2)", "2%", "Lab Speed"),
+    10: ("Pulse (T3)", "2%", "Crit"),
+    11: ("Harmonic (T4)", "2%", "Damage"),
+    12: ("Ether (T5)", "2%", "Health"),
+    13: ("Nova (T6)", "5%", "Abs def"),
+    14: ("Aether (T7)", "5%", "Coins"),
+    15: ("Graviton (T8)", "5%", "DPM"),
+    16: ("Fusion (T9)", "5%", "Health"),
+    17: ("Plasma (T10)", "5%", "DPM"),
+    18: ("Resonance (T11)", "10%", "Abs def"),
+    19: ("Chrono (T12)", "10%", "Lab Speed"),
+    20: ("Hyper (T13)", "10%", "Coins"),
+    21: ("Arcane (T14)", "10%", "Damage"),
+    22: ("Celestial (T15)", "10%", "Crit"),
+    23: ("1 year", "2%", "DPM"),
+    24: ("2 years", "2%", "Crit"),
+    25: ("3 years", "2%", "DPM"),
+    26: ("Dreamcatcher", "2%", "Coins"),
+    28: ("Bacteriophage", "2%", "Damage"),
+    29: ("Neuron", "5%", "Health"),
+}

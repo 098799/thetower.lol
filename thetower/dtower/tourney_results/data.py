@@ -302,9 +302,18 @@ def get_soft_banned_ids():
 
 if __name__ == "__main__":
     os.environ["LEAGUE_SWITCHER"] = "true"
+    # os.environ["HIDDEN_FEATURES"] = "true"
 
     df = load_tourney_results("data")
-    breakpoint()
+
+    # df = df[df.date == df.date.unique()[-1]]
+    # df = df[df.position > 0]
+
+    # for cutoff in [10, 25, 50, 100, 200, 500, 1000, 2000]:
+    #     fil_df = df[df.position <= cutoff]
+    #     total = len(fil_df)
+    #     verified = len(fil_df[fil_df.verified == "✓"])
+    #     print(f"{cutoff}: {verified}/{total} ({verified/total*100:.2f}%)")
 
 
 # import cProfile

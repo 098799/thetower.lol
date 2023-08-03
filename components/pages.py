@@ -36,6 +36,7 @@ pages = [
     Page("components/top_scores.py", "Top Scores", "🤑"),
     Page("components/breakdown.py", "Breakdown", "🪁"),
     Page("components/namechangers.py", "Namechangers", "💩"),
+    Page("components/various.py", "Relics and Avatars", "👽"),
     Page("components/about.py", "About", "👴"),
 ]
 

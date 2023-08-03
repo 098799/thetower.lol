@@ -8,7 +8,7 @@ import streamlit as st
 from streamlit_js_eval import get_page_location
 
 from components.util import links_toggle
-from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder, sus_person
+from dtower.tourney_results.constants import Graph, Options, all_relics, champ, league_to_folder, sus_person
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
@@ -114,7 +114,9 @@ class Results:
             lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>" if avatar_id != -1 else ""
         )
         to_be_displayed["relic"] = to_be_displayed.relic.map(
-            lambda relic_id: f"<img src='./app/static/Tower_Relics/{relic_id}.png' width='32'>" if relic_id != -1 else ""
+            lambda relic_id: f"<img src='./app/static/Tower_Relics/{relic_id}.png' width='32' title='{all_relics[relic_id][0]}, {all_relics[relic_id][1]} {all_relics[relic_id][2]}'>"
+            if relic_id != -1
+            else ""
         )
 
         if not self.hidden_features:
