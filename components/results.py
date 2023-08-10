@@ -114,7 +114,9 @@ class Results:
             lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>" if avatar_id != -1 else ""
         )
         to_be_displayed["relic"] = to_be_displayed.relic.map(
-            lambda relic_id: f"<img src='./app/static/Tower_Relics/{relic_id}.png' width='32' title='{all_relics[relic_id][0]}, {all_relics[relic_id][1]} {all_relics[relic_id][2]}'>"
+            lambda relic_id: (
+                f"<img src='./app/static/Tower_Relics/{relic_id}.png' width='32' title='{all_relics[relic_id][0]}, {all_relics[relic_id][1]} {all_relics[relic_id][2]}'>"
+            )
             if relic_id != -1
             else ""
         )
@@ -130,7 +132,7 @@ class Results:
         to_be_displayed = to_be_displayed[["id", "#", "tourney_name", "real_name", "wave", "✓"]]
         to_be_displayed = to_be_displayed.rename({"wave": date}, axis=1)
 
-        common_data = self.dates
+        common_data = list(self.dates)
 
         current_date_index = common_data.index(date)
         previous_4_dates = common_data[current_date_index - 4 : current_date_index][::-1]

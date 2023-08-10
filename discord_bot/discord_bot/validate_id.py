@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 
+from discord_bot.add_roles import handle_adding
 from discord_bot.util import get_tower, get_verified_role, verified_role_id
 from dtower.sus.models import KnownPlayer, PlayerId
 
@@ -7,13 +8,16 @@ from dtower.sus.models import KnownPlayer, PlayerId
 async def validate_player_id(client, message):
     try:
         if 17 > len(message.content) > 12 and message.attachments:
+            discord_id = message.author.id
+
             player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
-                discord_id=message.author.id, defaults=dict(approved=True, name=message.author.name)
+                discord_id=discord_id, defaults=dict(approved=True, name=message.author.name)
             )
             await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(id=message.content, player_id=player.id, defaults=dict(primary=True))
             discord_player = await (await get_tower(client)).fetch_member(player.discord_id)
             await handle_role_present(client, discord_player)
             await message.add_reaction("✅")
+            await handle_adding(client, limit=None, discord_ids=[discord_id], channel=message.channel)
         else:
             await message.add_reaction("⁉️")
     except Exception as exc:

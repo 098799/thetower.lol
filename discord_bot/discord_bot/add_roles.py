@@ -13,7 +13,9 @@ from dtower.tourney_results.data import load_tourney_results__uncached
 from dtower.tourney_results.models import PatchNew as Patch
 
 
-async def handle_adding(client, limit, channel=None, debug_channel=None, verbose=None):
+async def handle_adding(client, limit, discord_ids=None, channel=None, debug_channel=None, verbose=None):
+    discord_id_kwargs = {} if discord_ids is None else {"discord_id__in": discord_ids}
+
     skipped = 0
     unchanged = defaultdict(list)
     changed = defaultdict(list)
@@ -21,7 +23,7 @@ async def handle_adding(client, limit, channel=None, debug_channel=None, verbose
     if debug_channel is None:
         debug_channel = channel
 
-    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
+    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False, **discord_id_kwargs)
 
     if verbose:
         await channel.send(f"Starting the processing of {players.count() if not limit else limit} users... :rocket:")
@@ -69,6 +71,9 @@ async def handle_adding(client, limit, channel=None, debug_channel=None, verbose
             added_roles_message = "\n".join(added_roles[chunk * chunk_by : (chunk + 1) * chunk_by])
             await channel.send(added_roles_message)
 
+            if channel != debug_channel:
+                await debug_channel.send(added_roles_message)
+
     logging.info("**********Done**********")
 
 
@@ -79,7 +84,9 @@ async def get_member(guild, discord_id, channel=None):
         logging.info(f"Failed to fetch {discord_id=}")
 
         if channel:
-            await channel.send(f"😱😱😱 Failed to fetch data for discord_id {discord_id}, please review.")
+            qs = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(discord_id=discord_id)
+            await sync_to_async(qs.update, thread_sensitive=True)(approved=False)
+            await channel.send(f"User with {discord_id=} is not found, marked as unapproved :warning:")
 
 
 async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel, patch, player, roles, skipped, tower, unchanged, debug_channel):

@@ -1,7 +1,9 @@
+import datetime
 import os
 from functools import partial
 
 from cachetools import TTLCache, cached
+from django.core.exceptions import BadRequest
 from django.http import HttpResponse
 from pretty_html_table import build_table
 
@@ -21,7 +23,10 @@ def get_data(league, tourney_date=None):
     if not tourney_date:
         last_date = df.date.unique()[-1]
     else:
-        last_date = tourney_date
+        try:
+            last_date = datetime.date.fromisoformat(tourney_date)
+        except ValueError:
+            raise (BadRequest("Invalid date format"))
 
     last_df = df[df.date == last_date].reset_index(drop=True)
     return last_df

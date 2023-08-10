@@ -41,7 +41,7 @@ async def on_ready():
     if handle_outside:
         # for local testing, this channel is private discord so we don't pollute tower discord
         # it doesn't guarantee that you won't create side-effects, so careful
-        channel = client.get_channel(1117480385941618800)
+        channel = await client.fetch_channel(930105733998080062)
 
         # those are the top level functionalities one may want to test
         # await handle_adding(client, limit=5, channel=channel, verbose=True)
