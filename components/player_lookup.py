@@ -158,7 +158,19 @@ def draw_info_tab(info_tab, user, player_df):
     if (avatar := player_df.iloc[0].avatar) != -1:
         avatar_col.image(glob.glob(f"Tower_Skins/{avatar}-*.png")[0], width=100)
 
-    name_col.write(f"<div style='font-size: 30px; color: {current_role_color}'>{real_name}</div>", unsafe_allow_html=True)
+    name_col.write(
+        f"<div style='font-size: 30px; color: {current_role_color}'><span style='vertical-align: middle;'>{real_name}</span></div>", unsafe_allow_html=True
+    )
+    #     name_col.write(
+    #         f"<div style='display: inline-block; font-size: 30px'><span style='vertical-align: middle;'>{real_name}</span></div>"
+    #         """
+    #         <div style="border-radius: 16px; margin: 4px 10px; display: inline-block; text-align: center; padding: 5px 10px; color: #FAFAFA; background-color: #262730;">
+    #     <div style="width: 10px; height: 10px; display: inline-block; vertical-align: middle; background-color: rgb(0, 177, 148);"></div>
+    #     <span style="vertical-align: middle; margin-left: 5px;">Champ: 3500</span>
+    # </div>
+    #         """,
+    #         unsafe_allow_html=True,
+    #     )
     name_col.write(f"<div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div>", unsafe_allow_html=True)
 
     if (relic := player_df.iloc[0].relic) != -1:
