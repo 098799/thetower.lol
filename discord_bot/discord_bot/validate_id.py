@@ -17,7 +17,7 @@ async def validate_player_id(client, message):
             discord_player = await (await get_tower(client)).fetch_member(player.discord_id)
             await handle_role_present(client, discord_player)
             await message.add_reaction("✅")
-            await handle_adding(client, limit=None, discord_ids=[discord_id], channel=message.channel)
+            # await handle_adding(client, limit=None, discord_ids=[discord_id], channel=message.channel)
         else:
             await message.add_reaction("⁉️")
     except Exception as exc:
