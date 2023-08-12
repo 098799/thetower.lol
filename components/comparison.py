@@ -164,11 +164,11 @@ def not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf)
                 line_dash="dash",
                 opacity=0.4,
             )
-    for index, (start, version_minor, version_patch, beta) in enumerate(
-        Patch.objects.all().values_list("start_date", "version_minor", "version_patch", "beta")
+    for index, (start, version_minor, version_patch, interim) in enumerate(
+        Patch.objects.all().values_list("start_date", "version_minor", "version_patch", "interim")
     ):
         name = f"0.{version_minor}{version_patch}"
-        beta = " beta" if beta else ""
+        interim = "interim" if interim else ""
 
         if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(days=3):
             continue
@@ -177,7 +177,7 @@ def not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf)
         fig.add_annotation(
             x=start,
             y=tbdf.wave.max() - 300 * (index % 2 + 1),
-            text=f"Patch {name}{beta} start",
+            text=f"Patch {name}{interim} start",
             showarrow=True,
             arrowhead=1,
         )

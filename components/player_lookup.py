@@ -175,7 +175,7 @@ def write_for_each_patch(patch_tab, player_df):
 
     for patch in player_df.patch.unique():
         patch_tab.subheader(
-            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}.{patch.version_patch}" + ("" if not patch.beta else " beta")
+            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}.{patch.version_patch}" + ("" if not patch.interim else " interim")
         )
         patch_df = player_df[player_df.patch == patch]
 
@@ -195,11 +195,11 @@ def write_for_each_patch(patch_tab, player_df):
 
 
 def handle_start_date_loop(fig, graph_position_instead, tbdf):
-    for index, (start, version_minor, version_patch, beta) in enumerate(
-        Patch.objects.all().values_list("start_date", "version_minor", "version_patch", "beta")
+    for index, (start, version_minor, version_patch, interim) in enumerate(
+        Patch.objects.all().values_list("start_date", "version_minor", "version_patch", "interim")
     ):
         name = f"0.{version_minor}.{version_patch}"
-        beta = " beta" if beta else ""
+        interim = " interim" if interim else ""
 
         if start < tbdf.date.min() - datetime.timedelta(days=2) or start > tbdf.date.max() + datetime.timedelta(days=3):
             continue
@@ -208,7 +208,7 @@ def handle_start_date_loop(fig, graph_position_instead, tbdf):
         fig.add_annotation(
             x=start,
             y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (tbdf.wave.max() - 300 * (index % 2 + 1)),
-            text=f"Patch {name}{beta} start",
+            text=f"Patch {name}{interim} start",
             showarrow=True,
             arrowhead=1,
         )

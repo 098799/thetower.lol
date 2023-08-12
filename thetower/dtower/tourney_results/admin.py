@@ -55,7 +55,7 @@ class PatchNewAdmin(SimpleHistoryAdmin):
     list_display = (
         "version_minor",
         "version_patch",
-        "beta",
+        "interim",
         "start_date",
         "end_date",
     )
