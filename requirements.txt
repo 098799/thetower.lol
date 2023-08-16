@@ -21,3 +21,7 @@ djangorestframework==3.14.0
 whitenoise==6.4.0
 django-colorfield==0.8.0
 pretty-html-table==0.9.16
+# testing
+pytest==7.4.0
+pytest-django==4.5.2
+pytest-sugar==0.9.7

@@ -51,4 +51,5 @@ def upgrade(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [("tourney_results", "0001_initial")]
-    operations = [migrations.RunPython(upgrade)]
+    # operations = [migrations.RunPython(upgrade)]
+    operations = []  # done

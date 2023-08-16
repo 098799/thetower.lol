@@ -11,3 +11,7 @@
 
 - `db.sqlite3` goes to `thetower/dtower` folder
 - `uploads` csvs folder go to `thetower/dtower`:
+
+
+## Testing
+- `pytest`
