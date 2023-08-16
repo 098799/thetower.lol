@@ -1,13 +1,20 @@
 from asgiref.sync import sync_to_async
 
-from discord_bot.add_roles import handle_adding
 from discord_bot.util import get_tower, get_verified_role, verified_role_id
 from dtower.sus.models import KnownPlayer, PlayerId
+
+hex_digits = set("0123456789abcdef")
+
+
+def only_made_of_hex(message):
+    player_id_candidate = message.content.strip().lower()
+    contents = set(player_id_candidate)
+    return contents | hex_digits == hex_digits
 
 
 async def validate_player_id(client, message):
     try:
-        if 17 > len(message.content) > 12 and message.attachments:
+        if 17 > len(message.content) > 12 and message.attachments and only_made_of_hex(message):
             discord_id = message.author.id
 
             player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
@@ -17,7 +24,6 @@ async def validate_player_id(client, message):
             discord_player = await (await get_tower(client)).fetch_member(player.discord_id)
             await handle_role_present(client, discord_player)
             await message.add_reaction("✅")
-            # await handle_adding(client, limit=None, discord_ids=[discord_id], channel=message.channel)
         else:
             await message.add_reaction("⁉️")
     except Exception as exc:
