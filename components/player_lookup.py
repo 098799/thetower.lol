@@ -124,13 +124,13 @@ def compute_player_lookup(df, options: Options):
     player_df = player_df.reset_index(drop=True)
 
     to_be_displayed = (
-        player_df[["date", "tourney_name", "wave", "position", "average"] + additional_column]
+        player_df[["date", "tourney_name", "wave", "position", "patch", "average"] + additional_column]
         .style.apply(
-            lambda row: [None, f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None] + additional_format,
+            lambda row: [None, f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None, None] + additional_format,
             axis=1,
         )
         .apply(
-            lambda row: [None, None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None] + additional_format,
+            lambda row: [None, None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None, None] + additional_format,
             axis=1,
         )
         .applymap(color_position, subset=["position"])
