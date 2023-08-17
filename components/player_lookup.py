@@ -44,6 +44,7 @@ def compute_player_lookup(df, options: Options):
 
     if league != champ:
         df = load_tourney_results(folder=league_to_folder[league])
+        df["league"] = league
 
     first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
@@ -326,6 +327,7 @@ def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices
             first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
 
             if (player_df := _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
+                df["league"] = league
                 return df, player_df
 
         raise ValueError(f"Could not find user {user}.")
