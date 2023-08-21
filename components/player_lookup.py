@@ -157,40 +157,29 @@ def draw_info_tab(info_tab, user, player_df):
 
     real_name = player_df.iloc[0].real_name
     current_role_color = player_df.iloc[0].name_role.color
-    patches_active = player_df.patch.unique()
-
-    avatar_col, name_col, relic_col = info_tab.columns([1, 4, 1])
 
     st.write(
         """
     <style>
     table {
     width: 100%;
-    border: 1px var(--active-element) solid !important;
-    border-collapse: collapse;
     margin: 20px 0px 20px 0px;
+    }
+    .top td, .top tr {
+        border: 0;
     }
     </style>
     """,
         unsafe_allow_html=True,
     )
 
-    if (avatar := player_df.iloc[0].avatar) != -1:
-        avatar_col.write(
-            f"<img src='./app/static/Tower_Skins/{avatar}.png' width=100>",
-            unsafe_allow_html=True,
-        )
+    avatar = player_df.iloc[0].avatar
+    relic = player_df.iloc[0].relic
 
-    name_col.write(
-        f"<div style='font-size: 30px; color: {current_role_color}'><span style='vertical-align: middle;'>{real_name}</span></div>", unsafe_allow_html=True
+    info_tab.write(
+        f"<table class='top'><tr><td><img src='./app/static/Tower_Skins/{avatar}.png' width=100></td><td><div style='font-size: 30px; color: {current_role_color}'><span style='vertical-align: middle;'>{real_name}</span></div><div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div></td><td><img src='./app/static/Tower_Relics/{relic}.png' width=100, title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'></td></tr></table>",
+        unsafe_allow_html=True,
     )
-    name_col.write(f"<div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div>", unsafe_allow_html=True)
-
-    if (relic := player_df.iloc[0].relic) != -1:
-        relic_col.write(
-            f"<img src='./app/static/Tower_Relics/{relic}.png' width=100, title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'>",
-            unsafe_allow_html=True,
-        )
 
 
 def write_for_each_patch(patch_tab, player_df):
