@@ -178,8 +178,12 @@ def draw_info_tab(info_tab, user, player_df):
     avatar = player_df.iloc[0].avatar
     relic = player_df.iloc[0].relic
 
+    avatar_string = f"<img src='./app/static/Tower_Skins/{avatar}.png' width=100>" if avatar > 0 else ""
+    title = f"title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'" if relic in all_relics else ""
+    relic_string = f"<img src='./app/static/Tower_Relics/{relic}.png' width=100, {title}>" if relic >= 0 else ""
+
     info_tab.write(
-        f"<table class='top'><tr><td><img src='./app/static/Tower_Skins/{avatar}.png' width=100></td><td><div style='font-size: 30px; color: {current_role_color}'><span style='vertical-align: middle;'>{real_name}</span></div><div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div></td><td><img src='./app/static/Tower_Relics/{relic}.png' width=100, title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'></td></tr></table>",
+        f"<table class='top'><tr><td>{avatar_string}</td><td><div style='font-size: 30px; color: {current_role_color}'><span style='vertical-align: middle;'>{real_name}</span></div><div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div></td><td>{relic_string}</td></tr></table>",
         unsafe_allow_html=True,
     )
 
