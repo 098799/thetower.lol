@@ -12,6 +12,7 @@ from dtower.sus.models import SusPerson
 from dtower.tourney_results.constants import (
     Graph,
     Options,
+    all_relics,
     champ,
     colors_017,
     colors_018,
@@ -60,7 +61,7 @@ def compute_player_lookup(df, options: Options):
     if not user:
         return
 
-    info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Results data", "Patch best"])
+    info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
 
     id_mapping = get_id_lookup()
 
@@ -124,19 +125,23 @@ def compute_player_lookup(df, options: Options):
     player_df["average"] = player_df.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
     player_df = player_df.reset_index(drop=True)
 
-    to_be_displayed = (
-        player_df[["date", "tourney_name", "wave", "position", "patch", "average"] + additional_column]
-        .style.apply(
-            lambda row: [None, f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None, None] + additional_format,
-            axis=1,
+    def dataframe_styler(player_df):
+        return (
+            player_df[["date", "tourney_name", "wave", "position", "patch"] + additional_column]
+            .style.apply(
+                lambda row: [None, f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None] + additional_format,
+                axis=1,
+            )
+            .apply(
+                lambda row: [None, None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None] + additional_format,
+                axis=1,
+            )
+            .applymap(color_position, subset=["position"])
+            .bar(subset=["wave"], color="#222222", vmin=min(player_df.wave), vmax=max(player_df.wave))
         )
-        .apply(
-            lambda row: [None, None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None, None] + additional_format,
-            axis=1,
-        )
-        .applymap(color_position, subset=["position"])
-    )
-    raw_data_tab.dataframe(to_be_displayed, use_container_width=True, height=800)
+
+    raw_data_tab.dataframe(dataframe_styler(player_df), use_container_width=True, height=800)
+    info_tab.write(dataframe_styler(player_df.loc[:9]).to_html(escape=False), unsafe_allow_html=True)
 
     write_for_each_patch(patch_tab, player_df)
 
@@ -156,31 +161,36 @@ def draw_info_tab(info_tab, user, player_df):
 
     avatar_col, name_col, relic_col = info_tab.columns([1, 4, 1])
 
+    st.write(
+        """
+    <style>
+    table {
+    width: 100%;
+    border: 1px var(--active-element) solid !important;
+    border-collapse: collapse;
+    margin: 20px 0px 20px 0px;
+    }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
     if (avatar := player_df.iloc[0].avatar) != -1:
-        avatar_col.image(glob.glob(f"Tower_Skins/{avatar}-*.png")[0], width=100)
+        avatar_col.write(
+            f"<img src='./app/static/Tower_Skins/{avatar}.png' width=100>",
+            unsafe_allow_html=True,
+        )
 
     name_col.write(
         f"<div style='font-size: 30px; color: {current_role_color}'><span style='vertical-align: middle;'>{real_name}</span></div>", unsafe_allow_html=True
     )
-    #     name_col.write(
-    #         f"<div style='display: inline-block; font-size: 30px'><span style='vertical-align: middle;'>{real_name}</span></div>"
-    #         """
-    #         <div style="border-radius: 16px; margin: 4px 10px; display: inline-block; text-align: center; padding: 5px 10px; color: #FAFAFA; background-color: #262730;">
-    #     <div style="width: 10px; height: 10px; display: inline-block; vertical-align: middle; background-color: rgb(0, 177, 148);"></div>
-    #     <span style="vertical-align: middle; margin-left: 5px;">Champ: 3500</span>
-    # </div>
-    #         """,
-    #         unsafe_allow_html=True,
-    #     )
     name_col.write(f"<div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div>", unsafe_allow_html=True)
 
     if (relic := player_df.iloc[0].relic) != -1:
-        relic_col.image(glob.glob(f"Tower_Relics/{relic}-*.png")[0], width=100)
-
-    info_tab.write(
-        f"Player <font color='{current_role_color}'>{real_name}</font> has been noted in tourney results during the following patches: {sorted([patch.version_minor for patch in patches_active])}. (0.17 counts as part of 0.16 since no roles were reset back then)",
-        unsafe_allow_html=True,
-    )
+        relic_col.write(
+            f"<img src='./app/static/Tower_Relics/{relic}.png' width=100, title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'>",
+            unsafe_allow_html=True,
+        )
 
 
 def write_for_each_patch(patch_tab, player_df):
