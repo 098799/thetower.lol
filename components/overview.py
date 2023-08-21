@@ -16,6 +16,9 @@ def compute_overview(dfs, options: Options):
     with open("style.css", "r") as infile:
         st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
 
+    with open("funny.css", "r") as infile:
+        st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
+
     for df, league in zip(dfs, leagues):
         st.header(league)
 

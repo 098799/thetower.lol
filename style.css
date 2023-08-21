@@ -48,10 +48,4 @@ tr:nth-child(even) {
         margin: 5px !important;
         padding: 5px !important;
     }
-    table td:nth-of-type(3), table th:nth-of-type(3) {
-        display: none;
-    }
-    table td:nth-of-type(7), table th:nth-of-type(7) {
-        display: none;
-    }
 }

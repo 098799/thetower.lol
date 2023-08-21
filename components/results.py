@@ -27,7 +27,11 @@ class Results:
         with open("style.css", "r") as infile:
             table_styling = f"<style>{infile.read()}</style>"
 
+        with open("funny.css", "r") as infile:
+            funny_styling = f"<style>{infile.read()}</style>"
+
         st.write(table_styling, unsafe_allow_html=True)
+        st.write(funny_styling, unsafe_allow_html=True)
 
     def congrats(self, filtered_df):
         if not self.hidden_features and self.congrats_toggle:
