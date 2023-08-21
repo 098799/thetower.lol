@@ -127,13 +127,13 @@ def compute_player_lookup(df, options: Options):
 
     def dataframe_styler(player_df):
         return (
-            player_df[["date", "tourney_name", "wave", "position", "patch"] + additional_column]
+            player_df[["tourney_name", "wave", "position", "date", "patch"] + additional_column]
             .style.apply(
-                lambda row: [None, f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None] + additional_format,
+                lambda row: [f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None, None] + additional_format,
                 axis=1,
             )
             .apply(
-                lambda row: [None, None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None] + additional_format,
+                lambda row: [None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None, None] + additional_format,
                 axis=1,
             )
             .applymap(color_position, subset=["position"])
@@ -141,7 +141,9 @@ def compute_player_lookup(df, options: Options):
         )
 
     raw_data_tab.dataframe(dataframe_styler(player_df), use_container_width=True, height=800)
-    info_tab.write(dataframe_styler(player_df.loc[:9]).to_html(escape=False), unsafe_allow_html=True)
+
+    small_df = player_df.loc[:9]
+    info_tab.write(dataframe_styler(small_df).to_html(escape=False), unsafe_allow_html=True)
 
     write_for_each_patch(patch_tab, player_df)
 
