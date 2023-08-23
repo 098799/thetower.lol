@@ -71,7 +71,7 @@ async def on_message(message):
             except Exception:
                 limit = None
 
-            await handle_adding(client, limit, message.channel, verbose=True)
+            await handle_adding(client, limit=limit, channel=message.channel, debug_channel=message.channel, verbose=True)
 
         elif is_player_id_please_room(message.channel) and message.author.id != 1117480944153145364:
             await validate_player_id(client, message)
