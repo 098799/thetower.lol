@@ -126,6 +126,11 @@ def compute_comparison(df, options: Options):
     fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
     st.plotly_chart(fig)
 
+    with st.expander("Debug data..."):
+        data = {real_name: list(df.id.unique()) for real_name, df in pd_datas.groupby("real_name")}
+        st.write("Player ids used:")
+        st.json(data)
+
 
 def add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch, sus_ids, users):
     for user in users:
