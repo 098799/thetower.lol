@@ -55,6 +55,13 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
     st.plotly_chart(fig)
 
+    patch_tabs = st.tabs([str(patch) for patch in selected_patches])
+
+    for patch, patch_tab in zip(selected_patches, patch_tabs):
+        dates, counts_data = get_data(df[df.patch == patch])
+        counts_df = pd.DataFrame({role.wave_bottom: count_data for role, count_data in counts_data.items()})
+        patch_tab.dataframe(counts_df)
+
     # glory_patch = Patch.objects.get(version_minor=16)
 
     # plot_data = {
