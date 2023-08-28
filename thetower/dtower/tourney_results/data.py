@@ -305,6 +305,7 @@ if __name__ == "__main__":
     # os.environ["HIDDEN_FEATURES"] = "true"
 
     df = load_tourney_results("data")
+    breakpoint()
 
     # df = df[df.date == df.date.unique()[-1]]
     # df = df[df.position > 0]

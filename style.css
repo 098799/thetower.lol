@@ -29,6 +29,7 @@ tfoot {
 }
 tr {
     border: 0 !important;
+    height: 45px;
 }
 th, td {
     border: 0 !important;

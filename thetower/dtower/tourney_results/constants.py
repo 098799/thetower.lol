@@ -131,6 +131,7 @@ all_relics = {
     24: ("2 years", "2%", "Crit"),
     25: ("3 years", "2%", "DPM"),
     26: ("Dreamcatcher", "2%", "Coins"),
+    27: ("Spirit Wolf", "2%", "Crit"),
     28: ("Bacteriophage", "2%", "Damage"),
     29: ("Neuron", "5%", "Health"),
 }
