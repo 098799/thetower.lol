@@ -85,7 +85,7 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
     for patch, patch_tab in zip(selected_patches, patch_tabs):
         dates, counts_data = get_data(df[df.patch == patch])
         counts_df = pd.DataFrame({role.wave_bottom: count_data for role, count_data in counts_data.items()})
-        patch_tab.dataframe(counts_df)
+        patch_tab.dataframe(counts_df.sort_index(axis=1, ascending=False))
 
     # glory_patch = Patch.objects.get(version_minor=16)
 
