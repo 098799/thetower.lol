@@ -55,6 +55,8 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
     st.plotly_chart(fig)
 
+    df = load_tourney_results(league_to_folder[champ])
+
     st.subheader("Scores in each patch")
 
     patch_breakdown_data = {}
