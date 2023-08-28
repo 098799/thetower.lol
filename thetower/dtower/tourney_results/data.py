@@ -141,7 +141,7 @@ def load_tourney_results__prev(folder: str) -> pd.DataFrame:
     return _load_tourney_results([(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in result_files])
 
 
-def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, result_cutoff: Optional[int] = None) -> pd.DataFrame:
+def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, result_cutoff: Optional[int] = None, role_to_date: bool = False) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     league_switcher = os.environ.get("LEAGUE_SWITCHER")
 
@@ -206,6 +206,10 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
     df["wave_role"] = [wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])]
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
 
+    if role_to_date:
+        breakpoint()
+        df["role_to_date"] = [wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])]
+
     load_data_bar.progress(0.95)
 
     df["position_role_color"] = [color_position_barebones(position) for position in df["position"]]
@@ -236,11 +240,11 @@ def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff
 
 
 @st.cache_data
-def load_tourney_results(folder: str, result_cutoff: Optional[int] = None) -> pd.DataFrame:
-    return load_tourney_results__uncached(folder, result_cutoff=result_cutoff)
+def load_tourney_results(folder: str, result_cutoff: Optional[int] = None, role_to_date: bool = False) -> pd.DataFrame:
+    return load_tourney_results__uncached(folder, result_cutoff=result_cutoff, role_to_date=role_to_date)
 
 
-def load_tourney_results__uncached(folder: str, result_cutoff: Optional[int] = None) -> pd.DataFrame:
+def load_tourney_results__uncached(folder: str, result_cutoff: Optional[int] = None, role_to_date: bool = False) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
 
@@ -261,7 +265,7 @@ def load_tourney_results__uncached(folder: str, result_cutoff: Optional[int] = N
         additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
         result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
 
-    return _load_tourney_results(result_files, league, result_cutoff=result_cutoff)
+    return _load_tourney_results(result_files, league, result_cutoff=result_cutoff, role_to_date=role_to_date)
 
 
 @st.cache_data
@@ -304,8 +308,7 @@ if __name__ == "__main__":
     os.environ["LEAGUE_SWITCHER"] = "true"
     # os.environ["HIDDEN_FEATURES"] = "true"
 
-    df = load_tourney_results("data")
-    breakpoint()
+    df = load_tourney_results("data", role_to_date=True)
 
     # df = df[df.date == df.date.unique()[-1]]
     # df = df[df.position > 0]

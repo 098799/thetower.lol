@@ -16,12 +16,12 @@ patches = sorted([patch for patch in get_patches() if patch.version_minor], key=
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
     sus_ids = get_sus_ids()
 
-    def get_data(df):
+    def get_data(df, role_type="wave_role"):
         non_sus_df = df[~df.id.isin(sus_ids)]
-        unique_roles = sorted(non_sus_df.wave_role.unique(), key=lambda role: role.wave_bottom)
+        unique_roles = sorted(non_sus_df[role_type].unique(), key=lambda role: role.wave_bottom)
         unique_dates = non_sus_df.date.unique()
 
-        counts_per_date = non_sus_df.groupby(["date", "wave_role"])
+        counts_per_date = non_sus_df.groupby(["date", role_type])
 
         date_counts = non_sus_df.groupby("date").count()
         total_per_date = {date: count for date, count in zip(date_counts.index, date_counts.id)}
@@ -54,6 +54,29 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
     fig.update_layout(barmode="stack", title="Role counts per tournament (non-sus), courtesy of ObsUK")
 
     st.plotly_chart(fig)
+
+    st.subheader("Scores in each patch")
+
+    patch_breakdown_data = {}
+
+    for patch in selected_patches:
+        non_sus_df = df[~df.id.isin(sus_ids)]
+        patch_breakdown_datum = {
+            patch.wave_bottom: len(players) for patch, players in dict(non_sus_df[non_sus_df.patch == patch].groupby("name_role").real_name.unique()).items()
+        }
+        patch_breakdown_data[patch] = patch_breakdown_datum
+
+    all_waves = sorted({wave for patch_data in patch_breakdown_data.values() for wave in patch_data.keys()})
+
+    for patch_data in patch_breakdown_data.values():
+        for wave in all_waves:
+            patch_data.setdefault(wave, 0)
+
+    data_df = pd.DataFrame(patch_breakdown_data).T.sort_index(axis=1, ascending=False)
+
+    st.dataframe(data_df)
+
+    st.subheader("Scores in each tournament")
 
     patch_tabs = st.tabs([str(patch) for patch in selected_patches])
 
