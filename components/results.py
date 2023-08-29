@@ -23,6 +23,9 @@ class Results:
         self.show_hist: Optional[bool] = None
         self.congrats_toggle = False
 
+    def _make_sus_link(self, id, name):
+        return f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}' target='_blank'>🔗 sus</a>"
+
     def _styler(self):
         with open("style.css", "r") as infile:
             table_styling = f"<style>{infile.read()}</style>"
@@ -146,8 +149,14 @@ class Results:
         for date_iter, prev_df in prev_dfs.items():
             to_be_displayed[date_iter] = [mini_df.iloc[0].wave if not (mini_df := prev_df[prev_df.id == id_]).empty else 0 for id_ in to_be_displayed.id]
 
+        indices = ["#", "tourney_name", "real_name", *[date, *previous_4_dates], "✓", "id"]
+
+        if self.hidden_features:
+            to_be_displayed["sus_me"] = [self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
+            indices += ["sus_me"]
+
         to_be_displayed = (
-            to_be_displayed[["#", "tourney_name", "real_name", *[date, *previous_4_dates], "✓", "id"]]
+            to_be_displayed[indices]
             .style.apply(
                 lambda row: [
                     None,
@@ -182,7 +191,7 @@ class Results:
         ]
 
         if self.hidden_features:
-            indices += ["id"]
+            indices += ["id", "sus_me"]
             styling = lambda row: [
                 None,
                 None,
@@ -192,7 +201,11 @@ class Results:
                 f"color: {filtered_df[filtered_df['position']==row['#']].wave_role_color.iloc[0]}",
                 None,
                 None,
+                None,
             ]
+
+        if self.hidden_features:
+            to_be_displayed["sus_me"] = [self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
 
         to_be_displayed = (
             to_be_displayed[indices].style.apply(styling, axis=1).applymap(color_position__top, subset=["#"]).applymap(am_i_sus, subset=["real_name"])
