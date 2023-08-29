@@ -87,7 +87,7 @@ def compute_player_lookup(df, options: Options):
 
     player_df = player_df.sort_values("date", ascending=False)
 
-    draw_info_tab(info_tab, user, player_df)
+    draw_info_tab(info_tab, user, player_df, hidden_features)
 
     patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
     graph_options = [options.default_graph.value] + [
@@ -153,12 +153,18 @@ def compute_player_lookup(df, options: Options):
     patch_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
 
 
-def draw_info_tab(info_tab, user, player_df):
+def draw_info_tab(info_tab, user, player_df, hidden_features):
     info_tab.code("https://thetower.lol/Player%20Lookup?" + urlencode({"player": user}, doseq=True))
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
 
     real_name = player_df.iloc[0].real_name
     current_role_color = player_df.iloc[0].name_role.color
+
+    if hidden_features:
+        info_tab.write(
+            f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={player_df.iloc[0].id}&name={real_name}' target='_blank'>🔗 sus me</a>",
+            unsafe_allow_html=True,
+        )
 
     st.write(
         """
