@@ -21,6 +21,7 @@ from components.overview import compute_overview
 from components.player_lookup import compute_player_lookup
 from components.results import compute_results
 from components.search_all_leagues import compute_search_all_leagues
+from components.sus_overview import compute_sus_overview
 from components.top_scores import compute_top
 from components.winners import compute_winners
 from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
@@ -130,6 +131,7 @@ else:
     tabs = ["Results"] + common_tabs
 
 if hidden_features:
+    tabs.append("SUS overview")
     tabs.append("Search all leagues")
 
 functionality: str = st.radio("Which functionality to show?", tabs, index=0 if not functionality else tabs.index(functionality))
@@ -144,6 +146,7 @@ def keep():
     compute_breakdown
     compute_about
     compute_namechangers
+    compute_sus_overview
     compute_search_all_leagues
     compute_overview
 
@@ -157,7 +160,7 @@ compute_results_copper = compute_results
 
 function_string = f"compute_{'_'.join(functionality.lower().split())}"
 
-if function_string == "compute_search_all_leagues":
+if function_string in ["compute_search_all_leagues", "compute_sus_overview"]:
     my_bar = st.progress(0)
     leagues = sorted(league_to_folder.items())
 
