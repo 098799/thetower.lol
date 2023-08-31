@@ -42,6 +42,30 @@ class Role(models.Model):
             return True
 
 
+class PositionRole(models.Model):
+    position = models.IntegerField(blank=False, null=False, help_text="Position in the tourney.")
+    patch = models.ForeignKey(
+        PatchNew, null=True, blank=True, related_name="position_roles", on_delete=models.CASCADE, help_text="Patch related to a given role."
+    )
+    league = models.CharField(blank=False, null=False, choices=leagues_choices, help_text="Which league are those results from?", max_length=16)
+    color = ColorField(max_length=255, null=False, blank=False)
+
+    def __str__(self):
+        return f"Pos={self.position}, {self.patch}, {self.league}"
+
+    def __gt__(self, other):
+        try:
+            return self.position > other.position
+        except (AttributeError, TypeError):
+            return True
+
+    def __ge__(self, other):
+        try:
+            return self.position >= other.position
+        except (AttributeError, TypeError):
+            return True
+
+
 class TourneyResult(models.Model):
     result_file = models.FileField(upload_to="uploads/", blank=False, null=False, help_text="CSV file from discord with results.")
     date = models.DateField(blank=False, null=False, help_text="Date of the tournament")
