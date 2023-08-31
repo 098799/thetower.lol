@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
-from dtower.tourney_results.models import PatchNew, Role, TourneyResult
+from dtower.tourney_results.models import PatchNew, PositionRole, Role, TourneyResult
 
 
 @admin.action(description="Restart the public app")
@@ -93,3 +93,28 @@ class RoleAdmin(SimpleHistoryAdmin):
     )
 
     list_filter = ["patch", "wave_bottom", "wave_top", "color", "league"]
+
+
+@admin.register(PositionRole)
+class PositionRoleAdmin(SimpleHistoryAdmin):
+    def _color_preview(self, obj):
+        return mark_safe(f"""<div style="width: 120px; height: 40px; background: {obj.color};">&nbsp;</div>""")
+
+    _color_preview.short_description = "Color"
+
+    list_display = (
+        "position",
+        "patch",
+        "league",
+        "_color_preview",
+        "color",
+    )
+
+    search_fields = (
+        "position",
+        "patch",
+        "league",
+        "color",
+    )
+
+    list_filter = ["patch", "position", "color", "league"]
