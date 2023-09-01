@@ -5,10 +5,16 @@ from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
 
 def compute_sus_overview(df, *args, **kwargs):
-    print_impossible_avatars(df)
+    data = get_impossible_avatars(df)
+
+    if not data.empty:
+        st.subheader("Impossible avatars not sused yet:")
+        st.write(data.to_html(escape=False), unsafe_allow_html=True)
+    else:
+        st.subheader("No impossible avatars")
 
 
-def print_impossible_avatars(df):
+def get_impossible_avatars(df):
     def make_sus_link(id, name, avatar, date):
         return f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}&notes=impossible avatar {avatar} {date.isoformat()}' target='_blank'>🔗 sus him</a>"
 
@@ -20,20 +26,18 @@ def print_impossible_avatars(df):
     df = df[~df.id.isin(get_sus_ids())]
     avatars_df = df[df.avatar.isin(impossible_avatars.keys())]
 
-    if not avatars_df.empty:
-        st.subheader("Impossible avatars not sused yet:")
-        avatars_df = avatars_df[["id", "tourney_name", "wave", "date", "league", "avatar"]]
-        avatars_df.avatar = avatars_df.avatar.map(impossible_avatars)
-        avatars_df["sus_him"] = [
-            make_sus_link(id, name, avatar, date)
-            for id, name, avatar, date in zip(
-                avatars_df.id,
-                avatars_df.tourney_name,
-                avatars_df.avatar,
-                avatars_df.date,
-            )
-        ]
-        st.write(avatars_df.to_html(escape=False), unsafe_allow_html=True)
+    avatars_df = avatars_df[["id", "tourney_name", "wave", "date", "league", "avatar"]]
+    avatars_df.avatar = avatars_df.avatar.map(impossible_avatars)
+    avatars_df["sus_him"] = [
+        make_sus_link(id, name, avatar, date)
+        for id, name, avatar, date in zip(
+            avatars_df.id,
+            avatars_df.tourney_name,
+            avatars_df.avatar,
+            avatars_df.date,
+        )
+    ]
+    return avatars_df
 
 
 if __name__ == "__main__":
