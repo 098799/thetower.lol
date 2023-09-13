@@ -30,7 +30,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     all_leagues = leagues
 
-    dfs = {league: load_tourney_results__uncached(league_to_folder[league]) for league in all_leagues[:1]}
+    dfs = {league: load_tourney_results__uncached(league_to_folder[league]) for league in all_leagues}
 
     patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=21, version_patch=0, interim=False)
     tower = await get_tower(client)
