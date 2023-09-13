@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check
 from dtower.sus.models import KnownPlayer
-from dtower.tourney_results.constants import league_to_folder, leagues
+from dtower.tourney_results.constants import champ, league_to_folder, leagues
 from dtower.tourney_results.data import load_tourney_results__uncached
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -30,9 +30,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     all_leagues = leagues
 
-    dfs = {league: load_tourney_results__uncached(league_to_folder[league]) for league in all_leagues}
+    dfs = {league: load_tourney_results__uncached(league_to_folder[league]) for league in all_leagues[:1]}
 
-    patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=20, version_patch=4, interim=False)
+    patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=21, version_patch=0, interim=False)
     tower = await get_tower(client)
     roles = await tower.fetch_roles()
 
@@ -89,15 +89,51 @@ async def get_member(guild, discord_id, channel=None):
             await channel.send(f"User with {discord_id=} is not found, marked as unapproved :warning:")
 
 
+async def get_position_roles(roles):
+    filtered_roles = [role for role in roles if role.name.startswith("Top")]
+    return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
+
+
+async def get_league_roles(roles, league):
+    if league == champ:
+        initial = [(int(role.name.split()[-1]), role) for role in roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
+        only_250 = [item for item in initial if item[0] == 250]  # remove me when others disappear
+        return dict(sorted(only_250, reverse=True))
+
+    return dict(
+        sorted([(int(role.name.split()[-1]), role) for role in roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]),
+        reverse=True,
+    )
+
+
+async def handle_champ_position_roles(df, player, roles, discord_player):
+    position_roles = await get_position_roles(roles)
+    logging.debug(f"{discord_player=} {df.position=}")
+
+    if df.iloc[-1].position == 1:  # special logic for the winner
+        for position_role in position_roles.values():
+            await discord_player.remove_roles(position_role)
+
+        await discord_player.add_roles(position_roles[1])
+        logging.info(f"Added champ top1 role to {discord_player=}")
+        return
+
+    best_position_in_patch = df.position.min()
+
+    if best_position_in_patch <= 500:  # first remove old roles
+        for role in [role for role in discord_player.roles if role.name.startswith("Top")]:
+            await discord_player.remove_roles(role)
+
+        for pos, role in tuple(position_roles.items())[1:]:
+            if best_position_in_patch <= pos:
+                await discord_player.add_roles(role)
+                logging.info(f"Added {role=} to {discord_player=}")
+                return
+
+
 async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel, patch, player, roles, skipped, tower, unchanged, debug_channel):
     for league in all_leagues:
-        safe_league_prefix = get_safe_league_prefix(league)
-        league_roles = dict(
-            sorted(
-                [(int(role.name.split()[-1]), role) for role in roles if role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")],
-                reverse=True,
-            )
-        )
+        league_roles = await get_league_roles(roles, league)
         df = dfs[league]
 
         player_df = df[df["real_name"] == player.name]
@@ -119,7 +155,10 @@ async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel
         if discord_player is None:
             return None, skipped + 1
 
-        current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, safe_league_prefix)]
+        if league == champ:
+            await handle_champ_position_roles(patch_df, player, roles, discord_player)
+
+        current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
         current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
 
         await iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league, rightful_role, unchanged, wave_bottom)
