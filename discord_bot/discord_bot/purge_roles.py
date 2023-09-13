@@ -2,7 +2,7 @@ import logging
 
 from tqdm import tqdm
 
-from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check
+from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check, role_only_champ_tourney_roles_check
 from dtower.tourney_results.constants import leagues
 
 
@@ -28,15 +28,22 @@ async def purge_all_tourney_roles(client, channel, players):
             safe_league_prefix = get_safe_league_prefix(league)
             for discord_player in tqdm(discord_players):
                 current_league_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, safe_league_prefix)]
+                if league.startswith("Champ"):
+                    current_league_roles.append([role for role in discord_player.roles if await role_only_champ_tourney_roles_check(role)])
 
-                if len(current_league_roles) > 0:
-                    await discord_player.remove_roles(*current_league_roles)
-                    purged += 1
-                else:
-                    logging.info(f"name: {discord_player.name} roles that should have been removed: {current_league_roles}")
+                purged = await purge_current_league_roles(current_league_roles, discord_player, purged)
 
         await channel.send(f"🔥🔥🔥 Purged {purged} tournament roles 🔥🔥🔥")
 
     except Exception as exc:
         await channel.send(f"😱😱😱 Something went terribly wrong, please debug me. \n\n {exc}")
         raise exc
+
+
+async def purge_current_league_roles(current_league_roles, discord_player, purged):
+    if len(current_league_roles) > 0:
+        await discord_player.remove_roles(*current_league_roles)
+        purged += 1
+    else:
+        logging.info(f"name: {discord_player.name} roles that should have been removed: {current_league_roles}")
+    return purged

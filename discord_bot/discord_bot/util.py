@@ -8,6 +8,7 @@ verified_role_id = 1119950199209611274
 testing_room_id = 930105733998080062
 role_log_room_id = 1128308502130081842
 id_098799 = 177504210177228801
+top = "Top"
 
 
 @lru_cache
@@ -44,3 +45,7 @@ def get_safe_league_prefix(league):
 
 async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
     return role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
+
+
+async def role_only_champ_tourney_roles_check(role):
+    return role.name.strip().startswith(top) and role.name[-1].isdigit()
