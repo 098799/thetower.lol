@@ -1,6 +1,7 @@
 import os
 
 from asyncstdlib.functools import lru_cache
+from dtower.tourney_results.constants import top
 
 handle_outside = bool(os.getenv("GO"))
 
@@ -8,7 +9,6 @@ verified_role_id = 1119950199209611274
 testing_room_id = 930105733998080062
 role_log_room_id = 1128308502130081842
 id_098799 = 177504210177228801
-top = "Top"
 
 
 @lru_cache
