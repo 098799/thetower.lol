@@ -1,6 +1,7 @@
 import os
 
 from asyncstdlib.functools import lru_cache
+from dtower.tourney_results.constants import top
 
 handle_outside = bool(os.getenv("GO"))
 
@@ -49,3 +50,7 @@ def get_safe_league_prefix(league):
 
 async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
     return role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
+
+
+async def role_only_champ_tourney_roles_check(role):
+    return role.name.strip().startswith(top) and role.name[-1].isdigit()
