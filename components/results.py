@@ -90,7 +90,7 @@ class Results:
         return new_pbs, new_role_rows
 
     def top_of_results(self) -> str:
-        date_to_bc = dict(zip(df.date, df.bcs))
+        date_to_bc = dict(zip(self.df.date, self.df.bcs))
 
         self.dates = self.df["date"].unique()
         tourneys = sorted(self.dates, reverse=True)

@@ -266,7 +266,6 @@ def load_tourney_results__uncached(folder: str, result_cutoff: Optional[int] = N
     return _load_tourney_results(result_files, league, result_cutoff=result_cutoff, role_to_date=role_to_date)
 
 
-@st.cache_data
 def get_player_list(df):
     last_date = df.date.unique()[-1]
     sus_ids = get_sus_ids()
