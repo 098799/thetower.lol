@@ -90,18 +90,26 @@ class Results:
         return new_pbs, new_role_rows
 
     def top_of_results(self) -> str:
+        date_to_bc = dict(zip(df.date, df.bcs))
+
         self.dates = self.df["date"].unique()
         tourneys = sorted(self.dates, reverse=True)
+        tourney_titles = [date if not date_to_bc[date] else f"{date}: {', '.join(item.shortcut for item in date_to_bc[date])}" for date in tourneys]
 
         tourney_col, self.results_col, debug_col = st.columns([3, 2, 1])
-        tourney_file_name = tourney_col.selectbox("Select tournament:", tourneys)
+        tourney_title = tourney_col.selectbox("Select tournament:", tourney_titles)
 
         self.show_hist = debug_col.checkbox("Hist data", value=False)
 
         if not self.hidden_features:
             self.congrats_toggle = debug_col.checkbox("Congrats", value=False)
 
-        return tourney_file_name
+        chosen_tourney = tourneys[tourney_titles.index(tourney_title)]
+
+        if bcs := date_to_bc[chosen_tourney]:
+            st.write(f"Battle Conditions: {', '.join(item.name for item in bcs)}")
+
+        return chosen_tourney
 
     def prepare_data(self, filtered_df, how_many: int):
         filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (

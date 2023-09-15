@@ -22,6 +22,7 @@ import streamlit as st
 from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import champ, data_folder_name_mapping
 from dtower.tourney_results.formatting import color_position_barebones
+from dtower.tourney_results.models import BattleCondition
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import Role, TourneyResult
 
@@ -135,13 +136,9 @@ def get_row_to_role(df: pd.DataFrame, league):
     return df
 
 
-@st.cache_data
-def load_tourney_results__prev(folder: str) -> pd.DataFrame:
-    result_files = sorted(glob(f"{folder}/*"))
-    return _load_tourney_results([(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in result_files])
-
-
-def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, result_cutoff: Optional[int] = None, role_to_date: bool = False) -> pd.DataFrame:
+def _load_tourney_results(
+    result_files: List[Tuple[str, str, list[BattleCondition]]], league=champ, result_cutoff: Optional[int] = None, role_to_date: bool = False
+) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     league_switcher = os.environ.get("LEAGUE_SWITCHER")
 
@@ -151,7 +148,7 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
 
     load_data_bar = st.progress(0)
 
-    for index, (result_file, date) in enumerate(result_files, 1):
+    for index, (result_file, date, bcs) in enumerate(result_files, 1):
         df = pd.read_csv(result_file, header=None)
 
         cutoff = handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff)
@@ -162,7 +159,8 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
 
         result_date = datetime.date.fromisoformat(date)
         df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
-        df["date"] = [result_date] * len(df)
+        df["date"] = result_date
+        df["bcs"] = [bcs for _ in range(len(df))]
 
         positions = []
         current = 1
@@ -207,7 +205,6 @@ def _load_tourney_results(result_files: List[Tuple[str, str]], league=champ, res
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
 
     if role_to_date:
-        breakpoint()
         df["role_to_date"] = [wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])]
 
     load_data_bar.progress(0.95)
@@ -253,10 +250,11 @@ def load_tourney_results__uncached(folder: str, result_cutoff: Optional[int] = N
     result_files = sorted(
         [
             (
-                Path("thetower/dtower") / result_file,
-                date.isoformat(),
+                Path("thetower/dtower") / str(result.result_file),
+                result.date.isoformat(),
+                result.conditions.all(),
             )
-            for result_file, date in TourneyResult.objects.filter(league=league, **additional_filter).values_list("result_file", "date")
+            for result in TourneyResult.objects.filter(league=league, **additional_filter)
         ],
         key=lambda x: x[1],
     )
@@ -309,6 +307,7 @@ if __name__ == "__main__":
     # os.environ["HIDDEN_FEATURES"] = "true"
 
     df = load_tourney_results("data", role_to_date=True)
+    breakpoint()
 
     # df = df[df.date == df.date.unique()[-1]]
     # df = df[df.position > 0]
