@@ -66,11 +66,17 @@ class PositionRole(models.Model):
             return True
 
 
+class BattleCondition(models.Model):
+    name = models.CharField(max_length=64, null=False, blank=False, help_text="Name of the condition.")
+    shortcut = models.CharField(max_length=8, null=False, blank=False, help_text="Shortcut of the condition.")
+
+
 class TourneyResult(models.Model):
     result_file = models.FileField(upload_to="uploads/", blank=False, null=False, help_text="CSV file from discord with results.")
     date = models.DateField(blank=False, null=False, help_text="Date of the tournament")
     league = models.CharField(blank=False, null=False, choices=leagues_choices, help_text="Which league are those results from?", max_length=16)
     public = models.BooleanField(blank=False, null=False, default=False, help_text="Are the results shown to everyone or just to review?")
+    conditions = models.ManyToManyField(BattleCondition, related_name="results", help_text="Battle conditions for the tourney.")
 
     history = HistoricalRecords()
 
