@@ -49,7 +49,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
     list_filter = ["date", "league", "public", "conditions"]
 
     def _conditions(self, obj):
-        return ", ".join([condition for condition in obj.conditions.all()])
+        return mark_safe("<br>".join([str(condition) for condition in obj.conditions.all()]))
 
     _conditions.short_description = "Battle Conditions"
 

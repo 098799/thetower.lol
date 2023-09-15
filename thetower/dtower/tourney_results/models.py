@@ -70,6 +70,9 @@ class BattleCondition(models.Model):
     name = models.CharField(max_length=64, null=False, blank=False, help_text="Name of the condition.")
     shortcut = models.CharField(max_length=8, null=False, blank=False, help_text="Shortcut of the condition.")
 
+    def __str__(self):
+        return f"BC: {self.name} ({self.shortcut})"
+
 
 class TourneyResult(models.Model):
     result_file = models.FileField(upload_to="uploads/", blank=False, null=False, help_text="CSV file from discord with results.")
