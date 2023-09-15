@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
-from dtower.tourney_results.models import PatchNew, PositionRole, Role, TourneyResult
+from dtower.tourney_results.models import BattleCondition, PatchNew, PositionRole, Role, TourneyResult
 
 
 @admin.action(description="Restart the public app")
@@ -33,6 +33,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
         "id",
         "league",
         "date",
+        "_conditions",
         "result_file",
         "public",
     )
@@ -45,7 +46,14 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
         "public",
     )
 
-    list_filter = ["date", "league", "public"]
+    list_filter = ["date", "league", "public", "conditions"]
+
+    def _conditions(self, obj):
+        return ", ".join([condition for condition in obj.conditions.all()])
+
+    _conditions.short_description = "Battle Conditions"
+
+    filter_horizontal = ("conditions",)
 
     actions = [publicize, restart_public_app, restart_hidden_app, restart_django]
 
@@ -118,3 +126,16 @@ class PositionRoleAdmin(SimpleHistoryAdmin):
     )
 
     list_filter = ["patch", "position", "color", "league"]
+
+
+@admin.register(BattleCondition)
+class BattleConditionAdmin(SimpleHistoryAdmin):
+    list_display = (
+        "name",
+        "shortcut",
+    )
+
+    search_fields = (
+        "name",
+        "shortcut",
+    )
