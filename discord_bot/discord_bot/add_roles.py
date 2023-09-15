@@ -9,7 +9,7 @@ from tqdm import tqdm
 from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check
 from dtower.sus.models import KnownPlayer
 from dtower.tourney_results.constants import champ, league_to_folder, leagues
-from dtower.tourney_results.data import load_tourney_results__uncached
+from dtower.tourney_results.data import get_sus_ids, load_tourney_results__uncached
 from dtower.tourney_results.models import PatchNew as Patch
 
 
@@ -136,6 +136,7 @@ async def handle_leagues(all_leagues, changed, dfs, discord_player, ids, channel
         league_roles = await get_league_roles(roles, league)
         df = dfs[league]
 
+        df = df[~df.id.isin(get_sus_ids())]
         player_df = df[df["real_name"] == player.name]
         player_df = player_df[player_df["id"].isin(ids)]
         patch_df = player_df[player_df["patch"] == patch]
