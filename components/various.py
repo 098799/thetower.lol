@@ -18,7 +18,7 @@ def compute_various(df, options):
 
     st.write(table_styling, unsafe_allow_html=True)
 
-    patches = list(Patch.objects.filter(version_minor=20, interim=False))
+    patches = list(Patch.objects.filter(version_minor__gte=20))
     df = df[df.patch.isin(patches)]
 
     podiums = []

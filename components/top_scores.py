@@ -3,7 +3,7 @@ import streamlit as st
 
 from dtower.tourney_results.constants import Graph, Options
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
-from dtower.tourney_results.formatting import color_position__top, make_url
+from dtower.tourney_results.formatting import color_position__top, make_player_url
 
 patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
 
@@ -38,7 +38,7 @@ def compute_top(df, options: Options):
     st.plotly_chart(fig)
 
     if options.links_toggle:
-        condensed_tbd = condensed_tbd.format(make_url, subset=["real_name"]).to_html(escape=False)
+        condensed_tbd = condensed_tbd.format(make_player_url, subset=["real_name"]).to_html(escape=False)
         st.write(condensed_tbd, unsafe_allow_html=True)
     else:
         st.dataframe(condensed_tbd, use_container_width=True, height=400)
@@ -53,7 +53,7 @@ def compute_top(df, options: Options):
     st.write("Overall:")
 
     if options.links_toggle:
-        overall_tbd = overall_tbd.format(make_url, subset=["real_name"]).to_html(escape=False)
+        overall_tbd = overall_tbd.format(make_player_url, subset=["real_name"]).to_html(escape=False)
         st.write(overall_tbd, unsafe_allow_html=True)
     else:
         st.dataframe(overall_tbd, use_container_width=True, height=400)

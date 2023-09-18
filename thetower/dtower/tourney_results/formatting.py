@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from operator import ge, le
 from urllib.parse import quote
@@ -77,10 +78,16 @@ def strike(text):
     # return result
 
 
-def make_url(username, base_url="thetower.lol"):
+BASE_URL = os.getenv("BASE_URL", "thetower.lol")
+
+
+def make_url(username, path, base_url=BASE_URL):
     original_username = username
 
     for medal in medals:
         username = username.strip(medal)
 
-    return f"<a href='http://{base_url}?player={quote(username.strip())}'>{original_username}</a>"
+    return f"<a href='http://{base_url}/{path}?player={quote(username.strip())}'>{original_username}</a>"
+
+
+make_player_url = partial(make_url, path="Player%20Lookup")

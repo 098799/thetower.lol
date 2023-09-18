@@ -21,7 +21,7 @@ from dtower.tourney_results.constants import (
     stratas_boundaries_018,
 )
 from dtower.tourney_results.data import get_id_lookup, get_patches, get_player_list, load_tourney_results
-from dtower.tourney_results.formatting import color_top_18, make_url
+from dtower.tourney_results.formatting import BASE_URL, color_top_18, make_player_url
 from dtower.tourney_results.models import PatchNew as Patch
 
 
@@ -50,7 +50,7 @@ def compute_comparison(df, options: Options):
     if not users:
         return
 
-    st.code("https://thetower.lol/Player%20Comparison?" + urlencode({"compare": users}, doseq=True))
+    st.code(f"http://{BASE_URL}/Player%20Comparison?" + urlencode({"compare": users}, doseq=True))
 
     datas = []
 
@@ -86,7 +86,7 @@ def compute_comparison(df, options: Options):
     summary.set_index(keys="User")
 
     if options.links_toggle:
-        to_be_displayed = summary.style.format(make_url, subset=["User"]).to_html(escape=False)
+        to_be_displayed = summary.style.format(make_player_url, subset=["User"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
         st.dataframe(summary, use_container_width=True)
@@ -108,7 +108,7 @@ def compute_comparison(df, options: Options):
     last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
 
     if options.links_toggle:
-        to_be_displayed = last_results.format(make_url, subset=["User"]).to_html(escape=False)
+        to_be_displayed = last_results.format(make_player_url, subset=["User"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
         st.dataframe(last_results, use_container_width=True)

@@ -30,7 +30,7 @@ from dtower.tourney_results.data import (
     get_sus_ids,
     load_tourney_results,
 )
-from dtower.tourney_results.formatting import color_position
+from dtower.tourney_results.formatting import BASE_URL, color_position
 from dtower.tourney_results.models import PatchNew as Patch
 
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
@@ -155,7 +155,7 @@ def compute_player_lookup(df, options: Options):
 
 
 def draw_info_tab(info_tab, user, player_df, hidden_features):
-    info_tab.code("https://thetower.lol/Player%20Lookup?" + urlencode({"player": user}, doseq=True))
+    info_tab.code(f"http://{BASE_URL}/Player%20Lookup?" + urlencode({"player": user}, doseq=True))
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
 
     real_name = player_df.iloc[0].real_name

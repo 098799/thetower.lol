@@ -10,7 +10,7 @@ from streamlit_js_eval import get_page_location
 from components.util import links_toggle
 from dtower.tourney_results.constants import Graph, Options, all_relics, champ, league_to_folder, sus_person
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
-from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_url, strike
+from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_player_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
 
 
@@ -237,11 +237,7 @@ class Results:
             self._styler()
             to_be_displayed_styler = self.regular_preparation(to_be_displayed, filtered_df)
 
-        to_be_displayed_styler = (
-            to_be_displayed_styler.format(partial(make_url, base_url="thetower.lol/Player%20Lookup"), subset=["real_name"])
-            .hide(axis="index")
-            .to_html(escape=False)
-        )
+        to_be_displayed_styler = to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False)
         st.write(to_be_displayed_styler, unsafe_allow_html=True)
 
 

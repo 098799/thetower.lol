@@ -6,7 +6,7 @@ import streamlit as st
 from components.results import Results
 from dtower.tourney_results.constants import Graph, Options, league_to_folder, leagues
 from dtower.tourney_results.data import load_tourney_results
-from dtower.tourney_results.formatting import make_url
+from dtower.tourney_results.formatting import make_player_url
 
 
 def compute_overview(dfs, options: Options):
@@ -32,9 +32,7 @@ def compute_overview(dfs, options: Options):
         to_be_displayed = results.prepare_data(filtered_df, how_many=10)
         to_be_displayed_styler = results.regular_preparation(to_be_displayed, filtered_df)
         st.write(
-            to_be_displayed_styler.format(partial(make_url, base_url="thetower.lol/Player%20Lookup"), subset=["real_name"])
-            .hide(axis="index")
-            .to_html(escape=False),
+            to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False),
             unsafe_allow_html=True,
         )
 
