@@ -113,7 +113,7 @@ async def handle_champ_position_roles(df, player, roles, discord_player, changed
     if df.iloc[-1].position == 1:  # special logic for the winner
         rightful_role = position_roles[1]
 
-        if rightful_role in [discord_player.roles]:
+        if rightful_role in discord_player.roles:
             unchanged[champ].append((discord_player, rightful_role))
             return True  # Don't actually do anything if the player already has the role
 
@@ -132,7 +132,7 @@ async def handle_champ_position_roles(df, player, roles, discord_player, changed
             if best_position_in_patch <= pos:
                 rightful_role = role
 
-                if rightful_role in [discord_player.roles]:
+                if rightful_role in discord_player.roles:
                     unchanged[champ].append((discord_player, rightful_role))
                     return True  # Don't actually do anything if the player already has the role
 

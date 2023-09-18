@@ -44,22 +44,23 @@ async def on_ready():
         channel = await client.fetch_channel(930105733998080062)
 
         # those are the top level functionalities one may want to test
-        # await handle_adding(
-        #     client,
-        #     limit=100,
-        #     discord_ids=[
-        #         177504210177228801,
-        #         349704551391297549,
-        #         150761026718007296,
-        #         181859318801498113,
-        #         211865455697068032,
-        #         280723745864286208,
-        #         269350887917355010,
-        #         940798253828542507,
-        #     ],
-        #     channel=channel,
-        #     verbose=True,
-        # )
+        await handle_adding(
+            client,
+            limit=100,
+            discord_ids=[
+                181859318801498113
+                # 177504210177228801,
+                # 349704551391297549,
+                # 150761026718007296,
+                # 181859318801498113,
+                # 211865455697068032,
+                # 280723745864286208,
+                # 269350887917355010,
+                # 940798253828542507,
+            ],
+            channel=channel,
+            verbose=True,
+        )
         # await remove_nicknames(client, channel)
         # await purge_all_tourney_roles(
         #     client=client,

@@ -139,4 +139,6 @@ all_relics = {
     27: ("Spirit Wolf", "2%", "Crit"),
     28: ("Bacteriophage", "2%", "Damage"),
     29: ("Neuron", "5%", "Health"),
+    30: ("IonizedPlazma", "2%", "Abs def"),
+    31: ("PlasmaArc", "5%", "Lab Speed"),
 }
