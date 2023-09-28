@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 from components.util import get_options
@@ -124,7 +125,8 @@ def compute_comparison(df, options: Options):
     else:
         st.dataframe(last_results, use_container_width=True)
 
-    fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True, hover_data=["position", "wave", "bcs"])
+    fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True, custom_data=["bcs", "position"])
+    fig.update_traces(hovertemplate="%{y}<br>Postion: %{customdata[1]}<br>BC: %{customdata[0]}")
     fig.update_layout(hovermode="x unified")
 
     min_ = min(pd_datas.wave)

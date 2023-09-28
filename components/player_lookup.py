@@ -306,7 +306,7 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
             y=tbdf.wave,
             name="Wave (left axis)",
             customdata=tbdf.bcs,
-            hovertemplate="%{y}, Extra:%{customdata}",
+            hovertemplate="%{y}, BC: %{customdata}",
             **foreground_kwargs if not average_foreground else background_kwargs,
         )
     )
