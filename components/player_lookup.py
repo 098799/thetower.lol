@@ -61,7 +61,9 @@ def compute_player_lookup(df, options: Options):
     if not user:
         return
 
-    info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
+    info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(
+        ["Info", "Tourney performance graph", "Full results data", "Patch best"]
+    )
 
     id_mapping = get_id_lookup()
 
@@ -89,19 +91,24 @@ def compute_player_lookup(df, options: Options):
 
     draw_info_tab(info_tab, user, player_df, hidden_features)
 
-    patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
+    patches_options = sorted(
+        [patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True
+    )
     graph_options = [options.default_graph.value] + [
         value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
     ]
     patch_col, average_col = graph_tab.columns([1, 1])
     patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
-    rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
+    rolling_average = average_col.slider(
+        "Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5
+    )
 
     colors, patch_df, stratas = handle_colors_dependant_on_patch(df, patch, player_df)
 
     tbdf = patch_df.reset_index(drop=True)
     tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
     tbdf["position_average"] = tbdf.position.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
+    tbdf["bcs"] = tbdf.bcs.map(lambda bc_qs: " / ".join([bc.shortcut for bc in bc_qs]))
 
     if len(tbdf) > 1:
         pos_col, tweak_col = graph_tab.columns([1, 1])
@@ -116,6 +123,7 @@ def compute_player_lookup(df, options: Options):
             handle_is_graph_position(average_foreground, fig, rolling_average, tbdf)
 
         handle_start_date_loop(fig, graph_position_instead, tbdf)
+        fig.update_layout(hovermode="x unified")
 
         graph_tab.plotly_chart(fig)
 
@@ -130,11 +138,27 @@ def compute_player_lookup(df, options: Options):
         return (
             player_df[["tourney_name", "wave", "position", "date", "patch", "battle"] + additional_column]
             .style.apply(
-                lambda row: [f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}", None, None, None, None, None] + additional_format,
+                lambda row: [
+                    f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}",
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ]
+                + additional_format,
                 axis=1,
             )
             .apply(
-                lambda row: [None, f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}", None, None, None, None] + additional_format,
+                lambda row: [
+                    None,
+                    f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}",
+                    None,
+                    None,
+                    None,
+                    None,
+                ]
+                + additional_format,
                 axis=1,
             )
             .applymap(color_position, subset=["position"])
@@ -144,7 +168,10 @@ def compute_player_lookup(df, options: Options):
     raw_data_tab.dataframe(dataframe_styler(player_df), use_container_width=True, height=800)
 
     small_df = player_df.loc[:9]
-    info_tab.write('<div style="overflow-x:auto;">' + dataframe_styler(small_df).to_html(escape=False) + "</div>", unsafe_allow_html=True)
+    info_tab.write(
+        '<div style="overflow-x:auto;">' + dataframe_styler(small_df).to_html(escape=False) + "</div>",
+        unsafe_allow_html=True,
+    )
 
     write_for_each_patch(patch_tab, player_df)
 
@@ -186,7 +213,9 @@ def draw_info_tab(info_tab, user, player_df, hidden_features):
     relic = player_df.iloc[0].relic
 
     avatar_string = f"<img src='./app/static/Tower_Skins/{avatar}.png' width=100>" if avatar > 0 else ""
-    title = f"title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'" if relic in all_relics else ""
+    title = (
+        f"title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'" if relic in all_relics else ""
+    )
     relic_string = f"<img src='./app/static/Tower_Relics/{relic}.png' width=100, {title}>" if relic >= 0 else ""
 
     info_tab.write(
@@ -200,7 +229,8 @@ def write_for_each_patch(patch_tab, player_df):
 
     for patch in player_df.patch.unique():
         patch_tab.subheader(
-            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}.{patch.version_patch}" + ("" if not patch.interim else " interim")
+            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}.{patch.version_patch}"
+            + ("" if not patch.interim else " interim")
         )
         patch_df = player_df[player_df.patch == patch]
 
@@ -232,7 +262,9 @@ def handle_start_date_loop(fig, graph_position_instead, tbdf):
         fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
         fig.add_annotation(
             x=start,
-            y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (tbdf.wave.max() - 300 * (index % 2 + 1)),
+            y=(tbdf.position.min() + 10 * (index % 2))
+            if graph_position_instead
+            else (tbdf.wave.max() - 300 * (index % 2 + 1)),
             text=f"Patch {name}{interim} start",
             showarrow=True,
             arrowhead=1,
@@ -273,6 +305,8 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
             x=tbdf.date,
             y=tbdf.wave,
             name="Wave (left axis)",
+            customdata=tbdf.bcs,
+            hovertemplate="%{y}, Extra:%{customdata}",
             **foreground_kwargs if not average_foreground else background_kwargs,
         )
     )
@@ -338,7 +372,9 @@ def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices
 
             first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
 
-            if (player_df := _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
+            if (
+                player_df := _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user)
+            ) is not None:
                 df["league"] = league
                 return df, player_df
 

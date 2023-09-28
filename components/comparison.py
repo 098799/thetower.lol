@@ -54,7 +54,9 @@ def compute_comparison(df, options: Options):
 
     datas = []
 
-    patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
+    patches_options = sorted(
+        [patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True
+    )
     graph_options = [options.default_graph.value] + [
         value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
     ]
@@ -62,7 +64,9 @@ def compute_comparison(df, options: Options):
 
     id_mapping = get_id_lookup()
 
-    colors, stratas, tbdf = add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch, sus_ids, users)
+    colors, stratas, tbdf = add_user_data_to_datas(
+        all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch, sus_ids, users
+    )
 
     if not datas:
         return
@@ -92,20 +96,27 @@ def compute_comparison(df, options: Options):
         st.dataframe(summary, use_container_width=True)
 
     pd_datas = pd.concat(datas)
+    pd_datas["bcs"] = pd_datas.bcs.map(lambda bc_qs: " / ".join([bc.shortcut for bc in bc_qs]))
 
     last_5_tourneys = sorted(pd_datas.date.unique())[-5:][::-1]
+    last_5_bcs = [pd_datas[pd_datas.date == date].bcs.iloc[0] for date in last_5_tourneys]
     last_results = pd.DataFrame(
         [
             [
                 data.real_name.unique()[0],
             ]
-            + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in last_5_tourneys]
+            + [
+                wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0
+                for date in last_5_tourneys
+            ]
             for data in datas
         ],
-        columns=["User", *last_5_tourneys],
+        columns=["User", *[f"{date.month}/{date.day}: {bc}" for date, bc in zip(last_5_tourneys, last_5_bcs)]],
     )
 
-    last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
+    last_results = last_results.style.apply(
+        lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1
+    )
 
     if options.links_toggle:
         to_be_displayed = last_results.format(make_player_url, subset=["User"]).to_html(escape=False)
@@ -113,7 +124,8 @@ def compute_comparison(df, options: Options):
     else:
         st.dataframe(last_results, use_container_width=True)
 
-    fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True)
+    fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True, hover_data=["position", "wave", "bcs"])
+    fig.update_layout(hovermode="x unified")
 
     min_ = min(pd_datas.wave)
     max_ = max(pd_datas.wave)
@@ -132,9 +144,13 @@ def compute_comparison(df, options: Options):
         st.json(data)
 
 
-def add_user_data_to_datas(all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch, sus_ids, users):
+def add_user_data_to_datas(
+    all_real_names, all_tourney_names, all_user_ids, datas, df, first_choices, id_mapping, patch, sus_ids, users
+):
     for user in users:
-        player_df = loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
+        player_df = loop_over_search_choices_for_user(
+            all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user
+        )
 
         if len(player_df.id.unique()) >= 2:
             aggreg = player_df.groupby("id").count()
@@ -175,7 +191,9 @@ def not_sure_what_to_call_this(colors, fig, max_, min_, pd_datas, stratas, tbdf)
         name = f"0.{version_minor}.{version_patch}"
         interim = "interim" if interim else ""
 
-        if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(days=3):
+        if start < pd_datas.date.min() - datetime.timedelta(days=2) or start > pd_datas.date.max() + datetime.timedelta(
+            days=3
+        ):
             continue
 
         fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
@@ -205,7 +223,9 @@ def handle_patch_colors(df, patch, player_df):
     return colors, patch_df, stratas
 
 
-def loop_over_search_choices_for_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
+def loop_over_search_choices_for_user(
+    all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user
+):
     if user in (set(first_choices) | all_real_names | all_tourney_names):
         player_df = df[(df.real_name == user) | (df.tourney_name == user)]
     elif user in all_user_ids:
