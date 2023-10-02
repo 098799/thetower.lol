@@ -86,13 +86,14 @@ async def check_id(client, message):
         if players:
             player = await sync_to_async(players.get)()
 
-            await message.channel.send(f"{player.discord_id=}, {player.ids.all()=}")
+            ids = player.ids.all().values("id", "primary")
+            await message.channel.send(f"{player.discord_id=}, {ids=}")
 
         player_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(id=potential_id)
 
         if player_ids:
             for player_id in player_ids:
-                await message.channel.send(f"{player_id.player.discord_id=}, {player_id.id=}")
+                await message.channel.send(f"{player_id.player.discord_id=}, {player_id.id=}, {player_id.primary=}")
 
 
 @client.event
