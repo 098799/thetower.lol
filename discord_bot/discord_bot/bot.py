@@ -71,27 +71,28 @@ async def on_ready():
         exit()
     logging.info(f"We have logged in as {client.user}")
 
-    # if not handle_roles_scheduled.is_running():
-    #     handle_roles_scheduled.start()
+    if not handle_roles_scheduled.is_running():
+        handle_roles_scheduled.start()
 
 
 async def check_id(client, message):
-    potential_id = message.content.split()[1]
+    _, *potential_ids = message.content.split()
 
-    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
-        approved=True, discord_id=potential_id
-    )
+    for potential_id in potential_ids:
+        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
+            approved=True, discord_id=potential_id
+        )
 
-    if players:
-        player = await sync_to_async(players.get)()
+        if players:
+            player = await sync_to_async(players.get)()
 
-        await message.channel.send(f"{player.discord_id=}, {player.ids.all()=}")
+            await message.channel.send(f"{player.discord_id=}, {player.ids.all()=}")
 
-    player_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(id=potential_id)
+        player_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(id=potential_id)
 
-    if player_ids:
-        for player_id in player_ids:
-            await message.channel.send(f"{player_id.player.discord_id=}, {player_id.id=}")
+        if player_ids:
+            for player_id in player_ids:
+                await message.channel.send(f"{player_id.player.discord_id=}, {player_id.id=}")
 
 
 @client.event
