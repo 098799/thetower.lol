@@ -346,7 +346,7 @@ def handle_sus_or_banned_ids(info_tab, id_, sus_ids):
     if id_ in get_banned_ids():
         info_tab.warning("This player is banned by the Support team.")
     if id_ in get_soft_banned_ids():
-        info_tab.warning("This player is banned by Pog.")
+        info_tab.warning("This player is banned.")
     if id_ in sus_ids:
         info_tab.error("This player is considered sus.")
 
