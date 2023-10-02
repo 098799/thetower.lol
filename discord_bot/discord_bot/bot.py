@@ -71,8 +71,27 @@ async def on_ready():
         exit()
     logging.info(f"We have logged in as {client.user}")
 
-    if not handle_roles_scheduled.is_running():
-        handle_roles_scheduled.start()
+    # if not handle_roles_scheduled.is_running():
+    #     handle_roles_scheduled.start()
+
+
+async def check_id(client, message):
+    potential_id = message.content.split()[1]
+
+    players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
+        approved=True, discord_id=potential_id
+    )
+
+    if players:
+        player = await sync_to_async(players.get)()
+
+        await message.channel.send(f"{player.discord_id=}, {player.ids.all()=}")
+
+    player_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(id=potential_id)
+
+    if player_ids:
+        for player_id in player_ids:
+            await message.channel.send(f"{player_id.player.discord_id=}, {player_id.id=}")
 
 
 @client.event
@@ -81,14 +100,33 @@ async def on_message(message):
         if is_testing_room(message.channel) and message.content.startswith("!remove_all_nicknames"):
             await remove_nicknames(client, message.channel)
 
+        elif is_testing_room(message.channel) and message.content.startswith("!check_id"):
+            try:
+                await check_id(client, message)
+            except Exception as exc:
+                logging.exception(exc)
+
         elif is_testing_room(message.channel) and message.content.startswith("!add_roles"):
             try:
-                limit = int(message.content.split()[1])
+                command, argument = message.content.split()
+
+                if len(argument) < 10:
+                    discord_ids = []
+                    limit = int(argument)
+                else:
+                    discord_ids = [int(argument)]
+                    limit = None
             except Exception:
                 limit = None
+                discord_ids = []
 
             await handle_adding(
-                client, limit=limit, channel=message.channel, debug_channel=message.channel, verbose=True
+                client,
+                limit=limit,
+                discord_ids=discord_ids,
+                channel=message.channel,
+                debug_channel=message.channel,
+                verbose=True,
             )
 
         elif is_player_id_please_room(message.channel) and message.author.id != 1117480944153145364:
