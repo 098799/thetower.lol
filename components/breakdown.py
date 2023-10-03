@@ -1,4 +1,5 @@
 import datetime
+import os
 from typing import Optional
 
 import pandas as pd
@@ -18,6 +19,7 @@ patches = sorted(
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
     sus_ids = get_sus_ids()
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
 
     def get_data(df, role_type="wave_role", overfill=200):
         non_sus_df = df[~df.id.isin(sus_ids)]
@@ -41,7 +43,15 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
         return unique_dates, counts_data
 
-    selected_patches = st.multiselect("Limit results to a patch?", patches, default=patches)
+    patches_col, overfill_col = st.columns([3, 1])
+
+    selected_patches = patches_col.multiselect("Limit results to a patch?", patches, default=patches)
+
+    overfill = overfill_col.slider(
+        "Overfill results to ", min_value=200, max_value=500 if not hidden_features else 2000, value=200, step=100
+    )
+    df = load_tourney_results(league_to_folder[champ], result_cutoff=overfill)
+
     df = df[df.patch.isin(selected_patches)]
 
     dates, counts_data = get_data(df, overfill=df.groupby("date").id.count().max())
@@ -140,5 +150,5 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
 if __name__ == "__main__":
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
-    df = load_tourney_results(league_to_folder[champ], result_cutoff=200)
-    compute_breakdown(df, options)
+    # df = load_tourney_results(league_to_folder[champ], result_cutoff=200)
+    compute_breakdown(None, options)
