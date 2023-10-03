@@ -128,9 +128,9 @@ async def get_league_roles(roles, league):
                 (int(role.name.split()[-1]), role)
                 for role in roles
                 if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))
-            ]
+            ],
+            reverse=True,
         ),
-        reverse=True,
     )
 
 
@@ -206,9 +206,12 @@ async def handle_leagues(
 
         if wave_bottom == 0:
             continue
+        try:
+            rightful_role = league_roles.get(wave_bottom, league_roles.get(250))
+        except Exception as exc:
+            print(f"{wave_bottom=}, {league_roles=}")
+            raise exc
 
-        rightful_role = league_roles.get(wave_bottom, league_roles[250])
-        # this should be extracted into a method
         discord_player = await get_member(tower, int(player.discord_id), channel=debug_channel)
 
         if discord_player is None:
