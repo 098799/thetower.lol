@@ -206,11 +206,12 @@ async def handle_leagues(
 
         if wave_bottom == 0:
             continue
-        try:
-            rightful_role = league_roles.get(wave_bottom, league_roles.get(250))
-        except Exception as exc:
-            print(f"{wave_bottom=}, {league_roles=}")
-            raise exc
+
+        if wave_bottom in league_roles:
+            rightful_role = league_roles[wave_bottom]
+        else:
+            rightful_role = league_roles.get(250)
+            wave_bottom = 250
 
         discord_player = await get_member(tower, int(player.discord_id), channel=debug_channel)
 
