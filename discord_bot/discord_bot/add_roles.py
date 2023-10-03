@@ -207,7 +207,7 @@ async def handle_leagues(
         if wave_bottom == 0:
             continue
 
-        rightful_role = league_roles.get(wave_bottom, 250)
+        rightful_role = league_roles.get(wave_bottom, league_roles[250])
         # this should be extracted into a method
         discord_player = await get_member(tower, int(player.discord_id), channel=debug_channel)
 
