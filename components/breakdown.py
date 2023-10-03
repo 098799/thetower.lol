@@ -9,14 +9,17 @@ from components.results import compute_results
 from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.models import PatchNew as Patch
+from dtower.tourney_results.models import TourneyResult
 
-patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
+patches = sorted(
+    [patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True
+)
 
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
     sus_ids = get_sus_ids()
 
-    def get_data(df, role_type="wave_role"):
+    def get_data(df, role_type="wave_role", overfill=200):
         non_sus_df = df[~df.id.isin(sus_ids)]
         unique_roles = sorted(non_sus_df[role_type].unique(), key=lambda role: role.wave_bottom)
         unique_dates = non_sus_df.date.unique()
@@ -25,6 +28,7 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
         date_counts = non_sus_df.groupby("date").count()
         total_per_date = {date: count for date, count in zip(date_counts.index, date_counts.id)}
+        overfill_per_date = {date: max(overfill - count, 0) for date, count in total_per_date.items()}
 
         counts_data = {role: {date: 0 for date in unique_dates} for role in unique_roles}
 
@@ -32,12 +36,21 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
             count = counts.count()[0] if not counts.empty else 0
             counts_data[role][date] = count
 
+        for date, overfill in overfill_per_date.items():
+            counts_data[unique_roles[0]][date] += overfill
+
         return unique_dates, counts_data
 
     selected_patches = st.multiselect("Limit results to a patch?", patches, default=patches)
     df = df[df.patch.isin(selected_patches)]
 
-    dates, counts_data = get_data(df)
+    dates, counts_data = get_data(df, overfill=df.groupby("date").id.count().max())
+    bcs = {
+        date: " / ".join(
+            TourneyResult.objects.get(date=date, league=champ).conditions.all().values_list("shortcut", flat=True)
+        )
+        for date in dates
+    }
 
     plot_data = {
         role: go.Bar(
@@ -53,6 +66,10 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
     fig = go.Figure(data=list(plot_data.values()))
     fig.update_layout(barmode="stack", title="Role counts per tournament (non-sus), courtesy of ObsUK")
 
+    for trace in fig.data:
+        trace.customdata = [bcs[date] for date in trace["x"]]
+        trace.hovertemplate = "%{x}, %{y}, %{customdata}"
+
     st.plotly_chart(fig)
 
     df = load_tourney_results(league_to_folder[champ])
@@ -64,7 +81,10 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
     for patch in selected_patches:
         non_sus_df = df[~df.id.isin(sus_ids)]
         patch_breakdown_datum = {
-            patch.wave_bottom: len(players) for patch, players in dict(non_sus_df[non_sus_df.patch == patch].groupby("name_role").real_name.unique()).items()
+            patch.wave_bottom: len(players)
+            for patch, players in dict(
+                non_sus_df[non_sus_df.patch == patch].groupby("name_role").real_name.unique()
+            ).items()
         }
         patch_breakdown_data[patch] = patch_breakdown_datum
 
