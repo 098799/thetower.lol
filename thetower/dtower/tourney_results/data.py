@@ -106,9 +106,16 @@ def get_player_id_lookup():
 
 def get_id_lookup():
     player_primary_id = {
-        name: id_ for id_, name, primary in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name", "primary") if primary
+        name: id_
+        for id_, name, primary in PlayerId.objects.filter(player__approved=True).values_list(
+            "id", "player__name", "primary"
+        )
+        if primary
     }
-    return {id_: player_primary_id[name] for id_, name in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name")}
+    return {
+        id_: player_primary_id[name]
+        for id_, name in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name")
+    }
 
 
 def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[str, str]:
@@ -137,7 +144,10 @@ def get_row_to_role(df: pd.DataFrame, league):
 
 
 def _load_tourney_results(
-    result_files: List[Tuple[str, str, list[BattleCondition]]], league=champ, result_cutoff: Optional[int] = None, role_to_date: bool = False
+    result_files: List[Tuple[str, str, list[BattleCondition]]],
+    league=champ,
+    result_cutoff: Optional[int] = None,
+    role_to_date: bool = False,
 ) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     league_switcher = os.environ.get("LEAGUE_SWITCHER")
@@ -180,8 +190,12 @@ def _load_tourney_results(
 
     df = pd.concat(dfs)
 
-    df["avatar"] = df.tourney_name.map(lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1)
-    df["relic"] = df.tourney_name.map(lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1)
+    df["avatar"] = df.tourney_name.map(
+        lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1
+    )
+    df["relic"] = df.tourney_name.map(
+        lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1
+    )
     df["tourney_name"] = df.tourney_name.map(lambda name: name.split("#")[0])
 
     lookup = get_player_id_lookup()
@@ -205,7 +219,9 @@ def _load_tourney_results(
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
 
     if role_to_date:
-        df["role_to_date"] = [wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])]
+        df["role_to_date"] = [
+            wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])
+        ]
 
     load_data_bar.progress(0.95)
 
@@ -241,7 +257,9 @@ def load_tourney_results(folder: str, result_cutoff: Optional[int] = None, role_
     return load_tourney_results__uncached(folder, result_cutoff=result_cutoff, role_to_date=role_to_date)
 
 
-def load_tourney_results__uncached(folder: str, result_cutoff: Optional[int] = None, role_to_date: bool = False) -> pd.DataFrame:
+def load_tourney_results__uncached(
+    folder: str, result_cutoff: Optional[int] = None, role_to_date: bool = False
+) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
 
@@ -306,16 +324,18 @@ if __name__ == "__main__":
     # os.environ["HIDDEN_FEATURES"] = "true"
 
     df = load_tourney_results("data", role_to_date=True)
+    df = df[~df.id.isin(get_sus_ids())]
+    sdf = df[df.date.isin(sorted(df.date.unique())[:3])]
+    sdf = sdf[sdf.wave > 1000]
+
+    lasts = {}
+
+    for person in sdf.real_name.unique():
+        ddf = df[df.real_name == person]
+        last = sorted(ddf.date.unique())[-1]
+        lasts[person] = last
+
     breakpoint()
-
-    # df = df[df.date == df.date.unique()[-1]]
-    # df = df[df.position > 0]
-
-    # for cutoff in [10, 25, 50, 100, 200, 500, 1000, 2000]:
-    #     fil_df = df[df.position <= cutoff]
-    #     total = len(fil_df)
-    #     verified = len(fil_df[fil_df.verified == "✓"])
-    #     print(f"{cutoff}: {verified}/{total} ({verified/total*100:.2f}%)")
 
 
 # import cProfile

@@ -50,12 +50,17 @@ def compute_various(df, options):
         podium = [relic for relic, _ in counter.most_common(3)]
         counts = [int(count / len(subdf) * 100) for _, count in counter.most_common(3)]
         seen_relics |= set(podium)
+
+        podium_titles = [all_relics[pod][0] if pod in all_relics else "" for pod in podium]
+        podium_relics_1 = [all_relics[pod][1] if pod in all_relics else "" for pod in podium]
+        podium_relics_2 = [all_relics[pod][2] if pod in all_relics else "" for pod in podium]
+
         podiums.append(
             {
                 "date": date,
-                "1st": f"<img src='./app/static/Tower_Relics/{podium[0]}.png' width='{width}' title='{all_relics[podium[0]][0]}, {all_relics[podium[0]][1]} {all_relics[podium[0]][2]}'> -- {counts[0]}%",
-                "2nd": f"<img src='./app/static/Tower_Relics/{podium[1]}.png' width='{width}' title='{all_relics[podium[1]][0]}, {all_relics[podium[1]][1]} {all_relics[podium[1]][2]}'> -- {counts[1]}%",
-                "3rd": f"<img src='./app/static/Tower_Relics/{podium[2]}.png' width='{width}' title='{all_relics[podium[2]][0]}, {all_relics[podium[2]][1]} {all_relics[podium[2]][2]}'> -- {counts[2]}%",
+                "1st": f"<img src='./app/static/Tower_Relics/{podium[0]}.png' width='{width}' title='{podium_titles[0]}, {podium_relics_1[0]} {podium_relics_2[0]}'> -- {counts[0]}%",
+                "2nd": f"<img src='./app/static/Tower_Relics/{podium[1]}.png' width='{width}' title='{podium_titles[1]}, {podium_relics_1[1]} {podium_relics_2[1]}'> -- {counts[1]}%",
+                "3rd": f"<img src='./app/static/Tower_Relics/{podium[2]}.png' width='{width}' title='{podium_titles[2]}, {podium_relics_1[2]} {podium_relics_2[2]}'> -- {counts[2]}%",
             }
         )
 
@@ -68,8 +73,12 @@ def compute_various(df, options):
     st.header("Legend:")
 
     for relic in sorted(seen_relics):
-        name, bonus, what = all_relics[relic]
-        st.write(f"<img src='./app/static/Tower_Relics/{relic}.png' width='{legend_width}'> -- {name}, {bonus} {what}", unsafe_allow_html=True)
+        if relic in all_relics:
+            name, bonus, what = all_relics[relic]
+            st.write(
+                f"<img src='./app/static/Tower_Relics/{relic}.png' width='{legend_width}'> -- {name}, {bonus} {what}",
+                unsafe_allow_html=True,
+            )
 
 
 if __name__ == "__main__":

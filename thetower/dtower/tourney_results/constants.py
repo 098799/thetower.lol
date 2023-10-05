@@ -7,7 +7,20 @@ the_color = "#807e29"
 
 stratas = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 100000]
 
-colors = ["#FFF", "#992d22", "#e390dc", "#ff65b8", "#d69900", "#06d68a", "#3970ec", "#206c5b", "#ff0000", "#6dc170", "#00ff00", "#ffffff"]
+colors = [
+    "#FFF",
+    "#992d22",
+    "#e390dc",
+    "#ff65b8",
+    "#d69900",
+    "#06d68a",
+    "#3970ec",
+    "#206c5b",
+    "#ff0000",
+    "#6dc170",
+    "#00ff00",
+    "#ffffff",
+]
 # colors = [the_color] * 11
 
 strata_to_color = dict(zip(stratas, colors))
@@ -17,7 +30,19 @@ strata_to_color = dict(zip(stratas, colors))
 
 # Just a placeholder, change me later to be dependant on patch!!!
 position_stratas = [0, 1, 10, 25, 50, 100, 200, 300, 400, 500, 2000][::-1]
-position_colors = ["#333333", "#cda6eb", "#7fffe8", "#00b194", "#0082ff", "#3fabff", "#8bcef9", "#ff1d05", "#ff9500", "#fff200", "#CCCCCC"][::-1]
+position_colors = [
+    "#333333",
+    "#cda6eb",
+    "#7fffe8",
+    "#00b194",
+    "#0082ff",
+    "#3fabff",
+    "#8bcef9",
+    "#ff1d05",
+    "#ff9500",
+    "#fff200",
+    "#CCCCCC",
+][::-1]
 
 top = "Top"
 champ = "Champions"
@@ -106,7 +131,27 @@ us_to_jim = {
 }
 
 
-wave_border_choices = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3500, 4000, 4500, 5000, 100000, 1000000]
+wave_border_choices = [
+    0,
+    250,
+    500,
+    750,
+    1000,
+    1250,
+    1500,
+    1750,
+    2000,
+    2250,
+    2500,
+    2750,
+    3000,
+    3500,
+    4000,
+    4500,
+    5000,
+    100000,
+    1000000,
+]
 
 all_relics = {
     0: ("No Spoon", "2%", "Abs def"),
@@ -141,4 +186,6 @@ all_relics = {
     29: ("Neuron", "5%", "Health"),
     30: ("IonizedPlazma", "2%", "Abs def"),
     31: ("PlasmaArc", "5%", "Lab Speed"),
+    38: ("AncientTome", "2%", "Lab Speed"),
+    39: ("Sundial", "5%", "Damage"),
 }

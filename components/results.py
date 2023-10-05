@@ -42,7 +42,10 @@ class Results:
                 new_pbs, new_role_rows = self.populate_pbs(filtered_df)
 
                 new_role_string = ", ".join(
-                    [f"<font color='{row.wave_role.color}'>{self.df[self.df.id == row.id].iloc[0].real_name}</font>" for row in new_role_rows]
+                    [
+                        f"<font color='{row.wave_role.color}'>{self.df[self.df.id == row.id].iloc[0].real_name}</font>"
+                        for row in new_role_rows
+                    ]
                 )
 
                 if new_role_string:
@@ -66,7 +69,9 @@ class Results:
             if person_row.id in self.sus_ids:
                 continue
 
-            players_df = self.df[(self.df["id"] == person_row["id"]) & (self.df["patch"] == person_row["patch"])].reset_index(drop=True)
+            players_df = self.df[
+                (self.df["id"] == person_row["id"]) & (self.df["patch"] == person_row["patch"])
+            ].reset_index(drop=True)
 
             current_date = person_row.date
             current_wave = person_row.wave
@@ -82,7 +87,14 @@ class Results:
             previous_best_role = previous_results.wave_role.max()
 
             if current_wave > previous_best_wave or len(players_df) == 1:
-                new_pbs.append((current_wave, current_wave_role, current_date, previous_results[previous_results["wave"] == previous_best_wave].iloc[0]))
+                new_pbs.append(
+                    (
+                        current_wave,
+                        current_wave_role,
+                        current_date,
+                        previous_results[previous_results["wave"] == previous_best_wave].iloc[0],
+                    )
+                )
 
             if current_role > previous_best_role or len(players_df) == 1:
                 new_role_rows.append(person_row)
@@ -94,7 +106,10 @@ class Results:
 
         self.dates = self.df["date"].unique()
         tourneys = sorted(self.dates, reverse=True)
-        tourney_titles = [date if not date_to_bc[date] else f"{date}: {', '.join(item.shortcut for item in date_to_bc[date])}" for date in tourneys]
+        tourney_titles = [
+            date if not date_to_bc[date] else f"{date}: {', '.join(item.shortcut for item in date_to_bc[date])}"
+            for date in tourneys
+        ]
 
         tourney_col, self.results_col, debug_col = st.columns([3, 2, 1])
         tourney_title = tourney_col.selectbox("Select tournament:", tourney_titles)
@@ -123,16 +138,24 @@ class Results:
         )
 
         to_be_displayed = filtered_df.copy()
-        to_be_displayed["real_name"] = [sus_person if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
-        to_be_displayed["tourney_name"] = [strike(name) if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
+        to_be_displayed["real_name"] = [
+            sus_person if id_ in self.sus_ids else name
+            for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)
+        ]
+        to_be_displayed["tourney_name"] = [
+            strike(name) if id_ in self.sus_ids else name
+            for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)
+        ]
         to_be_displayed["avatar"] = to_be_displayed.avatar.map(
-            lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>" if avatar_id != -1 else ""
+            lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>"
+            if avatar_id != -1
+            else ""
         )
         to_be_displayed["relic"] = to_be_displayed.relic.map(
             lambda relic_id: (
                 f"<img src='./app/static/Tower_Relics/{relic_id}.png' width='32' title='{all_relics[relic_id][0]}, {all_relics[relic_id][1]} {all_relics[relic_id][2]}'>"
             )
-            if relic_id != -1
+            if relic_id != -1 and relic_id in all_relics
             else ""
         )
 
@@ -155,12 +178,17 @@ class Results:
         prev_dfs = {date: self.df[self.df["date"] == date].reset_index(drop=True) for date in previous_4_dates}
 
         for date_iter, prev_df in prev_dfs.items():
-            to_be_displayed[date_iter] = [mini_df.iloc[0].wave if not (mini_df := prev_df[prev_df.id == id_]).empty else 0 for id_ in to_be_displayed.id]
+            to_be_displayed[date_iter] = [
+                mini_df.iloc[0].wave if not (mini_df := prev_df[prev_df.id == id_]).empty else 0
+                for id_ in to_be_displayed.id
+            ]
 
         indices = ["#", "tourney_name", "real_name", *[date, *previous_4_dates], "✓", "id"]
 
         if self.hidden_features:
-            to_be_displayed["sus_me"] = [self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
+            to_be_displayed["sus_me"] = [
+                self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)
+            ]
             indices += ["sus_me"]
 
         to_be_displayed = (
@@ -213,10 +241,15 @@ class Results:
             ]
 
         if self.hidden_features:
-            to_be_displayed["sus_me"] = [self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
+            to_be_displayed["sus_me"] = [
+                self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)
+            ]
 
         to_be_displayed = (
-            to_be_displayed[indices].style.apply(styling, axis=1).applymap(color_position__top, subset=["#"]).applymap(am_i_sus, subset=["real_name"])
+            to_be_displayed[indices]
+            .style.apply(styling, axis=1)
+            .applymap(color_position__top, subset=["#"])
+            .applymap(am_i_sus, subset=["real_name"])
         )
 
         return to_be_displayed
@@ -225,7 +258,9 @@ class Results:
         date = self.top_of_results()
 
         filtered_df = self.df[self.df["date"] == date].reset_index(drop=True)
-        prefilter_results = self.results_col.slider("Show how many results?", min_value=50, max_value=len(filtered_df), value=100, step=50)
+        prefilter_results = self.results_col.slider(
+            "Show how many results?", min_value=50, max_value=len(filtered_df), value=100, step=50
+        )
 
         to_be_displayed = self.prepare_data(filtered_df, how_many=prefilter_results)
 
@@ -237,7 +272,11 @@ class Results:
             self._styler()
             to_be_displayed_styler = self.regular_preparation(to_be_displayed, filtered_df)
 
-        to_be_displayed_styler = to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False)
+        to_be_displayed_styler = (
+            to_be_displayed_styler.format(make_player_url, subset=["real_name"])
+            .hide(axis="index")
+            .to_html(escape=False)
+        )
         st.write(to_be_displayed_styler, unsafe_allow_html=True)
 
 

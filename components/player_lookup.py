@@ -162,7 +162,7 @@ def compute_player_lookup(df, options: Options):
                 axis=1,
             )
             .applymap(color_position, subset=["position"])
-            .bar(subset=["wave"], color="#222222", vmin=min(player_df.wave), vmax=max(player_df.wave))
+            .bar(subset=["wave"], color="#222222", vmin=0, vmax=max(player_df.wave))
         )
 
     raw_data_tab.dataframe(dataframe_styler(player_df), use_container_width=True, height=800)
