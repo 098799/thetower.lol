@@ -6,7 +6,7 @@ import discord
 from asgiref.sync import sync_to_async
 from tqdm import tqdm
 
-from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check
+from discord_bot.util import get_safe_league_prefix, get_tower, role_only_champ_tourney_roles_check, role_prefix_and_only_tourney_roles_check
 from dtower.sus.models import KnownPlayer
 from dtower.tourney_results.constants import champ, league_to_folder, leagues
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results__uncached
@@ -108,7 +108,7 @@ async def get_member(guild, discord_id, channel=None):
 
 
 async def get_position_roles(roles):
-    filtered_roles = [role for role in roles if role.name.startswith("Top")]
+    filtered_roles = [role for role in roles if await role_only_champ_tourney_roles_check(role)]
     return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
 
 
@@ -155,22 +155,21 @@ async def handle_champ_position_roles(df, player, roles, discord_player, changed
 
     best_position_in_patch = df.position.min()
 
-    if best_position_in_patch <= 500:  # first remove old roles
-        for pos, role in tuple(position_roles.items())[1:]:
-            if best_position_in_patch <= pos:
-                rightful_role = role
+    for pos, role in tuple(position_roles.items())[1:]:
+        if best_position_in_patch <= pos:
+            rightful_role = role
 
-                if rightful_role in discord_player.roles:
-                    unchanged[champ].append((discord_player, rightful_role))
-                    return True  # Don't actually do anything if the player already has the role
+            if rightful_role in discord_player.roles:
+                unchanged[champ].append((discord_player, rightful_role))
+                return True  # Don't actually do anything if the player already has the role
 
-                for role in [role for role in discord_player.roles if role.name.startswith("Top")]:
-                    await discord_player.remove_roles(role)
+            for role in [role for role in discord_player.roles if role.name.startswith("Top")]:
+                await discord_player.remove_roles(role)
 
-                await discord_player.add_roles(rightful_role)
-                logging.info(f"Added {role=} to {discord_player=}")
-                changed[champ].append((discord_player.name, rightful_role.name))
-                return True
+            await discord_player.add_roles(rightful_role)
+            logging.info(f"Added {role=} to {discord_player=}")
+            changed[champ].append((discord_player.name, rightful_role.name))
+            return True
 
     return False
 
@@ -219,10 +218,8 @@ async def handle_leagues(
             return None, skipped + 1
 
         if league == champ:
-            champ_role = await handle_champ_position_roles(patch_df, player, roles, discord_player, changed, unchanged)
-
-            if champ_role:  # don't give out wave role if position role given
-                continue
+            await handle_champ_position_roles(patch_df, player, roles, discord_player, changed, unchanged)
+            continue  # don't give out wave role for champ
 
         current_champ_roles = [
             role

@@ -43,7 +43,7 @@ async def on_ready():
         # for local testing, this channel is private discord so we don't pollute tower discord
         # it doesn't guarantee that you won't create side-effects, so careful
         channel = await client.fetch_channel(meme_channel_id)
-        await channel.edit(name="bot can change that")
+        await channel.edit(name="bob-saviours")
 
         # those are the top level functionalities one may want to test
         # await handle_adding(
@@ -73,8 +73,8 @@ async def on_ready():
         exit()
     logging.info(f"We have logged in as {client.user}")
 
-    # if not handle_roles_scheduled.is_running():
-    #     handle_roles_scheduled.start()
+    if not handle_roles_scheduled.is_running():
+        handle_roles_scheduled.start()
 
 
 async def check_id(client, message):

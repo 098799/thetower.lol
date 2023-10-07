@@ -1,4 +1,5 @@
 import os
+import re
 
 from asyncstdlib.functools import lru_cache
 
@@ -55,4 +56,4 @@ async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
 
 
 async def role_only_champ_tourney_roles_check(role):
-    return role.name.strip().startswith(top) and role.name[-1].isdigit()
+    return re.findall(rf"{top}\s\d", role.name.strip())
