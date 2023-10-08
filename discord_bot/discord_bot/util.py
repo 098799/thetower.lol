@@ -27,6 +27,10 @@ async def get_verified_role(client):
     return (await get_tower(client)).get_role(verified_role_id)
 
 
+def is_meme_room(channel):
+    return channel.id == meme_channel_id
+
+
 def is_testing_room(channel):
     return channel.id == testing_room_id
 

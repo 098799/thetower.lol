@@ -18,6 +18,7 @@ from discord_bot.util import (
     get_verified_role,
     handle_outside,
     id_098799,
+    is_meme_room,
     is_player_id_please_room,
     is_testing_room,
     meme_channel_id,
@@ -42,27 +43,27 @@ async def on_ready():
     if handle_outside:
         # for local testing, this channel is private discord so we don't pollute tower discord
         # it doesn't guarantee that you won't create side-effects, so careful
-        channel = await client.fetch_channel(meme_channel_id)
-        await channel.edit(name="bob-saviours")
+        channel = await client.fetch_channel(testing_room_id)
+        # await channel.edit(name="bob-saviours")
 
         # those are the top level functionalities one may want to test
-        # await handle_adding(
-        #     client,
-        #     limit=100,
-        #     discord_ids=[
-        #         181859318801498113
-        #         # 177504210177228801,
-        #         # 349704551391297549,
-        #         # 150761026718007296,
-        #         # 181859318801498113,
-        #         # 211865455697068032,
-        #         # 280723745864286208,
-        #         # 269350887917355010,
-        #         # 940798253828542507,
-        #     ],
-        #     channel=channel,
-        #     verbose=True,
-        # )
+        await handle_adding(
+            client,
+            limit=100,
+            discord_ids=[
+                764487596902318080
+                # 177504210177228801,
+                # 349704551391297549,
+                # 150761026718007296,
+                # 181859318801498113,
+                # 211865455697068032,
+                # 280723745864286208,
+                # 269350887917355010,
+                # 940798253828542507,
+            ],
+            channel=channel,
+            verbose=True,
+        )
         # await remove_nicknames(client, channel)
         # await purge_all_tourney_roles(
         #     client=client,
@@ -73,8 +74,8 @@ async def on_ready():
         exit()
     logging.info(f"We have logged in as {client.user}")
 
-    if not handle_roles_scheduled.is_running():
-        handle_roles_scheduled.start()
+    # if not handle_roles_scheduled.is_running():
+    #     handle_roles_scheduled.start()
 
 
 async def check_id(client, message):
@@ -103,6 +104,13 @@ async def on_message(message):
     try:
         if is_testing_room(message.channel) and message.content.startswith("!remove_all_nicknames"):
             await remove_nicknames(client, message.channel)
+
+        elif is_meme_room(message.channel) and message.content.startswith("!rename"):
+            if "Top 1" in {role.name for role in message.author.roles}:
+                new_name = message.content.split(" ", 1)[1]
+
+                channel = await client.fetch_channel(meme_channel_id)
+                await channel.edit(name=new_name)
 
         elif is_testing_room(message.channel) and message.content.startswith("!check_id"):
             try:

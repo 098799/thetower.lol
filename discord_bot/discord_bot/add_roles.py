@@ -219,7 +219,7 @@ async def handle_leagues(
 
         if league == champ:
             await handle_champ_position_roles(patch_df, player, roles, discord_player, changed, unchanged)
-            continue  # don't give out wave role for champ
+            return discord_player, skipped  # don't give out wave role for champ
 
         current_champ_roles = [
             role
