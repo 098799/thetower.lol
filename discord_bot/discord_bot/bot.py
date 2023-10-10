@@ -74,8 +74,8 @@ async def on_ready():
         exit()
     logging.info(f"We have logged in as {client.user}")
 
-    # if not handle_roles_scheduled.is_running():
-    #     handle_roles_scheduled.start()
+    if not handle_roles_scheduled.is_running():
+        handle_roles_scheduled.start()
 
 
 async def check_id(client, message):
@@ -123,7 +123,7 @@ async def on_message(message):
                 command, argument = message.content.split()
 
                 if len(argument) < 10:
-                    discord_ids = []
+                    discord_ids = None
                     limit = int(argument)
                 else:
                     discord_ids = [int(argument)]
