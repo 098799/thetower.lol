@@ -173,15 +173,21 @@ def _load_tourney_results(
         df["bcs"] = [bcs for _ in range(len(df))]
 
         positions = []
-        current = 1
+        current = 0
+        borrow = 1
 
-        for id_ in df.id:
+        for id_, idx, wave in zip(df.id, df.index, df.wave):
             if id_ in sus_ids:
                 positions.append(-1)
                 continue
 
+            if idx - 1 in df.index and wave == df.loc[idx - 1, "wave"]:
+                borrow += 1
+            else:
+                current += borrow
+                borrow = 1
+
             positions.append(current)
-            current += 1
 
         df["position"] = positions
         dfs.append(df)
