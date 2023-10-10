@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from components.results import compute_results
-from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
+from dtower.tourney_results.constants import Graph, Options, champ, how_many_results_hidden_site, how_many_results_public_site, league_to_folder
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult
@@ -45,10 +45,20 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 
     patches_col, overfill_col = st.columns([3, 1])
 
-    selected_patches = patches_col.multiselect("Limit results to a patch?", patches, default=patches)
+    selected_patches_slider = patches_col.select_slider(
+        "Limit results to a patch?",
+        options=sorted([patch for patch in patches if not patch.interim], reverse=True),
+        value=patches[-1],
+    )
 
-    overfill = overfill_col.slider(
-        "Overfill results to ", min_value=200, max_value=500 if not hidden_features else 2000, value=200, step=100
+    selected_patches = [patch for patch in patches if patch.version_minor >= selected_patches_slider.version_minor]
+
+    overfill = overfill_col.number_input(
+        "Overfill results to ",
+        min_value=200,
+        max_value=how_many_results_public_site if not hidden_features else how_many_results_hidden_site,
+        value=200,
+        step=100,
     )
     df = load_tourney_results(league_to_folder[champ], result_cutoff=overfill)
 

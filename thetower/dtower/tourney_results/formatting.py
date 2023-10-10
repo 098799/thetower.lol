@@ -36,9 +36,15 @@ def color_strata(wave, stratas, colors, operator, formatting_function):
 
 
 color_top = partial(color_strata, stratas=stratas, colors=colors, operator=ge, formatting_function=simple_format)
-color_top_18 = partial(color_strata, stratas=stratas_boundaries_018, colors=colors_018, operator=ge, formatting_function=simple_format)
-color_position = partial(color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=simple_format)
-color_position_barebones = partial(color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=barebones_format)
+color_top_18 = partial(
+    color_strata, stratas=stratas_boundaries_018, colors=colors_018, operator=ge, formatting_function=simple_format
+)
+color_position = partial(
+    color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=simple_format
+)
+color_position_barebones = partial(
+    color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=barebones_format
+)
 
 
 def color_nickname__detail(row, roles_by_id, stratas, colors, operator, formatting_function):
@@ -49,9 +55,15 @@ detailed_format__base = partial(detailed_format, which=2, how_many=6)
 detailed_format__top = partial(detailed_format, which=1, how_many=5)
 detailed_format__top_position = partial(detailed_format, which=3, how_many=5)
 
-color_nickname = partial(color_nickname__detail, stratas=stratas, colors=colors, operator=ge, formatting_function=detailed_format__base)
-color_nickname__top = partial(color_nickname__detail, stratas=stratas, colors=colors, operator=ge, formatting_function=detailed_format__top)
-color_position__top = partial(color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=simple_format)
+color_nickname = partial(
+    color_nickname__detail, stratas=stratas, colors=colors, operator=ge, formatting_function=detailed_format__base
+)
+color_nickname__top = partial(
+    color_nickname__detail, stratas=stratas, colors=colors, operator=ge, formatting_function=detailed_format__top
+)
+color_position__top = partial(
+    color_strata, stratas=position_stratas, colors=position_colors, operator=le, formatting_function=simple_format
+)
 
 
 def am_i_sus(name):
@@ -81,13 +93,19 @@ def strike(text):
 BASE_URL = os.getenv("BASE_URL", "thetower.lol")
 
 
+def get_url(path, base_url=BASE_URL):
+    return f"http://{base_url}/{path}"
+
+
 def make_url(username, path, base_url=BASE_URL):
     original_username = username
 
     for medal in medals:
         username = username.strip(medal)
 
-    return f"<a href='http://{base_url}/{path}?player={quote(username.strip())}'>{original_username}</a>"
+    url = get_url(path, base_url=base_url)
+
+    return f"<a href='{url}?player={quote(username.strip())}'>{original_username}</a>"
 
 
 make_player_url = partial(make_url, path="Player%20Lookup")

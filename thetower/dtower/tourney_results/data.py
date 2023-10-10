@@ -20,7 +20,14 @@ import pandas as pd
 import streamlit as st
 
 from dtower.sus.models import PlayerId, SusPerson
-from dtower.tourney_results.constants import champ, data_folder_name_mapping
+from dtower.tourney_results.constants import (
+    champ,
+    data_folder_name_mapping,
+    how_many_results_hidden_site,
+    how_many_results_legacy,
+    how_many_results_public_site,
+    how_many_results_public_site_other,
+)
 from dtower.tourney_results.formatting import color_position_barebones
 from dtower.tourney_results.models import BattleCondition
 from dtower.tourney_results.models import PatchNew as Patch
@@ -247,14 +254,14 @@ def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff
         cutoff = result_cutoff
     elif not hidden_features:
         if league_switcher:
-            cutoff = 500
+            cutoff = how_many_results_public_site
 
             if league != champ:
-                cutoff = 100
+                cutoff = how_many_results_public_site_other
         else:
-            cutoff = 200
+            cutoff = how_many_results_legacy
     else:
-        cutoff = 10000
+        cutoff = how_many_results_hidden_site
     return cutoff
 
 

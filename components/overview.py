@@ -6,7 +6,7 @@ import streamlit as st
 from components.results import Results
 from dtower.tourney_results.constants import Graph, Options, league_to_folder, leagues
 from dtower.tourney_results.data import load_tourney_results
-from dtower.tourney_results.formatting import make_player_url
+from dtower.tourney_results.formatting import get_url, make_player_url
 
 
 def compute_overview(dfs, options: Options):
@@ -20,7 +20,8 @@ def compute_overview(dfs, options: Options):
         st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
 
     for df, league in zip(dfs, leagues):
-        st.header(league)
+        url = get_url(path=f"Results%20{league}")
+        st.write(f"<h2><a href='{url}'>{league}</a></h2>", unsafe_allow_html=True)
 
         filtered_df = df[df.date == last_tourney]
         filtered_df = filtered_df.reset_index(drop=True)

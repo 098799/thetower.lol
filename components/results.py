@@ -111,7 +111,7 @@ class Results:
             for date in tourneys
         ]
 
-        tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([3, 1, 1, 1])
+        tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([3, 1, 1.2, 1])
         tourney_title = tourney_col.selectbox("Select tournament:", tourney_titles)
 
         self.show_hist = debug_col.checkbox("Hist data", value=False)

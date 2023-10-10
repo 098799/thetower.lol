@@ -3,6 +3,11 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
+how_many_results_hidden_site = 2000
+how_many_results_public_site = 1000
+how_many_results_public_site_other = 500
+how_many_results_legacy = 200
+
 the_color = "#807e29"
 
 stratas = [0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 100000]

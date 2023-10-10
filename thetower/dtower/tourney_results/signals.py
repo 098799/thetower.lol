@@ -19,5 +19,12 @@ def recalculate_results(sender, instance, signal, created, update_fields, raw, u
         ...
     else:
         if instance.league == champ:
+            if bcs := instance.conditions.all():
+                other_results = TourneyResult.objects.filter(date=instance.date)
+
+                for result in other_results:
+                    for bc in bcs:
+                        result.conditions.add(bc)
+
             subprocess.call("systemctl restart streamlit2", shell=True)
             subprocess.call("systemctl restart streamlit", shell=True)
