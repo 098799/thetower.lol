@@ -111,7 +111,7 @@ class Results:
             for date in tourneys
         ]
 
-        tourney_col, self.results_col, debug_col = st.columns([3, 2, 1])
+        tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([3, 1, 1, 1])
         tourney_title = tourney_col.selectbox("Select tournament:", tourney_titles)
 
         self.show_hist = debug_col.checkbox("Hist data", value=False)
@@ -263,8 +263,10 @@ class Results:
         filtered_df = self.df[self.df["date"] == date].reset_index(drop=True)
 
         step = 100
-        total_pages = len(filtered_df) // step
+        total_results = len(filtered_df)
 
+        step = self.results_col_page.number_input("Results per page", min_value=100, max_value=total_results, step=100)
+        total_pages = total_results // step + 1
         current_page = self.results_col.number_input("Page", min_value=1, max_value=total_pages, step=1)
         to_be_displayed = self.prepare_data(filtered_df, current_page=current_page, step=step)
 
