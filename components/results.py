@@ -133,18 +133,15 @@ class Results:
         to_be_displayed = filtered_df.iloc[begin:end].reset_index(drop=True)
 
         if not self.hidden_features:
-            to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
+            to_be_displayed = to_be_displayed[~to_be_displayed.id.isin(get_sus_ids())].reset_index(drop=True)
 
         if current_page == 1:
-            filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (
-                filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] + " 🥇"
-            )
-            filtered_df.loc[filtered_df[filtered_df.position == 2].index[0], "real_name"] = (
-                filtered_df.loc[filtered_df[filtered_df.position == 2].index[0], "real_name"] + " 🥈"
-            )
-            filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] = (
-                filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] + " 🥉"
-            )
+            for position, medal in zip([1, 2, 3], [" 🥇", " 🥈", " 🥉"]):
+                if not to_be_displayed[to_be_displayed.position == position].empty:
+                    to_be_displayed.loc[to_be_displayed[to_be_displayed.position == position].index[0], "real_name"] = (
+                        to_be_displayed.loc[to_be_displayed[to_be_displayed.position == position].index[0], "real_name"]
+                        + medal
+                    )
 
         to_be_displayed["real_name"] = [
             sus_person if id_ in self.sus_ids else name
@@ -265,7 +262,9 @@ class Results:
         step = 100
         total_results = len(filtered_df)
 
-        step = self.results_col_page.number_input("Results per page", min_value=100, max_value=total_results, step=100)
+        step = self.results_col_page.number_input(
+            "Results per page", min_value=100, max_value=max(total_results, 100), step=100
+        )
         total_pages = (
             total_results // step if total_results // step == total_results / step else total_results // step + 1
         )
