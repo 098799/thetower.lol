@@ -29,10 +29,12 @@ def compute_overview(dfs, options: Options):
             continue
 
         results = Results(filtered_df, options)
-        to_be_displayed = results.prepare_data(filtered_df, how_many=10)
+        to_be_displayed = results.prepare_data(filtered_df, current_page=1, step=10)
         to_be_displayed_styler = results.regular_preparation(to_be_displayed, filtered_df)
         st.write(
-            to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False),
+            to_be_displayed_styler.format(make_player_url, subset=["real_name"])
+            .hide(axis="index")
+            .to_html(escape=False),
             unsafe_allow_html=True,
         )
 

@@ -126,18 +126,26 @@ class Results:
 
         return chosen_tourney
 
-    def prepare_data(self, filtered_df, how_many: int):
-        filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (
-            filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] + " 🥇"
-        )
-        filtered_df.loc[filtered_df[filtered_df.position == 2].index[0], "real_name"] = (
-            filtered_df.loc[filtered_df[filtered_df.position == 2].index[0], "real_name"] + " 🥈"
-        )
-        filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] = (
-            filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] + " 🥉"
-        )
+    def prepare_data(self, filtered_df, current_page: int, step: int):
+        begin = (current_page - 1) * step
+        end = current_page * step
 
-        to_be_displayed = filtered_df.copy()
+        to_be_displayed = filtered_df.iloc[begin:end].reset_index(drop=True)
+
+        if not self.hidden_features:
+            to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
+
+        if current_page == 1:
+            filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] = (
+                filtered_df.loc[filtered_df[filtered_df.position == 1].index[0], "real_name"] + " 🥇"
+            )
+            filtered_df.loc[filtered_df[filtered_df.position == 2].index[0], "real_name"] = (
+                filtered_df.loc[filtered_df[filtered_df.position == 2].index[0], "real_name"] + " 🥈"
+            )
+            filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] = (
+                filtered_df.loc[filtered_df[filtered_df.position == 3].index[0], "real_name"] + " 🥉"
+            )
+
         to_be_displayed["real_name"] = [
             sus_person if id_ in self.sus_ids else name
             for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)
@@ -158,11 +166,6 @@ class Results:
             if relic_id != -1 and relic_id in all_relics
             else ""
         )
-
-        if not self.hidden_features:
-            to_be_displayed = to_be_displayed[to_be_displayed.real_name != sus_person]
-
-        to_be_displayed = to_be_displayed.iloc[:how_many].reset_index(drop=True)
 
         return to_be_displayed.rename(columns={"position": "#", "verified": "✓", "avatar": "⬡"})
 
@@ -258,11 +261,12 @@ class Results:
         date = self.top_of_results()
 
         filtered_df = self.df[self.df["date"] == date].reset_index(drop=True)
-        prefilter_results = self.results_col.slider(
-            "Show how many results?", min_value=50, max_value=len(filtered_df), value=100, step=50
-        )
 
-        to_be_displayed = self.prepare_data(filtered_df, how_many=prefilter_results)
+        step = 100
+        total_pages = len(filtered_df) // step
+
+        current_page = self.results_col.number_input("Page", min_value=1, max_value=total_pages, step=1)
+        to_be_displayed = self.prepare_data(filtered_df, current_page=current_page, step=step)
 
         self.congrats(to_be_displayed)
 
