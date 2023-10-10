@@ -266,7 +266,9 @@ class Results:
         total_results = len(filtered_df)
 
         step = self.results_col_page.number_input("Results per page", min_value=100, max_value=total_results, step=100)
-        total_pages = total_results // step + 1
+        total_pages = (
+            total_results // step if total_results // step == total_results / step else total_results // step + 1
+        )
         current_page = self.results_col.number_input("Page", min_value=1, max_value=total_pages, step=1)
         to_be_displayed = self.prepare_data(filtered_df, current_page=current_page, step=step)
 
