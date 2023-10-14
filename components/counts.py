@@ -17,7 +17,11 @@ def compute_counts(df, options):
     results = []
 
     for date, ddf in df.groupby("date"):
-        result = {"date": date, "bc": " / ".join([bc.name for bc in ddf.iloc[0].bcs])}
+        result = {
+            "date": date,
+            "bc1": bcs[0].name if (bcs := ddf.iloc[0].bcs) else "",
+            "bc2": bcs[1].name if (bcs := ddf.iloc[0].bcs) else "",
+        }
 
         result |= {
             f"Top {count_for}": ddf.iloc[count_for - 1].wave if count_for <= len(ddf) else 0 for count_for in counts_for
