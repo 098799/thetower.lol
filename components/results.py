@@ -219,7 +219,7 @@ class Results:
         styling = lambda row: [
             None,
             None,
-            f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
+            None,  # f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
             None,
             None,
             f"color: {filtered_df[filtered_df['position']==row['#']].wave_role_color.iloc[0]}",
@@ -231,7 +231,7 @@ class Results:
             styling = lambda row: [
                 None,
                 None,
-                f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
+                None,  # f"color: {filtered_df[filtered_df['position']==row['#']].name_role_color.iloc[0]}",
                 None,
                 None,
                 f"color: {filtered_df[filtered_df['position']==row['#']].wave_role_color.iloc[0]}",
