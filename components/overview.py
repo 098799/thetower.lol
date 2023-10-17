@@ -7,6 +7,7 @@ from components.results import Results
 from dtower.tourney_results.constants import Graph, Options, league_to_folder, leagues
 from dtower.tourney_results.data import load_tourney_results
 from dtower.tourney_results.formatting import get_url, make_player_url
+from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_overview(dfs, options: Options):
@@ -33,14 +34,12 @@ def compute_overview(dfs, options: Options):
         to_be_displayed = results.prepare_data(filtered_df, current_page=1, step=10)
         to_be_displayed_styler = results.regular_preparation(to_be_displayed, filtered_df)
         st.write(
-            to_be_displayed_styler.format(make_player_url, subset=["real_name"])
-            .hide(axis="index")
-            .to_html(escape=False),
+            to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False),
             unsafe_allow_html=True,
         )
 
 
 if __name__ == "__main__":
-    df = [load_tourney_results(league, result_cutoff=20) for league in league_to_folder.values()]
+    df = [load_tourney_results(league, patch_id=Patch.objects.last().id, result_cutoff=20) for league in league_to_folder.values()]
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     compute_overview(df, options)

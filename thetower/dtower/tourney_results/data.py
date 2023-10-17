@@ -113,16 +113,9 @@ def get_player_id_lookup():
 
 def get_id_lookup():
     player_primary_id = {
-        name: id_
-        for id_, name, primary in PlayerId.objects.filter(player__approved=True).values_list(
-            "id", "player__name", "primary"
-        )
-        if primary
+        name: id_ for id_, name, primary in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name", "primary") if primary
     }
-    return {
-        id_: player_primary_id[name]
-        for id_, name in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name")
-    }
+    return {id_: player_primary_id[name] for id_, name in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name")}
 
 
 def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[str, str]:
@@ -154,7 +147,6 @@ def _load_tourney_results(
     result_files: List[Tuple[str, str, list[BattleCondition]]],
     league=champ,
     result_cutoff: Optional[int] = None,
-    role_to_date: bool = False,
 ) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     league_switcher = os.environ.get("LEAGUE_SWITCHER")
@@ -203,20 +195,17 @@ def _load_tourney_results(
 
     df = pd.concat(dfs)
 
-    df["avatar"] = df.tourney_name.map(
-        lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1
-    )
-    df["relic"] = df.tourney_name.map(
-        lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1
-    )
+    df["avatar"] = df.tourney_name.map(lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1)
+    df["relic"] = df.tourney_name.map(lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1)
     df["tourney_name"] = df.tourney_name.map(lambda name: name.split("#")[0])
-
-    lookup = get_player_id_lookup()
-    id_to_real_name = get_id_real_name_mapping(df, lookup)
 
     df["raw_id"] = df.id
     id_mapping = get_id_lookup()
     df["id"] = df.id.map(lambda id_: id_mapping.get(id_, id_))  # id renormalization
+
+    lookup = get_player_id_lookup()
+    id_to_real_name = get_id_real_name_mapping(df, lookup)
+
     df["verified"] = df.id.map(lambda id_: "✓" if lookup.get(id_) else "")
 
     load_data_bar.progress(0.6)
@@ -230,11 +219,6 @@ def _load_tourney_results(
 
     df["wave_role"] = [wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])]
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
-
-    if role_to_date:
-        df["role_to_date"] = [
-            wave_to_role(wave, date_to_patch(date), league) for wave, date in zip(df["wave"], df["date"])
-        ]
 
     load_data_bar.progress(0.95)
 
@@ -266,15 +250,18 @@ def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff
 
 
 @st.cache_data
-def load_tourney_results(folder: str, result_cutoff: Optional[int] = None, role_to_date: bool = False) -> pd.DataFrame:
-    return load_tourney_results__uncached(folder, result_cutoff=result_cutoff, role_to_date=role_to_date)
+def load_tourney_results(folder: str, patch_id: Optional[int] = None, result_cutoff: Optional[int] = None) -> pd.DataFrame:
+    return load_tourney_results__uncached(folder, patch_id=patch_id, result_cutoff=result_cutoff)
 
 
-def load_tourney_results__uncached(
-    folder: str, result_cutoff: Optional[int] = None, role_to_date: bool = False
-) -> pd.DataFrame:
+def load_tourney_results__uncached(folder: str, patch_id: Optional[int] = None, result_cutoff: Optional[int] = None) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
+
+    if patch_id is not None:
+        patch = Patch.objects.get(id=patch_id)
+        additional_filter["date__gte"] = patch.start_date
+        additional_filter["date__lte"] = patch.end_date
 
     league = data_folder_name_mapping[folder]
 
@@ -290,11 +277,7 @@ def load_tourney_results__uncached(
         key=lambda x: x[1],
     )
 
-    if hidden_features and league == champ:
-        additional_files = sorted(glob("/home/tgrining/tourney/test/*"))
-        result_files += [(file_name, file_name.split("/")[-1].split(".")[0]) for file_name in additional_files]
-
-    return _load_tourney_results(result_files, league, result_cutoff=result_cutoff, role_to_date=role_to_date)
+    return _load_tourney_results(result_files, league, result_cutoff=result_cutoff)
 
 
 def get_player_list(df):
@@ -336,7 +319,8 @@ if __name__ == "__main__":
     os.environ["LEAGUE_SWITCHER"] = "true"
     # os.environ["HIDDEN_FEATURES"] = "true"
 
-    df = load_tourney_results("data", role_to_date=True)
+    df = load_tourney_results__uncached("data", patch_id=Patch.objects.last().id)
+    breakpoint()
     df = df[~df.id.isin(get_sus_ids())]
     sdf = df[df.date.isin(sorted(df.date.unique())[:3])]
     sdf = sdf[sdf.wave > 1000]

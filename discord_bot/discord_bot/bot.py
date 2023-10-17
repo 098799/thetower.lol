@@ -82,9 +82,7 @@ async def check_id(client, message):
     _, *potential_ids = message.content.split()
 
     for potential_id in potential_ids:
-        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
-            approved=True, discord_id=potential_id
-        )
+        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id=potential_id)
 
         if players:
             player = await sync_to_async(players.get)()
@@ -130,7 +128,7 @@ async def on_message(message):
                     limit = None
             except Exception:
                 limit = None
-                discord_ids = []
+                discord_ids = None
 
             await handle_adding(
                 client,
@@ -148,9 +146,7 @@ async def on_message(message):
         #     await validate_player_id(client, message)
 
         elif is_testing_room(message.channel) and message.content.startswith("!purge_all_tourney_roles"):
-            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
-                approved=True, discord_id__isnull=False
-            )
+            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
             await purge_all_tourney_roles(client, message.channel, players)
             logging.info("Purged all tournaments roles")
 

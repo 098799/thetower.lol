@@ -42,10 +42,7 @@ class Results:
                 new_pbs, new_role_rows = self.populate_pbs(filtered_df)
 
                 new_role_string = ", ".join(
-                    [
-                        f"<font color='{row.wave_role.color}'>{self.df[self.df.id == row.id].iloc[0].real_name}</font>"
-                        for row in new_role_rows
-                    ]
+                    [f"<font color='{row.wave_role.color}'>{self.df[self.df.id == row.id].iloc[0].real_name}</font>" for row in new_role_rows]
                 )
 
                 if new_role_string:
@@ -69,9 +66,7 @@ class Results:
             if person_row.id in self.sus_ids:
                 continue
 
-            players_df = self.df[
-                (self.df["id"] == person_row["id"]) & (self.df["patch"] == person_row["patch"])
-            ].reset_index(drop=True)
+            players_df = self.df[(self.df["id"] == person_row["id"]) & (self.df["patch"] == person_row["patch"])].reset_index(drop=True)
 
             current_date = person_row.date
             current_wave = person_row.wave
@@ -102,19 +97,18 @@ class Results:
         return new_pbs, new_role_rows
 
     def top_of_results(self) -> str:
-        date_to_bc = dict(zip(self.df.date, self.df.bcs))
+        patch_col, tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([1.0, 2, 1, 1.2, 1])
 
-        self.dates = self.df["date"].unique()
-        tourneys = sorted(self.dates, reverse=True)
-        tourney_titles = [
-            date if not date_to_bc[date] else f"{date}: {', '.join(item.shortcut for item in date_to_bc[date])}"
-            for date in tourneys
-        ]
-
-        tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([3, 1, 1.2, 1])
-        tourney_title = tourney_col.selectbox("Select tournament:", tourney_titles)
+        patch = patch_col.selectbox("Patch:", Patch.objects.all().order_by("-start_date"), index=0)
+        self.df = load_tourney_results(league_to_folder[champ], patch_id=patch.id)
 
         self.show_hist = debug_col.checkbox("Hist data", value=False)
+
+        date_to_bc = dict(zip(self.df.date, self.df.bcs))
+        self.dates = self.df["date"].unique()
+        tourneys = sorted(self.dates, reverse=True)
+        tourney_titles = [date if not date_to_bc[date] else f"{date}: {', '.join(item.shortcut for item in date_to_bc[date])}" for date in tourneys]
+        tourney_title = tourney_col.selectbox("Select tournament:", tourney_titles)
 
         if not self.hidden_features:
             self.congrats_toggle = debug_col.checkbox("Congrats", value=False)
@@ -139,22 +133,13 @@ class Results:
             for position, medal in zip([1, 2, 3], [" 🥇", " 🥈", " 🥉"]):
                 if not to_be_displayed[to_be_displayed.position == position].empty:
                     to_be_displayed.loc[to_be_displayed[to_be_displayed.position == position].index[0], "real_name"] = (
-                        to_be_displayed.loc[to_be_displayed[to_be_displayed.position == position].index[0], "real_name"]
-                        + medal
+                        to_be_displayed.loc[to_be_displayed[to_be_displayed.position == position].index[0], "real_name"] + medal
                     )
 
-        to_be_displayed["real_name"] = [
-            sus_person if id_ in self.sus_ids else name
-            for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)
-        ]
-        to_be_displayed["tourney_name"] = [
-            strike(name) if id_ in self.sus_ids else name
-            for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)
-        ]
+        to_be_displayed["real_name"] = [sus_person if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
+        to_be_displayed["tourney_name"] = [strike(name) if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
         to_be_displayed["avatar"] = to_be_displayed.avatar.map(
-            lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>"
-            if avatar_id != -1
-            else ""
+            lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>" if avatar_id != -1 else ""
         )
         to_be_displayed["relic"] = to_be_displayed.relic.map(
             lambda relic_id: (
@@ -178,17 +163,12 @@ class Results:
         prev_dfs = {date: self.df[self.df["date"] == date].reset_index(drop=True) for date in previous_4_dates}
 
         for date_iter, prev_df in prev_dfs.items():
-            to_be_displayed[date_iter] = [
-                mini_df.iloc[0].wave if not (mini_df := prev_df[prev_df.id == id_]).empty else 0
-                for id_ in to_be_displayed.id
-            ]
+            to_be_displayed[date_iter] = [mini_df.iloc[0].wave if not (mini_df := prev_df[prev_df.id == id_]).empty else 0 for id_ in to_be_displayed.id]
 
         indices = ["#", "tourney_name", "real_name", *[date, *previous_4_dates], "✓", "id"]
 
         if self.hidden_features:
-            to_be_displayed["sus_me"] = [
-                self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)
-            ]
+            to_be_displayed["sus_me"] = [self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
             indices += ["sus_me"]
 
         to_be_displayed = (
@@ -241,15 +221,10 @@ class Results:
             ]
 
         if self.hidden_features:
-            to_be_displayed["sus_me"] = [
-                self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)
-            ]
+            to_be_displayed["sus_me"] = [self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
 
         to_be_displayed = (
-            to_be_displayed[indices]
-            .style.apply(styling, axis=1)
-            .applymap(color_position__top, subset=["#"])
-            .applymap(am_i_sus, subset=["real_name"])
+            to_be_displayed[indices].style.apply(styling, axis=1).applymap(color_position__top, subset=["#"]).applymap(am_i_sus, subset=["real_name"])
         )
 
         return to_be_displayed
@@ -262,12 +237,8 @@ class Results:
         step = 100
         total_results = len(filtered_df)
 
-        step = self.results_col_page.number_input(
-            "Results per page", min_value=100, max_value=max(total_results, 100), step=100
-        )
-        total_pages = (
-            total_results // step if total_results // step == total_results / step else total_results // step + 1
-        )
+        step = self.results_col_page.number_input("Results per page", min_value=100, max_value=max(total_results, 100), step=100)
+        total_pages = total_results // step if total_results // step == total_results / step else total_results // step + 1
         current_page = self.results_col.number_input("Page", min_value=1, max_value=total_pages, step=1)
         to_be_displayed = self.prepare_data(filtered_df, current_page=current_page, step=step)
 
@@ -279,11 +250,7 @@ class Results:
             self._styler()
             to_be_displayed_styler = self.regular_preparation(to_be_displayed, filtered_df)
 
-        to_be_displayed_styler = (
-            to_be_displayed_styler.format(make_player_url, subset=["real_name"])
-            .hide(axis="index")
-            .to_html(escape=False)
-        )
+        to_be_displayed_styler = to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False)
         st.write(to_be_displayed_styler, unsafe_allow_html=True)
 
 
@@ -293,7 +260,7 @@ def compute_results(df, options: Options):
 
 if __name__ == "__main__":
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
-    df = load_tourney_results(league_to_folder[champ])
+    df = load_tourney_results(league_to_folder[champ], patch_id=Patch.objects.last().id)
     compute_results(df, options)
 
 
