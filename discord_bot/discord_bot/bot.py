@@ -10,6 +10,8 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
 django.setup()
 
+from collections import defaultdict
+
 from discord_bot.add_roles import handle_adding
 from discord_bot.purge_roles import purge_all_tourney_roles
 from discord_bot.remove_nicknames import remove_nicknames
@@ -47,23 +49,23 @@ async def on_ready():
         # await channel.edit(name="bob-saviours")
 
         # those are the top level functionalities one may want to test
-        await handle_adding(
-            client,
-            limit=100,
-            discord_ids=[
-                764487596902318080
-                # 177504210177228801,
-                # 349704551391297549,
-                # 150761026718007296,
-                # 181859318801498113,
-                # 211865455697068032,
-                # 280723745864286208,
-                # 269350887917355010,
-                # 940798253828542507,
-            ],
-            channel=channel,
-            verbose=True,
-        )
+        # await handle_adding(
+        #     client,
+        #     limit=100,
+        #     discord_ids=[
+        #         764487596902318080
+        #         # 177504210177228801,
+        #         # 349704551391297549,
+        #         # 150761026718007296,
+        #         # 181859318801498113,
+        #         # 211865455697068032,
+        #         # 280723745864286208,
+        #         # 269350887917355010,
+        #         # 940798253828542507,
+        #     ],
+        #     channel=channel,
+        #     verbose=True,
+        # )
         # await remove_nicknames(client, channel)
         # await purge_all_tourney_roles(
         #     client=client,
@@ -78,11 +80,45 @@ async def on_ready():
         handle_roles_scheduled.start()
 
 
+async def print_roles(client):
+    guild = await get_tower(client)
+
+    members = []
+    i = 0
+
+    async for member in guild.fetch_members():
+        members.append(member)
+        i += 1
+
+    all_roles = {role for member in members for role in member.roles}
+    # all_positions = sorted([(role.position, role) for role in all_roles])
+
+    role_counts = defaultdict(int)
+
+    for member in members:
+        for role in member.roles:
+            role_counts[(role.position, role.name)] += 1
+
+    role_counts = sorted([(k[0], k[1], v) for k, v in role_counts.items()], reverse=True)
+
+    channel = await client.fetch_channel(testing_room_id)
+
+    chunk_size = 15
+
+    for role_chunk in range(len(all_roles) // chunk_size + 1):
+        role_list_chunk = role_counts[role_chunk * chunk_size : (role_chunk + 1) * chunk_size]
+        role_counts_normalized = "\n".join([f"{role}: {count}" for _, role, count in role_list_chunk])
+
+        await channel.send(role_counts_normalized)
+
+
 async def check_id(client, message):
     _, *potential_ids = message.content.split()
 
     for potential_id in potential_ids:
-        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id=potential_id)
+        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
+            approved=True, discord_id=potential_id
+        )
 
         if players:
             player = await sync_to_async(players.get)()
@@ -146,7 +182,9 @@ async def on_message(message):
         #     await validate_player_id(client, message)
 
         elif is_testing_room(message.channel) and message.content.startswith("!purge_all_tourney_roles"):
-            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
+            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
+                approved=True, discord_id__isnull=False
+            )
             await purge_all_tourney_roles(client, message.channel, players)
             logging.info("Purged all tournaments roles")
 
