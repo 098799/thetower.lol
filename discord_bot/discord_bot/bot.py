@@ -10,9 +10,8 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
 django.setup()
 
-from collections import defaultdict
-
 from discord_bot.add_roles import handle_adding
+from discord_bot.print_role_counts import print_roles
 from discord_bot.purge_roles import purge_all_tourney_roles
 from discord_bot.remove_nicknames import remove_nicknames
 from discord_bot.util import (
@@ -45,6 +44,7 @@ async def on_ready():
     if handle_outside:
         # for local testing, this channel is private discord so we don't pollute tower discord
         # it doesn't guarantee that you won't create side-effects, so careful
+        await print_roles(client)
         channel = await client.fetch_channel(testing_room_id)
         # await channel.edit(name="bob-saviours")
 
@@ -80,38 +80,6 @@ async def on_ready():
         handle_roles_scheduled.start()
 
 
-async def print_roles(client):
-    guild = await get_tower(client)
-
-    members = []
-    i = 0
-
-    async for member in guild.fetch_members():
-        members.append(member)
-        i += 1
-
-    all_roles = {role for member in members for role in member.roles}
-    # all_positions = sorted([(role.position, role) for role in all_roles])
-
-    role_counts = defaultdict(int)
-
-    for member in members:
-        for role in member.roles:
-            role_counts[(role.position, role.name)] += 1
-
-    role_counts = sorted([(k[0], k[1], v) for k, v in role_counts.items()], reverse=True)
-
-    channel = await client.fetch_channel(testing_room_id)
-
-    chunk_size = 15
-
-    for role_chunk in range(len(all_roles) // chunk_size + 1):
-        role_list_chunk = role_counts[role_chunk * chunk_size : (role_chunk + 1) * chunk_size]
-        role_counts_normalized = "\n".join([f"{role}: {count}" for _, role, count in role_list_chunk])
-
-        await channel.send(role_counts_normalized)
-
-
 async def check_id(client, message):
     _, *potential_ids = message.content.split()
 
@@ -138,6 +106,9 @@ async def on_message(message):
     try:
         if is_testing_room(message.channel) and message.content.startswith("!remove_all_nicknames"):
             await remove_nicknames(client, message.channel)
+
+        elif is_testing_room(message.channel) and message.content.startswith("!role_counts"):
+            await print_roles(client, message)
 
         elif is_meme_room(message.channel) and message.content.startswith("!rename"):
             if "Top 1" in {role.name for role in message.author.roles}:
