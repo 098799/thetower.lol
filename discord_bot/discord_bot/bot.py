@@ -21,6 +21,7 @@ from discord_bot.util import (
     id_098799,
     is_meme_room,
     is_player_id_please_room,
+    is_role_count_room,
     is_testing_room,
     meme_channel_id,
     role_log_room_id,
@@ -84,9 +85,7 @@ async def check_id(client, message):
     _, *potential_ids = message.content.split()
 
     for potential_id in potential_ids:
-        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
-            approved=True, discord_id=potential_id
-        )
+        players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id=potential_id)
 
         if players:
             player = await sync_to_async(players.get)()
@@ -107,7 +106,7 @@ async def on_message(message):
         if is_testing_room(message.channel) and message.content.startswith("!remove_all_nicknames"):
             await remove_nicknames(client, message.channel)
 
-        elif is_testing_room(message.channel) and message.content.startswith("!role_counts"):
+        elif (is_testing_room(message.channel) or is_role_count_room(message.channel)) and message.content.startswith("!role_counts"):
             await print_roles(client, message)
 
         elif is_meme_room(message.channel) and message.content.startswith("!rename"):
@@ -153,9 +152,7 @@ async def on_message(message):
         #     await validate_player_id(client, message)
 
         elif is_testing_room(message.channel) and message.content.startswith("!purge_all_tourney_roles"):
-            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(
-                approved=True, discord_id__isnull=False
-            )
+            players = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False)
             await purge_all_tourney_roles(client, message.channel, players)
             logging.info("Purged all tournaments roles")
 

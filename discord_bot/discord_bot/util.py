@@ -1,5 +1,6 @@
 import os
 import re
+from functools import partial
 
 from asyncstdlib.functools import lru_cache
 
@@ -13,6 +14,7 @@ helpers_room_id = 1006900314588336139
 role_log_room_id = 1128308502130081842
 id_098799 = 177504210177228801
 meme_channel_id = 1159121488931209328
+role_count_channel_id = 1164883276243140638
 
 
 @lru_cache
@@ -27,20 +29,15 @@ async def get_verified_role(client):
     return (await get_tower(client)).get_role(verified_role_id)
 
 
-def is_meme_room(channel):
-    return channel.id == meme_channel_id
+def is_channel(channel, id_):
+    return channel.id == id_
 
 
-def is_testing_room(channel):
-    return channel.id == testing_room_id
-
-
-def is_helpers_room(channel):
-    return channel.id == helpers_room_id
-
-
-def is_player_id_please_room(channel):
-    return channel.id == 1117867265375879259
+is_meme_room = partial(is_channel, id_=meme_channel_id)
+is_testing_room = partial(is_channel, id_=testing_room_id)
+is_helpers_room = partial(is_channel, id_=helpers_room_id)
+is_player_id_please_room = partial(is_channel, id_=1117867265375879259)
+is_role_count_room = partial(is_channel, id_=role_count_channel_id)
 
 
 def is_098799(author):
