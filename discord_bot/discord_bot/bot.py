@@ -115,6 +115,7 @@ async def on_message(message):
 
                 channel = await client.fetch_channel(meme_channel_id)
                 await channel.edit(name=new_name)
+                await message.channel.send(f"🔥 Renamed channel to {new_name} 🔥")
 
         elif is_testing_room(message.channel) and message.content.startswith("!check_id"):
             try:
