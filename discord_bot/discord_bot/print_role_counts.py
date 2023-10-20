@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from discord_bot.util import get_tower, testing_room_id
+from discord_bot.util import get_tower, role_count_channel_id
 
 
 async def print_roles(client, message):
@@ -89,10 +89,7 @@ async def print_roles(client, message):
         roles_allowed += [
             (number, role, count)
             for number, role, count in role_counts
-            if role.startswith("Golden Bot")
-            or role.startswith("Flame Bot")
-            or role.startswith("Thunder Bot")
-            or role.startswith("Amplify Bot")
+            if role.startswith("Golden Bot") or role.startswith("Flame Bot") or role.startswith("Thunder Bot") or role.startswith("Amplify Bot")
         ]
 
     if "stats" in role_types_to_show:
@@ -118,7 +115,7 @@ async def print_roles(client, message):
             if role.startswith("Epic Pack") or role.startswith("Starter-Pack") or role.startswith("No Ads")
         ]
 
-    channel = await client.fetch_channel(testing_room_id)
+    channel = await client.fetch_channel(role_count_channel_id)
 
     chunk_size = 15
 
