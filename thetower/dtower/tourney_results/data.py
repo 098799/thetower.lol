@@ -317,7 +317,7 @@ def get_soft_banned_ids():
 
 if __name__ == "__main__":
     os.environ["LEAGUE_SWITCHER"] = "true"
-    # os.environ["HIDDEN_FEATURES"] = "true"
+    os.environ["HIDDEN_FEATURES"] = "true"
 
     df = load_tourney_results__uncached("data", patch_id=Patch.objects.last().id)
     breakpoint()

@@ -4,9 +4,16 @@ from math import ceil
 
 import discord
 from asgiref.sync import sync_to_async
+from asyncstdlib.functools import lru_cache
 from tqdm import tqdm
 
-from discord_bot.util import get_safe_league_prefix, get_tower, role_only_champ_tourney_roles_check, role_prefix_and_only_tourney_roles_check
+from discord_bot.util import (
+    get_all_members,
+    get_safe_league_prefix,
+    get_tower,
+    role_only_champ_tourney_roles_check,
+    role_prefix_and_only_tourney_roles_check,
+)
 from dtower.sus.models import KnownPlayer
 from dtower.tourney_results.constants import champ, league_to_folder, leagues
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results__uncached
@@ -53,13 +60,13 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
             player,
             roles,
             skipped,
-            tower,
+            client,
             unchanged,
             debug_channel,
         )
 
         if discord_player is None:
-            discord_player = await get_member(tower, int(player.discord_id), channel=debug_channel)
+            discord_player = await get_member(client, int(player.discord_id))
 
             if discord_player is None:
                 continue
@@ -89,16 +96,25 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     logging.info("**********Done**********")
 
 
-async def get_member(guild, discord_id, channel=None):
-    try:
-        return await guild.fetch_member(discord_id)
-    except discord.errors.NotFound:
-        logging.info(f"Failed to fetch {discord_id=}")
+@lru_cache
+async def members_lookup(client):
+    members = await get_all_members(client)
+    member_lookup = {member.id: member for member in members}
+    return member_lookup
 
-        if channel:
-            qs = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(discord_id=discord_id)
-            await sync_to_async(qs.update, thread_sensitive=True)(approved=False)
-            await channel.send(f"User with {discord_id=} is not found, marked as unapproved :warning:")
+
+async def get_member(client, discord_id):
+    member_lookup = await members_lookup(client)
+    return member_lookup.get(discord_id)
+    # try:
+    #     return await guild.fetch_member(discord_id)
+    # except discord.errors.NotFound:
+    #     logging.info(f"Failed to fetch {discord_id=}")
+
+    #     if channel:
+    #         qs = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(discord_id=discord_id)
+    #         await sync_to_async(qs.update, thread_sensitive=True)(approved=False)
+    #         await channel.send(f"User with {discord_id=} is not found, marked as unapproved :warning:")
 
 
 async def get_position_roles(roles):
@@ -171,7 +187,7 @@ async def handle_leagues(
     player,
     roles,
     skipped,
-    tower,
+    client,
     unchanged,
     debug_channel,
 ):
@@ -198,7 +214,7 @@ async def handle_leagues(
             rightful_role = league_roles.get(250)
             wave_bottom = 250
 
-        discord_player = await get_member(tower, int(player.discord_id), channel=debug_channel)
+        discord_player = await get_member(client, int(player.discord_id))
 
         if discord_player is None:
             return None, skipped + 1

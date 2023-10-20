@@ -45,35 +45,15 @@ async def on_ready():
     if handle_outside:
         # for local testing, this channel is private discord so we don't pollute tower discord
         # it doesn't guarantee that you won't create side-effects, so careful
-        await print_roles(client)
-        channel = await client.fetch_channel(testing_room_id)
-        # await channel.edit(name="bob-saviours")
+        channel = client.get_channel(testing_room_id)
+        await handle_adding(
+            client,
+            limit=100,
+            discord_ids=None,
+            channel=channel,
+            verbose=False,
+        )
 
-        # those are the top level functionalities one may want to test
-        # await handle_adding(
-        #     client,
-        #     limit=100,
-        #     discord_ids=[
-        #         764487596902318080
-        #         # 177504210177228801,
-        #         # 349704551391297549,
-        #         # 150761026718007296,
-        #         # 181859318801498113,
-        #         # 211865455697068032,
-        #         # 280723745864286208,
-        #         # 269350887917355010,
-        #         # 940798253828542507,
-        #     ],
-        #     channel=channel,
-        #     verbose=True,
-        # )
-        # await remove_nicknames(client, channel)
-        # await purge_all_tourney_roles(
-        #     client=client,
-        #     channel=channel,
-        #     players=await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(approved=True, discord_id__isnull=False, discord_id=id_098799),
-        # )
-        # await handle_role_present(client, await (await get_tower(client)).fetch_member(id_098799))
         exit()
     logging.info(f"We have logged in as {client.user}")
 

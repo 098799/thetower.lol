@@ -58,3 +58,14 @@ async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
 
 async def role_only_champ_tourney_roles_check(role):
     return re.findall(rf"{top}\s\d", role.name.strip())
+
+
+async def get_all_members(client):
+    guild = await get_tower(client)
+
+    members = []
+
+    async for member in guild.fetch_members():
+        members.append(member)
+
+    return members

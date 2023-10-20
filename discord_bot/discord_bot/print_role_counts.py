@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from discord_bot.util import get_tower, role_count_channel_id
+from discord_bot.util import get_all_members, get_tower, role_count_channel_id
 
 
 async def print_roles(client, message):
@@ -32,14 +32,7 @@ async def print_roles(client, message):
         "@everyone",
     }
 
-    guild = await get_tower(client)
-
-    members = []
-    i = 0
-
-    async for member in guild.fetch_members():
-        members.append(member)
-        i += 1
+    members = await get_all_members(client)
 
     # all_roles = {role for member in members for role in member.roles}
     # all_positions = sorted([(role.position, role) for role in all_roles])
