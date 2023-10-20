@@ -8,6 +8,7 @@ django.setup()
 
 import datetime
 import os
+from functools import partial
 from typing import List, Optional
 
 import pandas as pd
@@ -24,7 +25,7 @@ from components.search_all_leagues import compute_search_all_leagues
 from components.sus_overview import compute_sus_overview
 from components.top_scores import compute_top
 from components.winners import compute_winners
-from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
+from dtower.tourney_results.constants import Graph, Options, champ, copper, gold, league_to_folder, plat, silver
 from dtower.tourney_results.data import load_tourney_results
 
 st.set_page_config(
@@ -151,11 +152,11 @@ def keep():
     compute_overview
 
 
-compute_results_champions = compute_results
-compute_results_platinum = compute_results
-compute_results_gold = compute_results
-compute_results_silver = compute_results
-compute_results_copper = compute_results
+compute_results_champions = partial(compute_results, league=champ)
+compute_results_platinum = partial(compute_results, league=plat)
+compute_results_gold = partial(compute_results, league=gold)
+compute_results_silver = partial(compute_results, league=silver)
+compute_results_copper = partial(compute_results, league=copper)
 
 
 function_string = f"compute_{'_'.join(functionality.lower().split())}"

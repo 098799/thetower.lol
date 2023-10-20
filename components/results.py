@@ -15,8 +15,9 @@ from dtower.tourney_results.models import PatchNew as Patch
 
 
 class Results:
-    def __init__(self, df, options: Options) -> None:
+    def __init__(self, df, options: Options, league: Optional[str] = None) -> None:
         self.df = df
+        self.league = league
         self.options = options
         self.hidden_features = os.environ.get("HIDDEN_FEATURES")
         self.sus_ids = get_sus_ids()
@@ -100,7 +101,7 @@ class Results:
         patch_col, tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([1.0, 2, 1, 1.2, 1])
 
         patch = patch_col.selectbox("Patch:", Patch.objects.all().order_by("-start_date"), index=0)
-        self.df = load_tourney_results(league_to_folder[champ], patch_id=patch.id)
+        self.df = load_tourney_results(league_to_folder[self.league], patch_id=patch.id)
 
         self.show_hist = debug_col.checkbox("Hist data", value=False)
 
@@ -254,14 +255,14 @@ class Results:
         st.write(to_be_displayed_styler, unsafe_allow_html=True)
 
 
-def compute_results(df, options: Options):
-    Results(df, options).compute_results()
+def compute_results(df, options: Options, league: Optional[str] = None):
+    Results(df, options, league=league).compute_results()
 
 
 if __name__ == "__main__":
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
     df = load_tourney_results(league_to_folder[champ], patch_id=Patch.objects.last().id)
-    compute_results(df, options)
+    compute_results(df, options, league=champ)
 
 
 # import cProfile

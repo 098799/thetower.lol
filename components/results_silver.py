@@ -7,4 +7,4 @@ from dtower.tourney_results.models import PatchNew as Patch
 if __name__ == "__main__":
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
     df = load_tourney_results(league_to_folder[silver], patch_id=Patch.objects.last().id)
-    compute_results(df, options)
+    compute_results(df, options, league=silver)
