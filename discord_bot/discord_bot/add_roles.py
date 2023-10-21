@@ -47,6 +47,8 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     for player in tqdm(player_iter):
         ids = await sync_to_async(player.ids.all().values_list, thread_sensitive=True)("id", flat=True)
+        ids = {id.upper() for id in ids}
+
         discord_player = None
 
         discord_player, skipped = await handle_leagues(
