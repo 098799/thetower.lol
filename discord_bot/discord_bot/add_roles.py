@@ -119,13 +119,11 @@ async def get_member(members, discord_id):
     #         await channel.send(f"User with {discord_id=} is not found, marked as unapproved :warning:")
 
 
-@lru_cache
 async def get_position_roles(roles):
     filtered_roles = [role for role in roles if await role_only_champ_tourney_roles_check(role)]
     return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
 
 
-@lru_cache
 async def get_league_roles(roles, league):
     if league == champ:
         initial = [(int(role.name.split()[-1]), role) for role in roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
