@@ -123,7 +123,11 @@ class Results:
 
     def prepare_data(self, filtered_df, current_page: int, step: int):
         if not self.hidden_features:
-            to_be_displayed = filtered_df[~filtered_df.id.isin(get_sus_ids())].reset_index(drop=True)
+            to_be_displayed = filtered_df[~filtered_df.id.isin(get_sus_ids())]
+        else:
+            to_be_displayed = filtered_df
+
+        to_be_displayed = to_be_displayed.reset_index(drop=True)
 
         begin = (current_page - 1) * step
         end = current_page * step
