@@ -105,20 +105,6 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     logging.info("**********Done**********")
 
 
-async def get_member(members, discord_id):
-
-    return member_lookup.get(discord_id)
-    # try:
-    #     return await guild.fetch_member(discord_id)
-    # except discord.errors.NotFound:
-    #     logging.info(f"Failed to fetch {discord_id=}")
-
-    #     if channel:
-    #         qs = await sync_to_async(KnownPlayer.objects.filter, thread_sensitive=True)(discord_id=discord_id)
-    #         await sync_to_async(qs.update, thread_sensitive=True)(approved=False)
-    #         await channel.send(f"User with {discord_id=} is not found, marked as unapproved :warning:")
-
-
 async def get_position_roles(roles):
     filtered_roles = [role for role in roles if await role_only_champ_tourney_roles_check(role)]
     return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
