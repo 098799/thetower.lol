@@ -57,11 +57,13 @@ def compute_comparison(df, options: Options):
     graph_options = [options.default_graph.value] + [
         value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
     ]
-    patch = st.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
+    patch_col, bc_col = st.columns([1, 1])
+    patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
+    filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
 
     id_mapping = get_id_lookup()
 
-    datas = create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, users)
+    datas = create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users)
 
     if not datas:
         return
@@ -136,7 +138,7 @@ def compute_comparison(df, options: Options):
         st.json(data)
 
 
-def create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, users):
+def create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users):
     datas = []
 
     for user in users:
@@ -158,6 +160,10 @@ def create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first
             st.error(f"Player {real_name} is considered sus.")
 
         patch_df = get_patch_df(df, player_df, patch)
+
+        if filter_bcs:
+            sbcs = set(filter_bcs)
+            patch_df = patch_df[patch_df.bcs.map(lambda table_bcs: sbcs & set(table_bcs) == sbcs)]
 
         tbdf = patch_df.reset_index(drop=True)
 
