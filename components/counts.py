@@ -23,13 +23,11 @@ def compute_counts(df, options):
             "bc2": bcs[1].name if (bcs := ddf.iloc[0].bcs) else "",
         }
 
-        result |= {
-            f"Top {count_for}": ddf.iloc[count_for - 1].wave if count_for <= len(ddf) else 0 for count_for in counts_for
-        }
+        result |= {f"Top {count_for}": ddf.iloc[count_for - 1].wave if count_for <= len(ddf) else 0 for count_for in counts_for}
         results.append(result)
 
     to_be_displayed = pd.DataFrame(results).sort_values("date", ascending=False).reset_index(drop=True)
-    st.dataframe(to_be_displayed)
+    st.dataframe(to_be_displayed, use_container_width=True, height=800, hide_index=True)
 
 
 if __name__ == "__main__":

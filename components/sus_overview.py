@@ -2,6 +2,7 @@ import streamlit as st
 
 from dtower.tourney_results.constants import league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
+from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_sus_overview(df, *args, **kwargs):
@@ -41,7 +42,9 @@ def get_impossible_avatars(df):
 
 
 if __name__ == "__main__":
-    dfs = [load_tourney_results(league) for league in league_to_folder.values()]
+    last_patch = Patch.objects.last()
+
+    dfs = [load_tourney_results(league, patch_id=last_patch.id) for league in league_to_folder.values()]
 
     for df, league in zip(dfs, league_to_folder.keys()):
         df["league"] = league

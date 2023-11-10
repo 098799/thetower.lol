@@ -250,11 +250,15 @@ def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff
 
 
 @st.cache_data
-def load_tourney_results(folder: str, patch_id: Optional[int] = None, result_cutoff: Optional[int] = None) -> pd.DataFrame:
-    return load_tourney_results__uncached(folder, patch_id=patch_id, result_cutoff=result_cutoff)
+def load_tourney_results(
+    folder: str, patch_id: Optional[int] = None, limit_no_results: Optional[int] = None, result_cutoff: Optional[int] = None
+) -> pd.DataFrame:
+    return load_tourney_results__uncached(folder, patch_id=patch_id, limit_no_results=limit_no_results, result_cutoff=result_cutoff)
 
 
-def load_tourney_results__uncached(folder: str, patch_id: Optional[int] = None, result_cutoff: Optional[int] = None) -> pd.DataFrame:
+def load_tourney_results__uncached(
+    folder: str, patch_id: Optional[int] = None, limit_no_results: Optional[int] = None, result_cutoff: Optional[int] = None
+) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     additional_filter = {} if hidden_features else dict(public=True)
 
@@ -263,7 +267,7 @@ def load_tourney_results__uncached(folder: str, patch_id: Optional[int] = None, 
         additional_filter["date__gte"] = patch.start_date
         additional_filter["date__lte"] = patch.end_date
 
-    league = data_folder_name_mapping[folder]
+    league = data_folder_name_mapping.get(folder, folder)
 
     result_files = sorted(
         [
@@ -276,6 +280,9 @@ def load_tourney_results__uncached(folder: str, patch_id: Optional[int] = None, 
         ],
         key=lambda x: x[1],
     )
+
+    if limit_no_results is not None:
+        result_files = result_files[-limit_no_results:]
 
     return _load_tourney_results(result_files, league, result_cutoff=result_cutoff)
 

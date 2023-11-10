@@ -91,7 +91,7 @@ def compute_comparison(df, options: Options):
         to_be_displayed = summary.style.format(make_player_url, subset=["Name"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
-        st.dataframe(summary, use_container_width=True)
+        st.dataframe(summary, use_container_width=True, hide_index=True)
 
     pd_datas = pd.concat([data for data, _ in datas])
     pd_datas["bcs"] = pd_datas.bcs.map(lambda bc_qs: " / ".join([bc.shortcut for bc in bc_qs]))
@@ -115,7 +115,7 @@ def compute_comparison(df, options: Options):
         to_be_displayed = last_results.format(make_player_url, subset=["Name"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
-        st.dataframe(last_results, use_container_width=True)
+        st.dataframe(last_results, use_container_width=True, hide_index=True)
 
     fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True, custom_data=["bcs", "position"])
     fig.update_traces(hovertemplate="%{y}<br>Postion: %{customdata[1]}<br>BC: %{customdata[0]}")

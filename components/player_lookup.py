@@ -1,8 +1,8 @@
 import datetime
-import glob
 import os
 from urllib.parse import urlencode
 
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
@@ -34,25 +34,74 @@ from dtower.tourney_results.formatting import BASE_URL, color_position
 from dtower.tourney_results.models import PatchNew as Patch
 
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
+id_mapping = get_id_lookup()
 
 
-def compute_player_lookup(df, options: Options):
+def compute_player_lookup(df, options: Options, all_leagues=False):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
-    league_col, user_col = st.columns([1, 2])
+    if not all_leagues:
+        league_col, user_col = st.columns([1, 2])
+    else:
+        user_col = st
 
-    league = league_col.selectbox("League?", leagues)
+    league_choices = leagues
+    user_choices = []
 
-    if league != champ:
-        df = load_tourney_results(folder=league_to_folder[league])
-        df["league"] = league
+    if options.current_player is not None:
+        user = options.current_player
+        find_player_across_leagues(user)
+
+        found = find_player_across_leagues(user)
+
+        if found is not None:
+            df, player_df, preselected_league = found
+            league_choices = [preselected_league] + [league_choice for league_choice in leagues if league_choice != preselected_league]
+            user_choices = [user]
+
+    league = league_col.selectbox("League?", league_choices) if not all_leagues else all
+
+    if df is None or league != preselected_league:
+        limit_no_results = None
+
+        if hidden_features:  # limit amount of results to load faster the hidden site
+            user_col, checkbox_col = user_col.columns([5, 1])
+            limit_loading = checkbox_col.checkbox("3 month", value=True)
+
+            if limit_loading:
+                limit_no_results = 8 * 3  # 3 months-ish for now
+
+        if not all_leagues:
+            df = load_tourney_results(folder=league_to_folder[league], limit_no_results=limit_no_results)
+
+            if league != champ:
+                df["league"] = league
+        else:
+            dfs = [load_tourney_results(league, limit_no_results=limit_no_results) for league in leagues]
+
+            for df, league in zip(dfs, leagues):
+                df["league"] = league
+
+            df = pd.concat(dfs)
 
     first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
 
-    player_list = handle_initial_choices(hidden_features, options, player_list, sus_ids)
+    if not hidden_features:
+        sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
+        player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
 
-    user = user_col.selectbox("Which user would you like to lookup?", player_list)
+    if not all_leagues:
+        user = user_col.selectbox("Which user would you like to lookup?", user_choices + player_list)
+    else:
+        id_ = user_col.selectbox("Lookup by id", [""] + sorted(all_user_ids))
+
+        tourney_name = None
+
+        if not id_:
+            tourney_name = user_col.selectbox("Lookup by tourney name", [""] + sorted(all_tourney_names))
+
+        user = id_ or tourney_name
 
     # lol
     if user == "Soelent":
@@ -63,9 +112,9 @@ def compute_player_lookup(df, options: Options):
 
     info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
 
-    id_mapping = get_id_lookup()
-
-    df, player_df = find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
+    if (player_df := _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is None:
+        st.write("User not found in this league.")
+        return
 
     # todo should be extracted
     if len(player_df.id.unique()) >= 2:
@@ -346,44 +395,43 @@ def handle_sus_or_banned_ids(info_tab, id_, sus_ids):
         info_tab.error("This player is considered sus.")
 
 
-def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
-    def _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user):
-        if user in (set(first_choices) | all_real_names | all_tourney_names):
-            player_df = df[(df.real_name == user) | (df.tourney_name == user)]
-        elif user in all_user_ids:
-            player_df = df[df.id == id_mapping.get(user, user)]
-        else:
-            player_df = None
+def _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user):
+    if user in (set(first_choices) | all_real_names | all_tourney_names):
+        player_df = df[(df.real_name == user) | (df.tourney_name == user)]
+    elif user in all_user_ids:
+        player_df = df[df.id == id_mapping.get(user, user)]
+    else:
+        player_df = None
 
-        return player_df
+    return player_df
 
-    if (player_df := _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
+
+def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, user):
+    if (player_df := _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
         return df, player_df
     else:
         # expensive branch, maybe we gotta look in another league? Should only happen if the user is passed as query param
+        found = find_player_across_leagues(user)
 
-        for league in leagues:
-            df = load_tourney_results(folder=league_to_folder[league])
+        if found is None:
+            raise ValueError(f"Could not find user {user}.")
 
-            first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
+        df, player_df, league = found
 
-            if (player_df := _find_user(all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
-                df["league"] = league
-                return df, player_df
-
-        raise ValueError(f"Could not find user {user}.")
+        return df, player_df
 
 
-def handle_initial_choices(hidden_features, options, player_list, sus_ids):
-    if not hidden_features:
-        sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
-        player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
-    if options.current_player is not None:
-        player_list = [options.current_player] + player_list
-    return player_list
+def find_player_across_leagues(user):
+    for league in leagues:
+        df = load_tourney_results(folder=league_to_folder[league])
+
+        first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
+
+        if (player_df := _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
+            df["league"] = league
+            return df, player_df, league
 
 
 if __name__ == "__main__":
-    df = load_tourney_results("data")
     options = get_options(links=False)
-    compute_player_lookup(df, options=options)
+    compute_player_lookup(None, options=options)

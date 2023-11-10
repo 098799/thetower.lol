@@ -8,23 +8,23 @@ from dtower.tourney_results.data import load_tourney_results
 compute_search_all_leagues = compute_player_lookup
 
 if __name__ == "__main__":
-    my_bar = st.progress(0)
-    leagues = sorted(league_to_folder.items())
+    # my_bar = st.progress(0)
+    # leagues = sorted(league_to_folder.items())
 
-    dfs = []
+    # dfs = []
 
-    for index, (_, league) in enumerate(leagues, 1):
-        df = load_tourney_results(league)
-        my_bar.progress(index / len(leagues))
+    # for index, (_, league) in enumerate(leagues, 1):
+    #     df = load_tourney_results(league)
+    #     my_bar.progress(index / len(leagues))
 
-        dfs.append(df)
+    #     dfs.append(df)
 
-    for df, (league, _) in zip(dfs, leagues):
-        df["league"] = league
+    # for df, (league, _) in zip(dfs, leagues):
+    #     df["league"] = league
 
-    df = pd.concat(dfs)
-    my_bar.empty()
+    # df = pd.concat(dfs)
+    # my_bar.empty()
 
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
 
-    compute_search_all_leagues(df, options)
+    compute_search_all_leagues(None, options, all_leagues=True)
