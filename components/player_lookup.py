@@ -41,6 +41,11 @@ id_mapping = get_id_lookup()
 def compute_player_lookup(df, options: Options, all_leagues=False):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
+    with open("style.css", "r") as infile:
+        table_styling = f"<style>{infile.read()}</style>"
+
+    st.write(table_styling, unsafe_allow_html=True)
+
     if not all_leagues:
         league_col, user_col = st.columns([1, 2])
     else:
@@ -212,7 +217,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
                 axis=1,
             )
             .applymap(color_position, subset=["position"])
-            .bar(subset=["wave"], color="#222222", vmin=0, vmax=max(player_df.wave))
+            # .bar(subset=["wave"], color="#222222", vmin=0, vmax=max(player_df.wave))
         )
 
     raw_data_tab.dataframe(dataframe_styler(player_df), use_container_width=True, height=800)
