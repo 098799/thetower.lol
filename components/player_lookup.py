@@ -249,21 +249,6 @@ def draw_info_tab(info_tab, user, player_df, hidden_features):
             unsafe_allow_html=True,
         )
 
-    st.write(
-        """
-    <style>
-    table {
-    width: 100%;
-    margin: 20px 0px 20px 0px;
-    }
-    .top td, .top tr {
-        border: 0;
-    }
-    </style>
-    """,
-        unsafe_allow_html=True,
-    )
-
     avatar = player_df.iloc[0].avatar
     relic = player_df.iloc[0].relic
 
