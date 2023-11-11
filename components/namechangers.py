@@ -3,9 +3,15 @@ import streamlit as st
 
 from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
+from dtower.tourney_results.formatting import make_player_url
 
 
 def compute_namechangers(df, options=None):
+    with open("style.css", "r") as infile:
+        table_styling = f"<style>{infile.read()}</style>"
+
+    st.write(table_styling, unsafe_allow_html=True)
+
     df = df[~df.id.isin(get_sus_ids())]
 
     combined_data = []
@@ -22,8 +28,8 @@ def compute_namechangers(df, options=None):
         combined_data.append(
             {
                 "real_name": real_name,
-                "no_in_champ": how_many_rows,
                 "namechanged_times": how_many_names,
+                "no_in_champ": how_many_rows,
                 "mean_last_5_tourneys": int(round(last_performance, 0)),
             }
         )
@@ -31,9 +37,9 @@ def compute_namechangers(df, options=None):
     new_df = pd.DataFrame(combined_data)
     new_df = new_df.sort_values("namechanged_times", ascending=False).reset_index(drop=True)
 
-    to_be_displayed = new_df.style.apply(lambda row: [f"color: {df[df.real_name == row.real_name].iloc[-1].name_role_color}", None, None, None], axis=1)
+    to_be_displayed = new_df.style.format(make_player_url, subset=["real_name"])
 
-    st.dataframe(to_be_displayed, use_container_width=True, height=800)
+    st.write(to_be_displayed.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
