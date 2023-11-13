@@ -16,6 +16,7 @@ table {
     width: 100%;
     border: 1px var(--active-element) solid !important;
     border-collapse: collapse;
+    margin-bottom: 10px !important;
 }
 
 tbody {
