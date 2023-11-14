@@ -299,7 +299,7 @@ def handle_start_date_loop(fig, graph_position_instead, tbdf):
         fig.add_vline(x=start, line_width=3, line_dash="dash", line_color="#888", opacity=0.4)
         fig.add_annotation(
             x=start,
-            y=(tbdf.position.min() + 10 * (index % 2)) if graph_position_instead else (tbdf.wave.max() - 300 * (index % 2 + 1)),
+            y=(tbdf.position.min() + 10 * (index % 5)) if graph_position_instead else (tbdf.wave.max() - 150 * (index % 5 + 1)),
             text=f"Patch {name}{interim} start",
             showarrow=True,
             arrowhead=1,
