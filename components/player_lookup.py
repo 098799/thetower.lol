@@ -328,7 +328,7 @@ def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
         ),
         secondary_y=True,
     )
-    fig.update_yaxes(secondary_y=True, range=[200, 0])
+    fig.update_yaxes(secondary_y=True, range=[tbdf.position.max() + 20, 0])
 
 
 def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf):
