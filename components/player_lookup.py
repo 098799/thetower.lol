@@ -173,7 +173,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         if not graph_position_instead:
-            handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf)
+            handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf, df)
         else:
             handle_is_graph_position(average_foreground, fig, rolling_average, tbdf)
 
@@ -334,10 +334,33 @@ def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
     fig.update_yaxes(secondary_y=True, range=[tbdf.position.max() + 20, 0])
 
 
-def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf):
+def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf, df):
+    def guess_closest_tops(tbdf):
+        def find_two_closest(mean_last_position, tops):
+            for index, top in enumerate(tops):
+                if top > mean_last_position:
+                    return tops[index - 1], top
+
+        tops = [1, 10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]
+        mean_last_position = tbdf[:5].position.mean()
+
+        return find_two_closest(mean_last_position, tops)
+
+    all_results = df[df.date.isin(tbdf.date.unique())]
+    top, bot = guess_closest_tops(tbdf)
+
+    median_tops = []
+    median_bots = []
+
+    for date, sdf in all_results.groupby("date"):
+        median_top = sdf[sdf.position <= top].wave.median()
+        median_tops.append(median_top)
+        median_bottom = sdf[sdf.position <= bot].wave.median()
+        median_bots.append(median_bottom)
+
     foreground_kwargs = {}
-    # background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
-    background_kwargs = dict(line_dash="dot", line_color="#FF4B4B", opacity=0.6)
+    background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
+    # background_kwargs = dict(line_dash="dot", line_color="#FF4B4B", opacity=0.6)
     fig.add_trace(
         go.Scatter(
             x=tbdf.date,
@@ -355,6 +378,10 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
             name=f"{rolling_average} tourney moving average",
             **foreground_kwargs if average_foreground else background_kwargs,
         )
+    )
+    fig.add_trace(go.Scatter(x=tbdf.date, y=median_tops, name=f"Median top {top}", line_dash="dot", opacity=0.6))
+    fig.add_trace(
+        go.Scatter(x=tbdf.date, y=median_bots, name=f"Median top {bot}", line_dash="dot", opacity=0.6, fill="tonexty", fillcolor="rgba(255, 0, 0, 0.2)")
     )
     min_ = min(tbdf.wave)
     max_ = max(tbdf.wave)
