@@ -237,7 +237,10 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
 
 def draw_info_tab(info_tab, user, player_df, hidden_features):
-    info_tab.code(f"http://{BASE_URL}/Player%20Lookup?" + urlencode({"player": user}, doseq=True))
+    url_tab, comp_tab = info_tab.columns([3, 1])
+    url_tab.code(f"http://{BASE_URL}/Player%20Lookup?" + urlencode({"player": user}, doseq=True))
+    url = f"http://{BASE_URL}/Player%20Comparison?" + urlencode({"compare": user}, doseq=True)
+    comp_tab.write(f"<a href='{url}'>🔗 Compare with...</a>", unsafe_allow_html=True)
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
 
     real_name = player_df.iloc[0].real_name
