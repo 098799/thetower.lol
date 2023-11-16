@@ -34,7 +34,7 @@ strata_to_color = dict(zip(stratas, colors))
 # position_colors = ["#333333", "#5555FF", "green", the_color, "red", "#CCCCCC"][::-1]
 
 # Just a placeholder, change me later to be dependant on patch!!!
-position_stratas = [0, 1, 10, 25, 50, 100, 200, 300, 400, 500, 2000][::-1]
+position_stratas = [0, 1, 10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000][::-1]
 position_colors = [
     "#333333",
     "#cda6eb",
@@ -44,8 +44,14 @@ position_colors = [
     "#3fabff",
     "#8bcef9",
     "#ff1d05",
+    "#ff6600",  # 400
     "#ff9500",
+    "#ffc000",  # 600
+    "#ffc000",
+    "#fff200",  # 800
     "#fff200",
+    "#fff200",
+    "#fffa9f",  # 1500
     "#CCCCCC",
 ][::-1]
 
