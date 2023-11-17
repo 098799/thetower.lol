@@ -1,5 +1,6 @@
 import datetime
 import os
+from collections import defaultdict
 from html import escape
 from urllib.parse import urlencode
 
@@ -19,6 +20,8 @@ from dtower.tourney_results.constants import (
     colors_018,
     league_to_folder,
     leagues,
+    position_colors,
+    position_stratas,
     stratas_boundaries,
     stratas_boundaries_018,
 )
@@ -31,7 +34,7 @@ from dtower.tourney_results.data import (
     get_sus_ids,
     load_tourney_results,
 )
-from dtower.tourney_results.formatting import BASE_URL, color_position
+from dtower.tourney_results.formatting import BASE_URL, color_position, html_to_rgb
 from dtower.tourney_results.models import PatchNew as Patch
 
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
@@ -169,7 +172,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         pos_col, tweak_col = graph_tab.columns([1, 1])
 
         graph_position_instead = pos_col.checkbox("Graph position instead")
-        average_foreground = tweak_col.checkbox("Average in the foreground?", value=True)
+        average_foreground = tweak_col.checkbox("Average in the foreground?", value=False)
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         if not graph_position_instead:
@@ -335,28 +338,46 @@ def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
 
 
 def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf, df):
-    def guess_closest_tops(tbdf):
-        def find_two_closest(mean_last_position, tops):
-            for index, top in enumerate(tops):
-                if top > mean_last_position:
-                    return tops[index - 1], top
+    tops = position_stratas[1:-1][::-1]
+    strata_to_color = dict(zip(tops, position_colors[2:-1][::-1]))
 
-        tops = [1, 10, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]
-        mean_last_position = tbdf[:5].position.mean()
+    # def guess_closest_tops(tbdf):
+    #     def find_two_closest(mean_last_position, tops):
+    #         for index, top in enumerate(tops):
+    #             if top > mean_last_position:
+    #                 return tops[index - 1], top
 
-        return find_two_closest(mean_last_position, tops)
+    #     mean_last_position = tbdf[:5].position.mean()
+
+    #     return find_two_closest(mean_last_position, tops)
+
+    best_position = tbdf.position.min()
+    worst_position = tbdf.position.max()
+    print(best_position, worst_position)
+
+    for strata in tops:
+        if strata <= best_position:
+            begin = strata
+            break
+
+    for strata in tops:
+        if strata >= worst_position:
+            end = strata
+            break
+
+    stratas_for_plot = [strata for strata in tops if strata >= begin and strata <= end]
+    print(stratas_for_plot)
 
     all_results = df[df.date.isin(tbdf.date.unique())]
-    top, bot = guess_closest_tops(tbdf)
+    all_results = all_results[all_results.position != -1]
 
-    median_tops = []
-    median_bots = []
+    min_by_strata = defaultdict(list)
+    max_by_strata = defaultdict(list)
 
     for date, sdf in all_results.groupby("date"):
-        median_top = sdf[sdf.position <= top].wave.median()
-        median_tops.append(median_top)
-        median_bottom = sdf[sdf.position <= bot].wave.median()
-        median_bots.append(median_bottom)
+        for strata in tops:
+            min_by_strata[strata].append(sdf[sdf.position <= strata].wave.min())
+            max_by_strata[strata].append(sdf[sdf.position <= strata].wave.max())
 
     foreground_kwargs = {}
     background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
@@ -368,6 +389,8 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
             name="Wave (left axis)",
             customdata=tbdf.bcs,
             hovertemplate="%{y}, BC: %{customdata}",
+            marker=dict(size=8, opacity=1),
+            line=dict(width=4, color="#FF4B4B"),
             **foreground_kwargs if not average_foreground else background_kwargs,
         )
     )
@@ -379,10 +402,36 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
             **foreground_kwargs if average_foreground else background_kwargs,
         )
     )
-    fig.add_trace(go.Scatter(x=tbdf.date, y=median_tops, name=f"Median top {top}", line_dash="dot", opacity=0.6))
+
     fig.add_trace(
-        go.Scatter(x=tbdf.date, y=median_bots, name=f"Median top {bot}", line_dash="dot", opacity=0.6, fill="tonexty", fillcolor="rgba(255, 0, 0, 0.2)")
+        go.Scatter(
+            x=tbdf.date[::-1],
+            y=max_by_strata[stratas_for_plot[0]],
+            name=f"Max top {stratas_for_plot[0]}",
+            line_dash="dot",
+            marker=dict(size=0, opacity=0),
+            opacity=0.6,
+            line_color=strata_to_color[stratas_for_plot[0]],
+        )
     )
+
+    for strata in stratas_for_plot[1:]:
+        fig.add_trace(
+            go.Scatter(
+                x=tbdf.date[::-1],
+                y=min_by_strata[strata],
+                name=f"Min top {strata}",
+                line_dash="dot",
+                marker=dict(size=0, opacity=0),
+                opacity=0.6,
+                fill="tonexty",
+                line_color=strata_to_color[strata],
+                fillcolor=html_to_rgb(strata_to_color[strata], transparency=0.1),
+            )
+        )
+
+    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+
     min_ = min(tbdf.wave)
     max_ = max(tbdf.wave)
     for color_, strata in zip(colors, stratas):
