@@ -389,8 +389,8 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
             name="Wave (left axis)",
             customdata=tbdf.bcs,
             hovertemplate="%{y}, BC: %{customdata}",
-            marker=dict(size=8, opacity=1),
-            line=dict(width=4, color="#FF4B4B"),
+            marker=dict(size=7, opacity=1),
+            line=dict(width=2, color="#FF4B4B"),
             **foreground_kwargs if not average_foreground else background_kwargs,
         )
     )
@@ -411,7 +411,7 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
             line_dash="dot",
             marker=dict(size=0, opacity=0),
             opacity=0.6,
-            line_color=strata_to_color[stratas_for_plot[0]],
+            line_color=html_to_rgb(strata_to_color[stratas_for_plot[0]], transparency=0.2),
         )
     )
 
@@ -425,18 +425,18 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
                 marker=dict(size=0, opacity=0),
                 opacity=0.6,
                 fill="tonexty",
-                line_color=strata_to_color[strata],
+                line_color=html_to_rgb(strata_to_color[strata], transparency=0.2),
                 fillcolor=html_to_rgb(strata_to_color[strata], transparency=0.1),
             )
         )
 
     fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
 
-    min_ = min(tbdf.wave)
-    max_ = max(tbdf.wave)
-    for color_, strata in zip(colors, stratas):
-        if max_ > strata > min_:
-            fig.add_hline(y=strata, line_color=color_, line_dash="dash", opacity=0.4, line_width=3)
+    # min_ = min(tbdf.wave)
+    # max_ = max(tbdf.wave)
+    # for color_, strata in zip(colors, stratas):
+    #     if max_ > strata > min_:
+    #         fig.add_hline(y=strata, line_color=color_, line_dash="dash", opacity=0.4, line_width=3)
 
 
 def handle_colors_dependant_on_patch(df, patch, player_df):
