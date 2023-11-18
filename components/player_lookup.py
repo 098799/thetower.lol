@@ -338,8 +338,8 @@ def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
 
 
 def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf, df):
-    tops = position_stratas[1:-1][::-1]
-    strata_to_color = dict(zip(tops, position_colors[2:][::-1]))
+    tops = position_stratas[:-1][::-1]
+    strata_to_color = dict(zip(tops, position_colors[2:][::-1] + ["#FFFFFF"]))
 
     # def guess_closest_tops(tbdf):
     #     def find_two_closest(mean_last_position, tops):
@@ -359,11 +359,15 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
         if strata <= best_position:
             begin = strata
             break
+    else:
+        begin = tops[0]
 
     for strata in tops:
         if strata >= worst_position:
             end = strata
             break
+    else:
+        end = tops[-1]
 
     stratas_for_plot = [strata for strata in tops if strata >= begin and strata <= end]
     print(stratas_for_plot)
