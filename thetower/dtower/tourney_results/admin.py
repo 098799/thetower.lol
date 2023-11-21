@@ -24,7 +24,10 @@ def restart_django(modeladmin, request, queryset):
 
 @admin.action(description="Publicize")
 def publicize(modeladmin, request, queryset):
-    queryset.update(public=True)
+    for item in queryset:
+        item.public = True
+        item.save()
+        # queryset.update(public=True)
 
 
 @admin.register(TourneyResult)
