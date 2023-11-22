@@ -7,9 +7,6 @@ django.setup()
 
 import streamlit as st
 
-from components.overview import compute_overview
-from dtower.tourney_results.constants import Graph, Options, league_to_folder
-from dtower.tourney_results.data import load_tourney_results
 
 st.set_page_config(
     page_title="The Tower top200 tourney results",
@@ -20,8 +17,7 @@ st.set_page_config(
     },
 )
 
-from st_pages import Page, Section, add_page_title, show_pages
-from streamlit.source_util import invalidate_pages_cache
+from st_pages import Page, show_pages
 
 pages = [
     Page("components/overview.py", "Overview", "🏠"),

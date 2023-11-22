@@ -211,7 +211,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
                 + additional_format,
                 axis=1,
             )
-            .applymap(color_position, subset=["position"])
+            .map(color_position, subset=["position"])
             # .bar(subset=["wave"], color="#222222", vmin=0, vmax=max(player_df.wave))
         )
 

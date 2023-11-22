@@ -1,4 +1,3 @@
-import datetime
 import os
 from typing import Optional
 
@@ -6,15 +5,11 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from components.results import compute_results
 from dtower.tourney_results.constants import Graph, Options, champ, how_many_results_hidden_site, how_many_results_public_site, league_to_folder
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
-from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult
 
-patches = sorted(
-    [patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True
-)
+patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
 
 
 def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
@@ -35,7 +30,7 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
         counts_data = {role: {date: 0 for date in unique_dates} for role in unique_roles}
 
         for (date, role), counts in counts_per_date:
-            count = counts.count()[0] if not counts.empty else 0
+            count = counts.count().iloc[0] if not counts.empty else 0
             counts_data[role][date] = count
 
         for date, overfill in overfill_per_date.items():
@@ -65,12 +60,7 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
     df = df[df.patch.isin(selected_patches)]
 
     dates, counts_data = get_data(df, overfill=df.groupby("date").id.count().max())
-    bcs = {
-        date: " / ".join(
-            TourneyResult.objects.get(date=date, league=champ).conditions.all().values_list("shortcut", flat=True)
-        )
-        for date in dates
-    }
+    bcs = {date: " / ".join(TourneyResult.objects.get(date=date, league=champ).conditions.all().values_list("shortcut", flat=True)) for date in dates}
 
     plot_data = {
         role: go.Bar(
@@ -101,10 +91,7 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
     for patch in selected_patches:
         non_sus_df = df[~df.id.isin(sus_ids)]
         patch_breakdown_datum = {
-            patch.wave_bottom: len(players)
-            for patch, players in dict(
-                non_sus_df[non_sus_df.patch == patch].groupby("name_role").real_name.unique()
-            ).items()
+            patch.wave_bottom: len(players) for patch, players in dict(non_sus_df[non_sus_df.patch == patch].groupby("name_role").real_name.unique()).items()
         }
         patch_breakdown_data[patch] = patch_breakdown_datum
 

@@ -1,12 +1,8 @@
-import glob
-from collections import Counter
-
 import pandas as pd
 import streamlit as st
 
-from dtower.tourney_results.constants import Graph, Options, all_relics, champ, league_to_folder
+from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
-from dtower.tourney_results.models import PatchNew as Patch
 
 
 def compute_counts(df, options):

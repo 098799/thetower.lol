@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -126,8 +126,8 @@ class Graph(Enum):
 
 class Options(BaseModel):
     links_toggle: bool
-    current_player: Optional[str]
-    compare_players: Optional[List[str]]
+    current_player: Optional[str] = None
+    compare_players: Optional[list[str]] = None
     default_graph: Graph
     average_foreground: bool
 

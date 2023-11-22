@@ -5,9 +5,7 @@ from dtower.tourney_results.constants import Graph, Options, how_many_results_pu
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position__top, make_player_url
 
-patches = sorted(
-    [patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True
-)
+patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
 
 
 def compute_top(df, options: Options):
@@ -23,27 +21,16 @@ def compute_top(df, options: Options):
     non_sus_df = df[~df["id"].isin(sus_ids)]
     patch_df = non_sus_df[non_sus_df["patch"] == patch]
 
-    overall_df = (
-        patch_df.sort_values("wave", ascending=False).reset_index(drop=True).iloc[:how_many_results_public_site]
-    )
+    overall_df = patch_df.sort_values("wave", ascending=False).reset_index(drop=True).iloc[:how_many_results_public_site]
     overall_df["ovr_pos"] = overall_df.index + 1
-    condensed_df = (
-        patch_df.sort_values("wave", ascending=False)
-        .drop_duplicates("id")
-        .reset_index(drop=True)
-        .iloc[:how_many_results_public_site_other]
-    )
+    condensed_df = patch_df.sort_values("wave", ascending=False).drop_duplicates("id").reset_index(drop=True).iloc[:how_many_results_public_site_other]
     condensed_df["ovr_pos"] = condensed_df.index + 1
 
     condensed_tbd = (
         condensed_df[["date", "real_name", "wave", "position", "ovr_pos"]]
-        .style.apply(
-            lambda row: [None, None, format_(row=row, df=condensed_df, column="wave_role_color"), None, None], axis=1
-        )
-        .applymap(color_position__top, subset=["position"])
-        .apply(
-            lambda row: [None, format_(row=row, df=condensed_df, column="name_role_color"), None, None, None], axis=1
-        )
+        .style.apply(lambda row: [None, None, format_(row=row, df=condensed_df, column="wave_role_color"), None, None], axis=1)
+        .map(color_position__top, subset=["position"])
+        .apply(lambda row: [None, format_(row=row, df=condensed_df, column="name_role_color"), None, None, None], axis=1)
     )
 
     fig = px.bar(condensed_df[:40], x="real_name", y="wave")
@@ -58,10 +45,8 @@ def compute_top(df, options: Options):
 
     overall_tbd = (
         overall_df[["date", "real_name", "wave", "position", "ovr_pos"]]
-        .style.apply(
-            lambda row: [None, None, format_(row=row, df=overall_df, column="wave_role_color"), None, None], axis=1
-        )
-        .applymap(color_position__top, subset=["position"])
+        .style.apply(lambda row: [None, None, format_(row=row, df=overall_df, column="wave_role_color"), None, None], axis=1)
+        .map(color_position__top, subset=["position"])
         .apply(lambda row: [None, format_(row=row, df=overall_df, column="name_role_color"), None, None, None], axis=1)
     )
 

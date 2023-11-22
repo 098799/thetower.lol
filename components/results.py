@@ -1,13 +1,8 @@
-import datetime
 import os
-from functools import partial
 from typing import Optional
 
-import plotly.express as px
 import streamlit as st
-from streamlit_js_eval import get_page_location
 
-from components.util import links_toggle
 from dtower.tourney_results.constants import Graph, Options, all_relics, champ, league_to_folder, sus_person
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_player_url, strike
@@ -193,8 +188,8 @@ class Results:
                 ],
                 axis=1,
             )
-            .applymap(color_position__top, subset=["#"])
-            .applymap(am_i_sus, subset=["real_name"])
+            .map(color_position__top, subset=["#"])
+            .map(am_i_sus, subset=["real_name"])
         )
 
         return to_be_displayed
@@ -228,9 +223,7 @@ class Results:
         if self.hidden_features:
             to_be_displayed["sus_me"] = [self._make_sus_link(id, name) for id, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
 
-        to_be_displayed = (
-            to_be_displayed[indices].style.apply(styling, axis=1).applymap(color_position__top, subset=["#"]).applymap(am_i_sus, subset=["real_name"])
-        )
+        to_be_displayed = to_be_displayed[indices].style.apply(styling, axis=1).map(color_position__top, subset=["#"]).map(am_i_sus, subset=["real_name"])
 
         return to_be_displayed
 
