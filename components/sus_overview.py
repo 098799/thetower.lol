@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 from dtower.tourney_results.constants import league_to_folder
@@ -13,6 +14,16 @@ def compute_sus_overview(df, *args, **kwargs):
         st.write(data.to_html(escape=False), unsafe_allow_html=True)
     else:
         st.subheader("No impossible avatars")
+
+    data = get_copper_to_champ(df)
+
+    if data:
+        st.subheader("Potential sus copper to champ (last 7 tourneys):")
+
+        for datum in data:
+            st.write(datum.to_html(escape=False), unsafe_allow_html=True)
+    else:
+        st.subheader("No potential unsussed copper to champ")
 
 
 def get_impossible_avatars(df):
@@ -41,12 +52,41 @@ def get_impossible_avatars(df):
     return avatars_df
 
 
+def get_copper_to_champ(df):
+    def make_sus_link(id, name, date):
+        return f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}&notes=potential coppper-champ {date.isoformat()}' target='_blank'>🔗 sus him</a>"
+
+    data = []
+
+    df = df[~df.id.isin(get_sus_ids())]
+
+    for id, player_df in df.groupby("id"):
+        leagues = sorted(player_df.league)
+
+        if len(leagues) < 7 and len(set(leagues)) >= 3 and "Copper" in leagues:
+            player_df = player_df[["id", "tourney_name", "wave", "position", "date", "league"]]
+            player_df["sus_him"] = [
+                make_sus_link(id, name, date)
+                for id, name, date in zip(
+                    player_df.id,
+                    player_df.tourney_name,
+                    player_df.date,
+                )
+            ]
+
+            data.append(player_df)
+
+    return data
+
+
 if __name__ == "__main__":
     last_patch = Patch.objects.last()
 
-    dfs = [load_tourney_results(league, patch_id=last_patch.id) for league in league_to_folder.values()]
+    dfs = [load_tourney_results(league, limit_no_results=7) for league in league_to_folder.values()]
 
     for df, league in zip(dfs, league_to_folder.keys()):
         df["league"] = league
+
+    df = pd.concat(dfs)
 
     compute_sus_overview(df)
