@@ -85,7 +85,7 @@ def get_copper_to_champ(df):
                 )
             ]
 
-            data.append(player_df)
+            data.append(player_df.sort_values("date", ascending=False).reset_index(drop=True))
 
     return data
 
