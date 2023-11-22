@@ -12,6 +12,7 @@ def compute_sus_overview(df, *args, **kwargs):
     if not data.empty:
         st.subheader("Impossible avatars not sused yet:")
         st.write(data.to_html(escape=False), unsafe_allow_html=True)
+        st.write("")
     else:
         st.subheader("No impossible avatars")
 
@@ -20,8 +21,17 @@ def compute_sus_overview(df, *args, **kwargs):
     if data:
         st.subheader("Potential sus copper to champ (last 7 tourneys):")
 
+        names = ["/".join(set(datum.tourney_name)) for datum in data]
+        leagues = ["/".join(set(datum.league)) for datum in data]
+
+        summary = pd.DataFrame({"name": names, "leagues": leagues, "sus_me_daddy": [datum.sus_him.iloc[0] for datum in data]})
+
+        st.write(summary.to_html(escape=False), unsafe_allow_html=True)
+        st.write("")
+
         for datum in data:
             st.write(datum.to_html(escape=False), unsafe_allow_html=True)
+            st.write("")
     else:
         st.subheader("No potential unsussed copper to champ")
 
