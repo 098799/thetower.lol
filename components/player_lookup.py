@@ -25,15 +25,7 @@ from dtower.tourney_results.constants import (
     stratas_boundaries,
     stratas_boundaries_018,
 )
-from dtower.tourney_results.data import (
-    get_banned_ids,
-    get_id_lookup,
-    get_patches,
-    get_player_list,
-    get_soft_banned_ids,
-    get_sus_ids,
-    load_tourney_results,
-)
+from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patches, get_player_list, get_soft_banned_ids, load_tourney_results
 from dtower.tourney_results.formatting import BASE_URL, color_position, html_to_rgb
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -233,10 +225,8 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     write_for_each_patch(patch_tab, player_df)
 
-    info_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
-    graph_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
-    raw_data_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
-    patch_tab.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+    for container in [info_tab, graph_tab, raw_data_tab, patch_tab]:
+        container.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
 
 
 def draw_info_tab(info_tab, user, player_df, hidden_features):
@@ -269,27 +259,68 @@ def draw_info_tab(info_tab, user, player_df, hidden_features):
 
 
 def write_for_each_patch(patch_tab, player_df):
-    real_name = player_df.iloc[0].real_name
+    wave_data = []
+    position_data = []
 
-    for patch in player_df.patch.unique():
-        patch_tab.subheader(
-            f"Patch 0.{patch.version_minor if patch.version_minor != 16 else '16-17'}.{patch.version_patch}" + ("" if not patch.interim else " interim")
-        )
-        patch_df = player_df[player_df.patch == patch]
-
-        patch_role_color = patch_df.iloc[-1].name_role.color
-
+    for patch, patch_df in player_df.groupby("patch"):
         max_wave = patch_df.wave.max()
-        max_pos = patch_df.position.min()
+        max_wave_data = patch_df[patch_df.wave == max_wave].iloc[0]
 
-        max_data = patch_df[patch_df.wave == max_wave].iloc[0]
+        max_pos = patch_df.position.min()
         max_pos_data = patch_df[patch_df.position == max_pos].iloc[0]
 
-        patch_tab.write(
-            f"Max wave for <font color='{patch_role_color}'>{real_name}</font> in champ during patch 0.{patch.version_minor}: <font color='{patch_role_color}'>**{max_wave}**</font>, as {max_data.tourney_name} on {max_data.date}"
-            f"<br>Best position for <font color='{patch_role_color}'>{real_name}</font> in champ during patch 0.{patch.version_minor}: <font color='{max_pos_data.position_role_color}'>**{max_pos}**</font>, as {max_pos_data.tourney_name} on {max_pos_data.date}",
-            unsafe_allow_html=True,
+        wave_data.append(
+            {
+                "patch": f"0.{patch.version_minor}.{patch.version_patch}",
+                "max_wave": max_wave,
+                "tourney_name": max_wave_data.tourney_name,
+                "date": max_wave_data.date,
+                "patch_role_color": max_wave_data.name_role.color,
+                "battle_conditions": ", ".join(max_wave_data.bcs.values_list("shortcut", flat=True)),
+            }
         )
+
+        position_data.append(
+            {
+                "patch": f"0.{patch.version_minor}.{patch.version_patch}",
+                "max_position": max_pos,
+                "tourney_name": max_pos_data.tourney_name,
+                "date": max_pos_data.date,
+                "max_position_color": max_pos_data.position_role_color,
+                "battle_conditions": ", ".join(max_pos_data.bcs.values_list("shortcut", flat=True)),
+            }
+        )
+
+    wave_df = pd.DataFrame(wave_data).sort_values("patch", ascending=False).reset_index(drop=True)
+    position_df = pd.DataFrame(position_data).sort_values("patch", ascending=False).reset_index(drop=True)
+
+    wave_tbdf = wave_df[["patch", "max_wave", "tourney_name", "date", "battle_conditions"]].style.apply(
+        lambda row: [
+            None,
+            f"color: {wave_df[wave_df.patch == row.patch].patch_role_color.iloc[0]}",
+            None,
+            None,
+            None,
+        ],
+        axis=1,
+    )
+
+    position_tbdf = position_df[["patch", "max_position", "tourney_name", "date", "battle_conditions"]].style.apply(
+        lambda row: [
+            None,
+            f"color: {position_df[position_df.patch == row.patch].max_position_color.iloc[0]}",
+            None,
+            None,
+            None,
+        ],
+        axis=1,
+    )
+
+    patch_tab.write("Best wave per patch")
+    patch_tab.dataframe(wave_tbdf)
+
+    patch_tab.write("Best position per patch")
+    patch_tab.dataframe(position_tbdf)
 
 
 def handle_start_date_loop(fig, graph_position_instead, tbdf):
@@ -353,7 +384,6 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
 
     best_position = tbdf.position.min()
     worst_position = tbdf.position.max()
-    print(best_position, worst_position)
 
     for strata in tops:
         if strata <= best_position:
@@ -370,7 +400,6 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
         end = tops[-1]
 
     stratas_for_plot = [strata for strata in tops if strata >= begin and strata <= end]
-    print(stratas_for_plot)
 
     all_results = df[df.date.isin(tbdf.date.unique())]
     all_results = all_results[all_results.position != -1]
