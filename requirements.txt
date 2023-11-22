@@ -17,7 +17,6 @@ seaborn==0.13.0
 
 # for the db and django
 Django==4.2.7
-django-colorfield==0.10.1
 django-extensions==3.2.3
 django-simple-history==3.4.0
 djangorestframework==3.14.0
