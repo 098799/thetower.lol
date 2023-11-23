@@ -190,18 +190,6 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
             .style.apply(
                 lambda row: [
                     f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}",
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                ]
-                + additional_format,
-                axis=1,
-            )
-            .apply(
-                lambda row: [
-                    None,
                     f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}",
                     None,
                     None,

@@ -3,10 +3,19 @@ import streamlit as st
 
 from dtower.tourney_results.constants import league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
+from dtower.tourney_results.formatting import color_position
 from dtower.tourney_results.models import PatchNew as Patch
+from dtower.tourney_results.models import Role
+
+league_to_color = {league: Role.objects.filter(league=league).last().color for league in league_to_folder.keys()}
 
 
 def compute_sus_overview(df, *args, **kwargs):
+    with open("style.css", "r") as infile:
+        table_styling = f"<style>{infile.read()}</style>"
+
+    st.write(table_styling, unsafe_allow_html=True)
+
     data = get_impossible_avatars(df)
 
     if not data.empty:
@@ -31,7 +40,11 @@ def compute_sus_overview(df, *args, **kwargs):
         st.write("")
 
         for datum in data:
-            st.write(datum.to_html(escape=False), unsafe_allow_html=True)
+            tbdf = datum.style.apply(lambda row: [None, None, None, None, None, f"color: {league_to_color[row.league]}", None], axis=1).map(
+                color_position, subset=["position"]
+            )
+
+            st.write(tbdf.to_html(escape=False), unsafe_allow_html=True)
             st.write("")
     else:
         st.subheader("No potential unsussed copper to champ")

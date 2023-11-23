@@ -23,6 +23,7 @@ from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     champ,
     data_folder_name_mapping,
+    how_many_results_debug,
     how_many_results_hidden_site,
     how_many_results_legacy,
     how_many_results_public_site,
@@ -150,6 +151,7 @@ def _load_tourney_results(
 ) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     league_switcher = os.environ.get("LEAGUE_SWITCHER")
+    debug = os.environ.get("DEBUG")
 
     dfs = []
 
@@ -160,7 +162,7 @@ def _load_tourney_results(
     for index, (result_file, date, bcs) in enumerate(result_files, 1):
         df = pd.read_csv(result_file, header=None)
 
-        cutoff = handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff)
+        cutoff = handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff, debug)
 
         df = df.iloc[:cutoff]
 
@@ -233,7 +235,7 @@ def _load_tourney_results(
     return df
 
 
-def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff):
+def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff, debug):
     if result_cutoff:
         cutoff = result_cutoff
     elif not hidden_features:
@@ -244,8 +246,13 @@ def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff
                 cutoff = how_many_results_public_site_other
         else:
             cutoff = how_many_results_legacy
+
     else:
         cutoff = how_many_results_hidden_site
+
+    if debug:  # watch out, debug for quick iteration
+        cutoff = how_many_results_debug
+
     return cutoff
 
 
