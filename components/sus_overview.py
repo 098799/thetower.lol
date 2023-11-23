@@ -49,14 +49,21 @@ def compute_sus_overview(df, *args, **kwargs):
 
             if reviewed:
                 Reviewed.objects.get_or_create(player_id=player_id)
+                pre = "<div class='desaturated transparent'>"
             else:
                 Reviewed.objects.filter(player_id=player_id).delete()
+                pre = ""
 
             tbdf = datum.style.apply(lambda row: [None, None, None, None, None, f"color: {league_to_color[row.league]}", None], axis=1).map(
                 color_position, subset=["position"]
             )
 
-            st.write(tbdf.to_html(escape=False), unsafe_allow_html=True)
+            if reviewed:
+                post = "</div>"
+            else:
+                post = ""
+
+            st.write(pre + tbdf.to_html(escape=False) + post, unsafe_allow_html=True)
             st.write("")
     else:
         st.subheader("No potential unsussed copper to champ")

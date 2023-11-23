@@ -62,3 +62,11 @@ tr:nth-child(even) {
         padding: 5px !important;
     }
 }
+
+.desaturated {
+    filter: grayscale(100%); /* Full desaturation */
+}
+
+.transparent {
+    opacity: 0.5; /* Adjust transparency as needed */
+}
