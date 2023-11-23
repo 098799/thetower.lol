@@ -36,3 +36,7 @@ class SusPerson(models.Model):
     banned = models.BooleanField(null=False, blank=False, default=False, help_text="Banned by support. For internal use.")
 
     history = HistoricalRecords()
+
+
+class Reviewed(models.Model):
+    player_id = models.CharField(max_length=32, primary_key=True, help_text="Player id from The Tower, pk")

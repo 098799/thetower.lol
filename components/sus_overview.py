@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 
+from dtower.sus.models import Reviewed
 from dtower.tourney_results.constants import league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position
@@ -40,6 +41,17 @@ def compute_sus_overview(df, *args, **kwargs):
         st.write("")
 
         for datum in data:
+            player_id = datum.id.iloc[0]
+            qs = Reviewed.objects.filter(player_id=player_id)
+
+            value = qs.exists()
+            reviewed = st.checkbox(f"Reviewed {player_id}", value=value)
+
+            if reviewed:
+                Reviewed.objects.get_or_create(player_id=player_id)
+            else:
+                Reviewed.objects.filter(player_id=player_id).delete()
+
             tbdf = datum.style.apply(lambda row: [None, None, None, None, None, f"color: {league_to_color[row.league]}", None], axis=1).map(
                 color_position, subset=["position"]
             )
