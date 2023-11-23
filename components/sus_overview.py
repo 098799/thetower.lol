@@ -34,8 +34,17 @@ def compute_sus_overview(df, *args, **kwargs):
         names = ["/".join(set(datum.tourney_name)) for datum in data]
         ids = ["/".join(set(datum.id)) for datum in data]
         leagues = ["/".join(set(datum.league)) for datum in data]
+        reviewed = ["✓" if Reviewed.objects.filter(player_id=datum.id.iloc[0]).exists() else "-" for datum in data]
 
-        summary = pd.DataFrame({"name": names, "ids": ids, "leagues": leagues, "sus_me_daddy": [datum.sus_him.iloc[0] for datum in data]})
+        summary = pd.DataFrame(
+            {
+                "name": names,
+                "ids": ids,
+                "leagues": leagues,
+                "reviewed": reviewed,
+                "sus_me": [datum.sus_him.iloc[0] for datum in data],
+            }
+        )
 
         st.write(summary.to_html(escape=False), unsafe_allow_html=True)
         st.write("")
