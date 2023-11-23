@@ -29,7 +29,22 @@ with open("SECRET_KEY", "r") as infile:
     SECRET_KEY = infile.read()
 
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "thetower.lol", "towerfans.lol", "65.109.4.244", "api.thetower.lol", "admin.thetower.lol"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "116.203.133.96",
+    "thetower.lol",
+    "towerfans.lol",
+    "65.109.4.244",
+    "api.thetower.lol",
+    "admin.thetower.lol",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://admin.thetower.lol",
+    "https://thetower.lol",
+    "https://api.thetower.lol",
+]
 
 
 # Application definition
