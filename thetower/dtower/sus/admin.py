@@ -1,15 +1,19 @@
-from django.contrib import admin, messages
+import os
+
+from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 
+BASE_HIDDEN_URL = os.getenv("BASE_HIDDEN_URL")
+
 
 @admin.register(SusPerson)
 class SusPersonAdmin(SimpleHistoryAdmin):
     def _link(self, obj):
-        return format_html(f"<a href='http://thetower.lol:8502/?player={obj.player_id}'>http://thetower.lol:8502/?player={obj.player_id}</a>")
+        return format_html(f"<a href='{BASE_HIDDEN_URL}?player={obj.player_id}'>{BASE_HIDDEN_URL}?player={obj.player_id}</a>")
 
     _link.short_description = "link"
 

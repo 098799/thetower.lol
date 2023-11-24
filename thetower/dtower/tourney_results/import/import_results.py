@@ -61,7 +61,7 @@ while True:
             ),
         )
 
-        # This is how we invalidate the cache on the hidden version of the site http://thetower.lol:8502/
+        # This is how we invalidate the cache on the hidden version of the site
         # Crude, there should be a better way
         subprocess.call("systemctl restart streamlit", shell=True)
 
