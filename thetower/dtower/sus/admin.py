@@ -13,7 +13,7 @@ BASE_HIDDEN_URL = os.getenv("BASE_HIDDEN_URL")
 @admin.register(SusPerson)
 class SusPersonAdmin(SimpleHistoryAdmin):
     def _link(self, obj):
-        return format_html(f"<a href='{BASE_HIDDEN_URL}?player={obj.player_id}'>{BASE_HIDDEN_URL}?player={obj.player_id}</a>")
+        return format_html(f"<a href='{BASE_HIDDEN_URL}Player%20Lookup?player={obj.player_id}'>{BASE_HIDDEN_URL}Player%20Lookup?player={obj.player_id}</a>")
 
     _link.short_description = "link"
 
