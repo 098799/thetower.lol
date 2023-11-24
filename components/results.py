@@ -20,7 +20,7 @@ class Results:
         self.congrats_toggle = False
 
     def _make_sus_link(self, id, name):
-        return f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}' target='_blank'>🔗 sus</a>"
+        return f"<a href='https://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}' target='_blank'>🔗 sus</a>"
 
     def _styler(self):
         with open("style.css", "r") as infile:

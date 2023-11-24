@@ -229,7 +229,7 @@ def draw_info_tab(info_tab, user, player_df, hidden_features):
 
     if hidden_features:
         info_tab.write(
-            f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={player_df.iloc[0].id}&name={escape(real_name)}' target='_blank'>🔗 sus me</a>",
+            f"<a href='https://admin.thetower.lol/admin/sus/susperson/add/?player_id={player_df.iloc[0].id}&name={escape(real_name)}' target='_blank'>🔗 sus me</a>",
             unsafe_allow_html=True,
         )
 

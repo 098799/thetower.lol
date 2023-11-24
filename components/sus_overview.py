@@ -80,7 +80,7 @@ def compute_sus_overview(df, *args, **kwargs):
 
 def get_impossible_avatars(df):
     def make_sus_link(id, name, avatar, date):
-        return f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}&notes=impossible avatar {avatar} {date.isoformat()}' target='_blank'>🔗 sus him</a>"
+        return f"<a href='https://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}&notes=impossible avatar {avatar} {date.isoformat()}' target='_blank'>🔗 sus him</a>"
 
     impossible_avatars = {
         25: "panda",
@@ -106,7 +106,7 @@ def get_impossible_avatars(df):
 
 def get_copper_to_champ(df):
     def make_sus_link(id, name, date):
-        return f"<a href='http://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}&notes=potential coppper-champ {date.isoformat()}' target='_blank'>🔗 sus him</a>"
+        return f"<a href='https://admin.thetower.lol/admin/sus/susperson/add/?player_id={id}&name={name}&notes=potential coppper-champ {date.isoformat()}' target='_blank'>🔗 sus him</a>"
 
     data = []
 
