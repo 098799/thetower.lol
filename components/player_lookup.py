@@ -186,7 +186,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     def dataframe_styler(player_df):
         return (
-            player_df[["tourney_name", "wave", "position", "date", "patch", "battle"] + additional_column]
+            player_df[["name", "wave", "#", "date", "patch", "battle"] + additional_column]
             .style.apply(
                 lambda row: [
                     f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}",
@@ -206,6 +206,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
     raw_data_tab.dataframe(dataframe_styler(player_df), use_container_width=True, height=800)
 
     small_df = player_df.loc[:9]
+    small_df = small_df.rename({"tourney_name": "name", "position": "#"}, axis=1)
     info_tab.write(
         '<div style="overflow-x:auto;">' + dataframe_styler(small_df).to_html(escape=False) + "</div>",
         unsafe_allow_html=True,
