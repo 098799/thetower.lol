@@ -199,14 +199,14 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
                 + additional_format,
                 axis=1,
             )
-            .map(color_position, subset=["position"])
+            .map(color_position, subset=["#"])
             # .bar(subset=["wave"], color="#222222", vmin=0, vmax=max(player_df.wave))
         )
 
+    player_df = player_df.rename({"tourney_name": "name", "position": "#"}, axis=1)
     raw_data_tab.dataframe(dataframe_styler(player_df), use_container_width=True, height=800)
 
     small_df = player_df.loc[:9]
-    small_df = small_df.rename({"tourney_name": "name", "position": "#"}, axis=1)
     info_tab.write(
         '<div style="overflow-x:auto;">' + dataframe_styler(small_df).to_html(escape=False) + "</div>",
         unsafe_allow_html=True,
@@ -255,14 +255,14 @@ def write_for_each_patch(patch_tab, player_df):
         max_wave = patch_df.wave.max()
         max_wave_data = patch_df[patch_df.wave == max_wave].iloc[0]
 
-        max_pos = patch_df.position.min()
-        max_pos_data = patch_df[patch_df.position == max_pos].iloc[0]
+        max_pos = patch_df["#"].min()
+        max_pos_data = patch_df[patch_df["#"] == max_pos].iloc[0]
 
         wave_data.append(
             {
                 "patch": f"0.{patch.version_minor}.{patch.version_patch}",
                 "max_wave": max_wave,
-                "tourney_name": max_wave_data.tourney_name,
+                "tourney_name": max_wave_data.name,
                 "date": max_wave_data.date,
                 "patch_role_color": max_wave_data.name_role.color,
                 "battle_conditions": ", ".join(max_wave_data.bcs.values_list("shortcut", flat=True)),
@@ -273,7 +273,7 @@ def write_for_each_patch(patch_tab, player_df):
             {
                 "patch": f"0.{patch.version_minor}.{patch.version_patch}",
                 "max_position": max_pos,
-                "tourney_name": max_pos_data.tourney_name,
+                "tourney_name": max_pos_data.name,
                 "date": max_pos_data.date,
                 "max_position_color": max_pos_data.position_role_color,
                 "battle_conditions": ", ".join(max_pos_data.bcs.values_list("shortcut", flat=True)),
