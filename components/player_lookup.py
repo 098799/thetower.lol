@@ -65,9 +65,9 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
     if df is None or league != preselected_league:
         limit_no_results = None
 
-        if hidden_features:  # limit amount of results to load faster the hidden site
+        if all_leagues:  # limit amount of results to load faster the hidden site
             user_col, checkbox_col = user_col.columns([5, 1])
-            limit_loading = checkbox_col.checkbox("3 month", value=True)
+            limit_loading = checkbox_col.checkbox("search last 3 months", value=True)
 
             if limit_loading:
                 limit_no_results = 8 * 3  # 3 months-ish for now
@@ -95,14 +95,19 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
     if not all_leagues:
         user = user_col.selectbox("Which user would you like to lookup?", user_choices + player_list)
     else:
-        id_ = user_col.selectbox("Lookup by id", [""] + sorted(all_user_ids))
+        sub_user_col, id_col, tourney_name_col = user_col.columns([1, 1, 1])
+        real_name = sub_user_col.selectbox("Lookup by real name", [""] + first_choices + ([name for name in all_real_names if name not in set(first_choices)]))
 
+        id_ = None
         tourney_name = None
 
-        if not id_:
-            tourney_name = user_col.selectbox("Lookup by tourney name", [""] + sorted(all_tourney_names))
+        if not real_name:
+            id_ = id_col.selectbox("Lookup by id", [""] + sorted(all_user_ids))
 
-        user = id_ or tourney_name
+            if not id_:
+                tourney_name = tourney_name_col.selectbox("Lookup by tourney name", [""] + sorted(all_tourney_names))
+
+        user = real_name or id_ or tourney_name
 
     # lol
     if user == "Soelent":
@@ -526,4 +531,4 @@ def find_player_across_leagues(user):
 
 if __name__ == "__main__":
     options = get_options(links=False)
-    compute_player_lookup(None, options=options)
+    compute_player_lookup(None, options=options, all_leagues=True)
