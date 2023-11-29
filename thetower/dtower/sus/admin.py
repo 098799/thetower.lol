@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
-from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
+from dtower.sus.models import KnownPlayer, PlayerId, Reviewed, SusPerson
 
 BASE_HIDDEN_URL = os.getenv("BASE_HIDDEN_URL")
 
@@ -80,3 +80,9 @@ class KnownPlayerAdmin(SimpleHistoryAdmin):
     #         raise ValueError("The first ID should be primary!")
 
     #     return super().save_model(request, obj, form, change)
+
+
+@admin.register(Reviewed)
+class ReviewedAdmin(SimpleHistoryAdmin):
+    list_display = ("player_id",)
+    search_display = ("player_id",)
