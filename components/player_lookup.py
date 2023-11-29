@@ -34,6 +34,9 @@ id_mapping = get_id_lookup()
 
 
 def compute_player_lookup(df, options: Options, all_leagues=False):
+    if options.current_player is not None:
+        all_leagues = False
+
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
     with open("style.css", "r") as infile:
