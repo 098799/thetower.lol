@@ -99,7 +99,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         user = user_col.selectbox("Which user would you like to lookup?", user_choices + player_list)
     else:
         sub_user_col, id_col, tourney_name_col = user_col.columns([1, 1, 1])
-        real_name = sub_user_col.selectbox("Lookup by real name", [""] + first_choices + ([name for name in all_real_names if name not in set(first_choices)]))
+        real_name = sub_user_col.selectbox("Lookup by real name", [""] + first_choices + list((all_real_names - set(first_choices))))
 
         id_ = None
         tourney_name = None
@@ -535,3 +535,17 @@ def find_player_across_leagues(user):
 if __name__ == "__main__":
     options = get_options(links=False)
     compute_player_lookup(None, options=options, all_leagues=True)
+
+
+# import cProfile
+# import pstats
+
+# os.environ["LEAGUE_SWITCHER"] = "true"
+# os.environ["HIDDEN_FEATURES"] = "false"
+
+# pr = cProfile.Profile()
+# pr.run("""compute_player_lookup(None, options=get_options(links=False), all_leagues=True)""")
+
+# stats = pstats.Stats(pr)
+# stats.sort_stats("cumtime")
+# stats.print_stats(50)
