@@ -8,7 +8,7 @@ from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 def compute_counts(df, options):
     df = df[~df.id.isin(get_sus_ids())]
 
-    counts_for = [1, 10, 25, 50, 100]
+    counts_for = [1, 10, 25, 50, 100, 200]
 
     results = []
 
