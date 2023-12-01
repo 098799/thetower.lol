@@ -218,4 +218,12 @@ all_relics = {
     31: ("PlasmaArc", "5%", "Lab Speed"),
     38: ("AncientTome", "2%", "Lab Speed"),
     39: ("Sundial", "5%", "Damage"),
+    40: ("Spooky Bat", "2%", "Crit"),
+    41: ("Man Skull", "5%", "Health"),
+    42: ("Cherry", "2%", "Abs def"),
+    43: ("Sakura Lantern", "5%", "Coins"),
+    44: ("Tower Latte", "2%", "DPM"),
+    45: ("Pumpkin", "5%", "Lab Speed"),
+    46: ("Holy Joystick", "2%", "Damage"),
+    47: ("Controller", "5%", "Crit"),
 }
