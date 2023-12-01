@@ -533,6 +533,7 @@ def find_player_across_leagues(user):
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="centered")
     options = get_options(links=False)
     compute_player_lookup(None, options=options, all_leagues=True)
 

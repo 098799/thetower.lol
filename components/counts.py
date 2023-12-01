@@ -27,6 +27,8 @@ def compute_counts(df, options):
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="wide")
+
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
-    df = load_tourney_results(league_to_folder[champ], result_cutoff=200)
+    df = load_tourney_results(league_to_folder[champ], result_cutoff=500)
     compute_counts(df, options)

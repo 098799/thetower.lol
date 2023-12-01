@@ -43,6 +43,7 @@ def compute_namechangers(df, options=None):
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="centered")
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     df = load_tourney_results(league_to_folder[champ])
     compute_namechangers(df, options)

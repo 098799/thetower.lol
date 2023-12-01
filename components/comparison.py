@@ -230,6 +230,7 @@ def get_player_df(all_real_names, all_tourney_names, all_user_ids, df, first_cho
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="centered")
     df = load_tourney_results("data")
     options = get_options(links=False)
     compute_comparison(df, options=options)

@@ -69,5 +69,6 @@ def compute_winners(df, options=None):
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="centered")
     df = load_tourney_results("data")
     compute_winners(df)

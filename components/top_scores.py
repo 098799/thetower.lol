@@ -60,6 +60,7 @@ def compute_top(df, options: Options):
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="centered")
     df = load_tourney_results("data")
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     compute_top(df, options)

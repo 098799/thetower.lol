@@ -38,6 +38,8 @@ def compute_overview(dfs, options: Options):
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="centered")
+
     df = [load_tourney_results(league, patch_id=Patch.objects.last().id, result_cutoff=20) for league in league_to_folder.values()]
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     compute_overview(df, options)
