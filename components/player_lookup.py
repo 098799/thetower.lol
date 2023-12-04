@@ -369,16 +369,6 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
     tops = position_stratas[:-1][::-1]
     strata_to_color = dict(zip(tops, position_colors[2:][::-1] + ["#FFFFFF"]))
 
-    # def guess_closest_tops(tbdf):
-    #     def find_two_closest(mean_last_position, tops):
-    #         for index, top in enumerate(tops):
-    #             if top > mean_last_position:
-    #                 return tops[index - 1], top
-
-    #     mean_last_position = tbdf[:5].position.mean()
-
-    #     return find_two_closest(mean_last_position, tops)
-
     best_position = tbdf.position.min()
     worst_position = tbdf.position.max()
 
@@ -398,7 +388,8 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
 
     stratas_for_plot = [strata for strata in tops if strata >= begin and strata <= end]
 
-    all_results = df[df.date.isin(tbdf.date.unique())]
+    champ_df = df[df.league == champ]  # backgrounds on graphs won't make sense for other leagues anyway
+    all_results = champ_df[champ_df.date.isin(tbdf.date.unique())]
     all_results = all_results[all_results.position != -1]
 
     min_by_strata = defaultdict(list)
