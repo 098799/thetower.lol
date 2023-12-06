@@ -77,9 +77,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
         if not all_leagues:
             df = load_tourney_results(folder=league_to_folder[league], limit_no_results=limit_no_results)
-
-            if league != champ:
-                df["league"] = league
+            df["league"] = league
         else:
             dfs = [load_tourney_results(league, limit_no_results=limit_no_results) for league in leagues]
 
