@@ -4,9 +4,10 @@ import subprocess
 import discord
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db.models import Q
 
 from discord_bot.util import role_log_room_id, testing_room_id
-from dtower.tourney_results.constants import champ
+from dtower.tourney_results.constants import champ, copper
 from dtower.tourney_results.models import TourneyResult
 
 intents = discord.Intents.default()
@@ -27,9 +28,6 @@ async def on_ready():
 
 @receiver(post_save, sender=TourneyResult)
 def recalculate_results(sender, instance, signal, created, update_fields, raw, using, **kwargs):
-    if os.getenv("DEBUG") == "true":
-        return
-
     if instance.public == False:
         # subprocess.call("systemctl restart streamlit", shell=True)
         ...
@@ -38,12 +36,14 @@ def recalculate_results(sender, instance, signal, created, update_fields, raw, u
             if instance.public == True:  # result release to the public
                 client.run(os.getenv("DISCORD_TOKEN"))
 
-            # if bcs := instance.conditions.all():
-            #     other_results = TourneyResult.objects.filter(date=instance.date)
+            if bcs := instance.conditions.all():
+                other_results = TourneyResult.objects.filter(~Q(league__in=[champ, copper]), date=instance.date)
 
-            #     for result in other_results:
-            #         for bc in bcs:
-            #             result.conditions.add(bc)
+                for result in other_results:
+                    result.conditions.clear()
+
+                    for bc in bcs:
+                        result.conditions.add(bc)
 
             # subprocess.call("systemctl restart streamlit2", shell=True)
             # subprocess.call("systemctl restart streamlit", shell=True)
