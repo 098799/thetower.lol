@@ -216,6 +216,8 @@ all_relics = {
     29: ("Neuron", "5%", "Health"),
     30: ("IonizedPlazma", "2%", "Abs def"),
     31: ("PlasmaArc", "5%", "Lab Speed"),
+    32: ("HoneyDrop", "2%", "Damage"),
+    33: ("Stinger", "5%", "Crit"),
     38: ("AncientTome", "2%", "Lab Speed"),
     39: ("Sundial", "5%", "Damage"),
     40: ("Spooky Bat", "2%", "Crit"),

@@ -38,6 +38,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         all_leagues = False
 
     hidden_features = os.environ.get("HIDDEN_FEATURES")
+    player_df = None
 
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
@@ -54,8 +55,6 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     if options.current_player is not None:
         user = options.current_player
-        find_player_across_leagues(user)
-
         found = find_player_across_leagues(user)
 
         if found is not None:
@@ -102,11 +101,16 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         id_ = None
         tourney_name = None
 
-        if not real_name:
+        if real_name:
+            player_df = df[df.real_name == real_name]
+        else:
             id_ = id_col.selectbox("Lookup by id", [""] + sorted(all_user_ids))
 
-            if not id_:
+            if id_:
+                player_df = df[df.id == id_mapping.get(id_, id_)]
+            else:
                 tourney_name = tourney_name_col.selectbox("Lookup by tourney name", [""] + sorted(all_tourney_names))
+                player_df = df[df.tourney_name == tourney_name]
 
         user = real_name or id_ or tourney_name
 
@@ -119,9 +123,12 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
 
-    if (player_df := _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is None:
-        st.write("User not found in this league.")
-        return
+    if player_df is None:
+        player_df = _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)
+
+        if player_df is None:
+            st.write("User not found in this league.")
+            return
 
     # todo should be extracted
     if len(player_df.id.unique()) >= 2:
@@ -493,21 +500,6 @@ def _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choice
         player_df = None
 
     return player_df
-
-
-def find_user(all_real_names, all_tourney_names, all_user_ids, df, first_choices, user):
-    if (player_df := _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
-        return df, player_df
-    else:
-        # expensive branch, maybe we gotta look in another league? Should only happen if the user is passed as query param
-        found = find_player_across_leagues(user)
-
-        if found is None:
-            raise ValueError(f"Could not find user {user}.")
-
-        df, player_df, league = found
-
-        return df, player_df
 
 
 def find_player_across_leagues(user):
