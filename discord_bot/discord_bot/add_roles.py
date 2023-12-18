@@ -1,3 +1,4 @@
+import datetime
 import logging
 from collections import defaultdict
 from math import ceil
@@ -18,6 +19,10 @@ from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.constants import champ, league_to_folder, leagues
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results__uncached
 from dtower.tourney_results.models import PatchNew as Patch
+from dtower.tourney_results.models import TourneyResult
+
+event_starts = datetime.date(2023, 11, 28)
+tourneys_this_event = TourneyResult.objects.filter(date__gt=event_starts, league=champ).count() % 4  # 4 tourneys per event
 
 
 async def handle_adding(client, limit, discord_ids=None, channel=None, debug_channel=None, verbose=None):
@@ -37,7 +42,8 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     all_leagues = leagues
 
-    patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=21, version_patch=0, interim=False)
+    # patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=21, version_patch=0, interim=False)
+    patch = sorted(await sync_to_async(Patch.objects.all, thread_sensitive=True)())[-1]
     dfs = {league: load_tourney_results__uncached(league_to_folder[league], patch_id=patch.id) for league in all_leagues}
 
     tower = await get_tower(client)
@@ -143,10 +149,18 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
         changed[champ].append((discord_player.name, rightful_role.name))
         return True
 
-    best_position_in_patch = df.position.min()
+    # best_position_in_patch = df.position.min()
+
+    dates_this_event = sorted(df.date.unique())[-tourneys_this_event:]
+    print(tourneys_this_event)
+    print(dates_this_event)
+
+    current_df = df[df["date"].isin(dates_this_event)]
+    best_position_in_event = current_df.position.min()
+    print(discord_player, best_position_in_event)
 
     for pos, role in tuple(position_roles.items())[1:]:
-        if best_position_in_patch <= pos:
+        if best_position_in_event <= pos:
             rightful_role = role
 
             if rightful_role in discord_player.roles:
@@ -208,7 +222,7 @@ async def handle_leagues(
             return None, skipped + 1
 
         if league == champ:
-            await handle_champ_position_roles(patch_df, roles, discord_player, changed, unchanged)
+            await handle_champ_position_roles(player_df, roles, discord_player, changed, unchanged)
             return discord_player, skipped  # don't give out wave role for champ
 
         current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
