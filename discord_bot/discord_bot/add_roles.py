@@ -23,6 +23,7 @@ from dtower.tourney_results.models import TourneyResult
 
 event_starts = datetime.date(2023, 11, 28)
 tourneys_this_event = TourneyResult.objects.filter(date__gt=event_starts, league=champ).count() % 4  # 4 tourneys per event
+dates_this_event = TourneyResult.objects.filter(date__gt=event_starts, league=champ).order_by("-date").values_list("date", flat=True)[:tourneys_this_event]
 
 
 async def handle_adding(client, limit, discord_ids=None, channel=None, debug_channel=None, verbose=None):
@@ -149,15 +150,8 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
         changed[champ].append((discord_player.name, rightful_role.name))
         return True
 
-    # best_position_in_patch = df.position.min()
-
-    dates_this_event = sorted(df.date.unique())[-tourneys_this_event:]
-    print(tourneys_this_event)
-    print(dates_this_event)
-
     current_df = df[df["date"].isin(dates_this_event)]
-    best_position_in_event = current_df.position.min()
-    print(discord_player, best_position_in_event)
+    best_position_in_event = current_df.position.min() if not current_df.empty else 100000
 
     for pos, role in tuple(position_roles.items())[1:]:
         if best_position_in_event <= pos:
@@ -174,6 +168,9 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
             logging.info(f"Added {role=} to {discord_player=}")
             changed[champ].append((discord_player.name, rightful_role.name))
             return True
+    else:
+        for role in [role for role in discord_player.roles if role.name.startswith("Top")]:
+            await discord_player.remove_roles(role)
 
     return False
 
@@ -194,6 +191,7 @@ async def handle_leagues(
     debug_channel,
 ):
     for league in all_leagues:
+        discord_player = member_lookup.get(int(player.discord_id))
         league_roles = await get_league_roles(roles, league)
         df = dfs[league]
 
@@ -215,8 +213,6 @@ async def handle_leagues(
         else:
             rightful_role = league_roles.get(250)
             wave_bottom = 250
-
-        discord_player = member_lookup.get(int(player.discord_id))
 
         if discord_player is None:
             return None, skipped + 1
