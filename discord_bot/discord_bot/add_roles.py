@@ -3,16 +3,15 @@ import logging
 from collections import defaultdict
 from math import ceil
 
-import discord
 from asgiref.sync import sync_to_async
-from asyncstdlib.functools import lru_cache
 from tqdm import tqdm
 
 from discord_bot.util import (
     get_all_members,
     get_safe_league_prefix,
     get_tower,
-    role_only_champ_tourney_roles_check,
+    position_role_ids,
+    role_id_to_position,
     role_prefix_and_only_tourney_roles_check,
 )
 from dtower.sus.models import KnownPlayer, PlayerId
@@ -43,7 +42,6 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     all_leagues = leagues
 
-    # patch = await sync_to_async(Patch.objects.get, thread_sensitive=True)(version_minor=21, version_patch=0, interim=False)
     patch = sorted(await sync_to_async(Patch.objects.all, thread_sensitive=True)())[-1]
     dfs = {league: load_tourney_results__uncached(league_to_folder[league], patch_id=patch.id) for league in all_leagues}
 
@@ -113,8 +111,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
 
 async def get_position_roles(roles):
-    filtered_roles = [role for role in roles if await role_only_champ_tourney_roles_check(role)]
-    return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
+    return {role_id_to_position[role.id]: role for role in roles if role.id in position_role_ids}
+    # filtered_roles = [role for role in roles if await role_only_champ_tourney_roles_check(role)]
+    # return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
 
 
 async def get_league_roles(roles, league):
@@ -161,7 +160,7 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
                 unchanged[champ].append((discord_player, rightful_role))
                 return True  # Don't actually do anything if the player already has the role
 
-            for role in [role for role in discord_player.roles if role.name.startswith("Top")]:
+            for role in [role for role in discord_player.roles if role.id in position_role_ids.values()]:
                 await discord_player.remove_roles(role)
 
             await discord_player.add_roles(rightful_role)
@@ -169,7 +168,7 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
             changed[champ].append((discord_player.name, rightful_role.name))
             return True
     else:
-        for role in [role for role in discord_player.roles if role.name.startswith("Top")]:
+        for role in [role for role in discord_player.roles if role.id in position_role_ids.values()]:
             await discord_player.remove_roles(role)
 
     return False

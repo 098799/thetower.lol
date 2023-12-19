@@ -56,8 +56,49 @@ async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
     return role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
 
 
+top1_id = "993947001232298126"
+top10_id = "1111025773856440410"
+top25_id = "1126993498294468709"
+top50_id = "1126993501238857749"
+top100_id = "1126993504330063934"
+top200_id = "1148207928407490570"
+top300_id = "1148207929665794068"
+top400_id = "1148207931024740412"
+top500_id = "1148207932173987870"
+top600_id = "1111011421141086289"
+top700_id = "1111011432738344960"
+top800_id = "1077324438657306744"
+top900_id = "1077324395598594150"
+top1000_id = "993946810240483347"
+top1500_id = "993946632120975512"
+top2000_id = "993946090061713571"
+
+
+position_role_ids = {
+    1: top1_id,
+    10: top10_id,
+    25: top25_id,
+    50: top50_id,
+    100: top100_id,
+    200: top200_id,
+    300: top300_id,
+    400: top400_id,
+    500: top500_id,
+    600: top600_id,
+    700: top700_id,
+    800: top800_id,
+    900: top900_id,
+    1000: top1000_id,
+    1500: top1500_id,
+    2000: top2000_id,
+}
+
+
+role_id_to_position = {value: key for key, value in position_role_ids.items()}
+
+
 async def role_only_champ_tourney_roles_check(role):
-    return re.findall(rf"{top}\s\d", role.name.strip())
+    return role in position_role_ids.values()
 
 
 async def get_all_members(client):
