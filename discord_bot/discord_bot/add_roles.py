@@ -6,14 +6,7 @@ from math import ceil
 from asgiref.sync import sync_to_async
 from tqdm import tqdm
 
-from discord_bot.util import (
-    get_all_members,
-    get_safe_league_prefix,
-    get_tower,
-    position_role_ids,
-    role_id_to_position,
-    role_prefix_and_only_tourney_roles_check,
-)
+from discord_bot.util import get_all_members, get_safe_league_prefix, get_tower, role_id_to_position, role_prefix_and_only_tourney_roles_check
 from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.constants import champ, league_to_folder, leagues
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results__uncached
@@ -111,7 +104,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
 
 async def get_position_roles(roles):
-    return {role_id_to_position[role.id]: role for role in roles if role.id in position_role_ids}
+    return {role_id_to_position[role.id]: role for role in roles if role.id in role_id_to_position}
     # filtered_roles = [role for role in roles if await role_only_champ_tourney_roles_check(role)]
     # return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
 
@@ -152,7 +145,7 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
     current_df = df[df["date"].isin(dates_this_event)]
     best_position_in_event = current_df.position.min() if not current_df.empty else 100000
 
-    for pos, role in tuple(position_roles.items())[1:]:
+    for pos, role in sorted(tuple(position_roles.items()))[1:]:
         if best_position_in_event <= pos:
             rightful_role = role
 
@@ -160,7 +153,7 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
                 unchanged[champ].append((discord_player, rightful_role))
                 return True  # Don't actually do anything if the player already has the role
 
-            for role in [role for role in discord_player.roles if role.id in position_role_ids.values()]:
+            for role in [role for role in discord_player.roles if role.id in role_id_to_position]:
                 await discord_player.remove_roles(role)
 
             await discord_player.add_roles(rightful_role)
@@ -168,7 +161,7 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
             changed[champ].append((discord_player.name, rightful_role.name))
             return True
     else:
-        for role in [role for role in discord_player.roles if role.id in position_role_ids.values()]:
+        for role in [role for role in discord_player.roles if role.id in role_id_to_position]:
             await discord_player.remove_roles(role)
 
     return False
