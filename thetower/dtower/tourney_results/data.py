@@ -300,7 +300,7 @@ def get_player_list(df):
     first_choices = list(df[(df.date == last_date) & ~(df.id.isin(sus_ids))].real_name)
     set_of_first_choices = set(first_choices)
     all_real_names = set(df.real_name.unique()) - set_of_first_choices
-    all_tourney_names = set(df.tourney_name.unique()) - set_of_first_choices
+    all_tourney_names = set(df.tourney_name.unique())
     all_user_ids = df.raw_id.unique().tolist()
     last_top_scorer = df[(df.date == sorted(df.date.unique())[-1]) & (df.position == 1)].tourney_name.iloc[0]
     return first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer
