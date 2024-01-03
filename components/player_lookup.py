@@ -69,10 +69,10 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
         if all_leagues:  # limit amount of results to load faster the hidden site
             user_col, checkbox_col = user_col.columns([5, 1])
-            limit_loading = checkbox_col.checkbox("search last 3 months", value=True)
+            limit_loading = checkbox_col.slider("last x months", min_value=3, max_value=18, value=3, step=3)
 
             if limit_loading:
-                limit_no_results = 8 * 3  # 3 months-ish for now
+                limit_no_results = 8 * limit_loading
 
         if not all_leagues:
             df = load_tourney_results(folder=league_to_folder[league], limit_no_results=limit_no_results)
