@@ -14,8 +14,6 @@ from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult
 
 event_starts = datetime.date(2023, 11, 28)
-tourneys_this_event = TourneyResult.objects.filter(date__gt=event_starts, league=champ).count() % 4  # 4 tourneys per event
-dates_this_event = TourneyResult.objects.filter(date__gt=event_starts, league=champ).order_by("-date").values_list("date", flat=True)[:tourneys_this_event]
 
 
 async def handle_adding(client, limit, discord_ids=None, channel=None, debug_channel=None, verbose=None):
@@ -46,6 +44,10 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     player_iter = players.order_by("-id")[:limit] if limit else players.order_by("-id")
     all_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(player__in=players)
 
+    tourneys_champ = await sync_to_async(TourneyResult.objects.filter, thread_sensitive=True)(date__gt=event_starts, league=champ)
+    tourneys_this_event = tourneys_champ.count() % 4  # 4 tourneys per event
+    dates_this_event = tourneys_champ.order_by("-date").values_list("date", flat=True)[:tourneys_this_event]
+
     ids_by_player = defaultdict(set)
 
     for id in all_ids:
@@ -65,6 +67,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
             channel,
             patch,
             player,
+            dates_this_event,
             roles,
             skipped,
             member_lookup,
@@ -93,12 +96,15 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
         chunk_by = 10
 
-        for chunk in range(ceil(len(added_roles) / chunk_by)):
-            added_roles_message = "\n".join(added_roles[chunk * chunk_by : (chunk + 1) * chunk_by])
-            await channel.send(added_roles_message)
+        try:
+            for chunk in range(ceil(len(added_roles) / chunk_by)):
+                added_roles_message = "\n".join(added_roles[chunk * chunk_by : (chunk + 1) * chunk_by])
+                await channel.send(added_roles_message)
 
-            if channel != debug_channel:
-                await debug_channel.send(added_roles_message)
+                if channel != debug_channel:
+                    await debug_channel.send(added_roles_message)
+        except Exception:
+            pass
 
     logging.info("**********Done**********")
 
@@ -123,7 +129,7 @@ async def get_league_roles(roles, league):
     )
 
 
-async def handle_champ_position_roles(df, roles, discord_player, changed, unchanged) -> bool:
+async def handle_champ_position_roles(df, roles, discord_player, changed, unchanged, dates_this_event) -> bool:
     position_roles = await get_position_roles(roles)
     logging.debug(f"{discord_player=} {df.position=}")
 
@@ -176,6 +182,7 @@ async def handle_leagues(
     channel,
     patch,
     player,
+    dates_this_event,
     roles,
     skipped,
     member_lookup,
@@ -210,7 +217,7 @@ async def handle_leagues(
             return None, skipped + 1
 
         if league == champ:
-            await handle_champ_position_roles(player_df, roles, discord_player, changed, unchanged)
+            await handle_champ_position_roles(player_df, roles, discord_player, changed, unchanged, dates_this_event)
             return discord_player, skipped  # don't give out wave role for champ
 
         current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
