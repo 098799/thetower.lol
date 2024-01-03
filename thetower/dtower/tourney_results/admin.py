@@ -22,6 +22,11 @@ def restart_django(modeladmin, request, queryset):
     subprocess.call("systemctl restart django", shell=True)
 
 
+@admin.action(description="Restart discord bot")
+def restart_discord_bot(modeladmin, request, queryset):
+    subprocess.call("systemctl restart discord_bot", shell=True)
+
+
 @admin.action(description="Publicize")
 def publicize(modeladmin, request, queryset):
     for item in queryset:
@@ -58,7 +63,13 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
 
     filter_horizontal = ("conditions",)
 
-    actions = [publicize, restart_public_app, restart_hidden_app, restart_django]
+    actions = [
+        publicize,
+        restart_public_app,
+        restart_hidden_app,
+        restart_django,
+        restart_discord_bot,
+    ]
 
 
 @admin.register(PatchNew)
