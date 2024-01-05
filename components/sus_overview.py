@@ -115,7 +115,7 @@ def get_copper_to_champ(df):
     for id, player_df in df.groupby("id"):
         leagues = sorted(player_df.league)
 
-        if len(leagues) < 7 and len(set(leagues)) >= 3 and "Copper" in leagues:
+        if len(leagues) < 7 and len(set(leagues)) >= 4 and "Copper" in leagues:
             player_df = player_df[["id", "tourney_name", "wave", "position", "date", "league"]]
             player_df["sus_him"] = [
                 make_sus_link(id, name, date)
