@@ -484,11 +484,11 @@ def handle_colors_dependant_on_patch(df, patch, player_df):
 
 def handle_sus_or_banned_ids(info_tab, id_, sus_ids):
     if id_ in get_banned_ids():
-        info_tab.warning("This player is banned by the Support team.")
+        info_tab.warning("This player is under review by the Support team.")
     if id_ in get_soft_banned_ids():
-        info_tab.warning("This player is banned.")
+        info_tab.warning("This player is under review by the Support team.")
     if id_ in sus_ids:
-        info_tab.error("This player is considered sus.")
+        info_tab.error("This player is under review by the Support team.")
 
 
 def _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user):
