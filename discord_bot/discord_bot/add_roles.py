@@ -45,7 +45,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     all_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(player__in=players)
 
     tourneys_champ = await sync_to_async(TourneyResult.objects.filter, thread_sensitive=True)(date__gt=event_starts, league=champ)
-    tourneys_this_event = tourneys_champ.count() % 4  # 4 tourneys per event
+    tourneys_this_event = tourneys_champ.count() % 4 or 4  # 4 tourneys per event
     dates_this_event = tourneys_champ.order_by("-date").values_list("date", flat=True)[:tourneys_this_event]
 
     ids_by_player = defaultdict(set)
