@@ -20,7 +20,9 @@ async def validate_player_id(client, message):
             player, created = await sync_to_async(KnownPlayer.objects.get_or_create, thread_sensitive=True)(
                 discord_id=discord_id, defaults=dict(approved=True, name=message.author.name)
             )
-            await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(id=message.content, player_id=player.id, defaults=dict(primary=True))
+            await sync_to_async(PlayerId.objects.update_or_create, thread_sensitive=True)(
+                id=message.content.upper(), player_id=player.id, defaults=dict(primary=True)
+            )
             discord_player = await (await get_tower(client)).fetch_member(player.discord_id)
             await handle_role_present(client, discord_player)
             await message.add_reaction("✅")
