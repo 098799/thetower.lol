@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 
+import plotly.express as px
 import streamlit as st
 
 from dtower.tourney_results.constants import Graph, Options, all_relics, champ, league_to_folder, sus_person
@@ -231,6 +232,13 @@ class Results:
         date = self.top_of_results()
 
         filtered_df = self.df[self.df["date"] == date].reset_index(drop=True)
+
+        with st.expander("Wave distribution"):
+            bin_width = st.slider("Bin width", min_value=10, max_value=100, step=10, value=10)
+            histogram_data = filtered_df[~filtered_df.id.isin(get_sus_ids())].wave // bin_width * bin_width
+            fig = px.histogram(histogram_data, nbins=len(set(histogram_data)))
+
+            st.plotly_chart(fig)
 
         step = 100
         total_results = len(filtered_df)
