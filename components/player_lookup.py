@@ -195,7 +195,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     player_df["average"] = player_df.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
     player_df = player_df.reset_index(drop=True)
-    player_df["battle"] = ["/".join([bc.shortcut for bc in bcs]) for bcs in player_df.bcs]
+    player_df["battle"] = [" / ".join([bc.shortcut for bc in bcs]) for bcs in player_df.bcs]
 
     def dataframe_styler(player_df):
         return (
