@@ -7,7 +7,6 @@ django.setup()
 
 import streamlit as st
 
-
 st.set_page_config(
     page_title="The Tower top200 tourney results",
     layout="centered",
@@ -34,6 +33,7 @@ pages = [
     Page("components/namechangers.py", "Namechangers", "💩"),
     Page("components/various.py", "Relics and Avatars", "👽"),
     Page("components/counts.py", "Counts", "🐈"),
+    Page("components/fallen_defenders.py", "Fallen defenders", "🪦"),
     Page("components/about.py", "About", "👴"),
 ]
 
