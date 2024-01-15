@@ -7,9 +7,11 @@ from dtower.tourney_results.data import get_sus_data
 
 def compute_about(*args, **kwargs):
     st.title("About")
-    st.markdown("Site is operated by `098799` and `andreasjn` on discord.")
+    st.markdown("Site by <a href='mailto:admin@thetower.lol'>`098799`</a>.")
+    st.markdown("Thanks to `andreasjn` for the help with the discord bot.")
     st.markdown("Thanks to `Milamber33` for a lot of help with css and other things.")
-    st.markdown("Thanks to `Jim808` and `ObsUK` for a graph ideas and encouragement.")
+    st.markdown("Thanks to `Jim808`, `ObsUK` and `Bartek` for a graph ideas and encouragement.")
+    st.markdown("Thanks to `Fnord`, `Neothin87`, `imsaguy` and others for the encouragement, ideas, security audits.")
     st.markdown("Thanks to `Pog` and the discord mods for all the work on sus reports.")
 
     st.header("Sus people")
