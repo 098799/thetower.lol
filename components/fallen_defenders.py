@@ -69,7 +69,7 @@ def compute_fallen_defenders(df):
     champ_col.write("All hail fallen champions 🫡")
     other_col.write("May your labs still chug along")
 
-    champ_col.dataframe(tbdf_champ.hide("Best wave", axis=1), hide_index=True)
+    champ_col.dataframe(tbdf_champ, hide_index=True)
     other_col.dataframe(tbdf_other, hide_index=True)
 
 
