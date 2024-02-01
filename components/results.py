@@ -137,18 +137,32 @@ class Results:
                         to_be_displayed.loc[to_be_displayed[to_be_displayed.position == position].index[0], "real_name"] + medal
                     )
 
+        def make_avatar(avatar_id):
+            if avatar_id == -1:
+                return ""
+
+            if avatar_id in [35, 36]:
+                extension = "webp"
+            else:
+                extension = "png"
+
+            return f"<img src='./app/static/Tower_Skins/{avatar_id}.{extension}' width='32'>"
+
+        def make_relic(relic_id):
+            if relic_id == -1 or relic_id not in all_relics:
+                return ""
+
+            if relic_id in [48, 49, 52, 53]:
+                extension = "webp"
+            else:
+                extension = "png"
+
+            return f"<img src='./app/static/Tower_Relics/{relic_id}.{extension}' width='32' title='{all_relics[relic_id][0]}, {all_relics[relic_id][1]} {all_relics[relic_id][2]}'>"
+
         to_be_displayed["real_name"] = [sus_person if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
         to_be_displayed["tourney_name"] = [strike(name) if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
-        to_be_displayed["avatar"] = to_be_displayed.avatar.map(
-            lambda avatar_id: f"<img src='./app/static/Tower_Skins/{avatar_id}.png' width='32'>" if avatar_id != -1 else ""
-        )
-        to_be_displayed["relic"] = to_be_displayed.relic.map(
-            lambda relic_id: (
-                f"<img src='./app/static/Tower_Relics/{relic_id}.png' width='32' title='{all_relics[relic_id][0]}, {all_relics[relic_id][1]} {all_relics[relic_id][2]}'>"
-            )
-            if relic_id != -1 and relic_id in all_relics
-            else ""
-        )
+        to_be_displayed["avatar"] = to_be_displayed.avatar.map(make_avatar)
+        to_be_displayed["relic"] = to_be_displayed.relic.map(make_relic)
 
         return to_be_displayed.rename(columns={"position": "#", "verified": "✓", "avatar": "⬡"})
 

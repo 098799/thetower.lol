@@ -105,6 +105,10 @@ def execute(league):
     print(f"Successfully stored file {file_path}")
 
 
+def check():
+    print(make_request("Champion")[:4000])
+
+
 if __name__ == "__main__":
     while True:
         for league in ["Champion", "Platinum", "Gold", "Silver", "Copper"]:

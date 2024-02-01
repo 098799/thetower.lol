@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -34,6 +36,9 @@ class SusPerson(models.Model):
     )
     soft_banned = models.BooleanField(null=False, blank=False, default=False, help_text="Soft-banned by Pog. For internal use.")
     banned = models.BooleanField(null=False, blank=False, default=False, help_text="Banned by support. For internal use.")
+
+    created = models.DateTimeField(auto_now_add=datetime.datetime.now, null=False, editable=False, db_index=True)
+    modified = models.DateTimeField(auto_now=datetime.datetime.now, null=False, editable=False)
 
     history = HistoricalRecords()
 

@@ -18,6 +18,9 @@ class SusPersonAdmin(SimpleHistoryAdmin):
     _link.short_description = "link"
 
     list_display = (
+        "created",
+        "modified",
+        "player_id",
         "player_id",
         "name",
         "sus",
