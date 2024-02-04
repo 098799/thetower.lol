@@ -10,7 +10,7 @@ class KnownPlayer(models.Model):
     approved = models.BooleanField(blank=False, null=False, default=True, help_text="Has this entry been validated?")
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} ({self.ids.filter(primary=True).first().id if self.ids.filter(primary=True).first() else ''})"
 
 
 # class RoleAward(models.Model):

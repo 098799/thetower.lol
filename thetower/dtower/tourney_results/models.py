@@ -2,6 +2,7 @@ from colorfield.fields import ColorField
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+from dtower.sus.models import KnownPlayer
 from dtower.tourney_results.constants import leagues_choices, wave_border_choices
 
 
@@ -11,9 +12,7 @@ class PatchNew(models.Model):
 
     version_minor = models.SmallIntegerField(blank=False, null=False, help_text="The xx in 0.xx version.")
     version_patch = models.SmallIntegerField(blank=False, null=False, help_text="The yy in 0.xx.yy version.", default=0)
-    interim = models.BooleanField(
-        blank=False, null=False, default=False, help_text="Maybe it's just an interim version between the patches?"
-    )
+    interim = models.BooleanField(blank=False, null=False, default=False, help_text="Maybe it's just an interim version between the patches?")
     start_date = models.DateField(blank=False, null=False, help_text="First tourney when patch was enforced.")
     end_date = models.DateField(blank=False, null=False, help_text="Last tourney when patch was in use.")
 
@@ -53,9 +52,7 @@ class PatchNew(models.Model):
 
 
 class Role(models.Model):
-    wave_bottom = models.SmallIntegerField(
-        blank=False, null=False, choices=[(wave, wave) for wave in wave_border_choices]
-    )
+    wave_bottom = models.SmallIntegerField(blank=False, null=False, choices=[(wave, wave) for wave in wave_border_choices])
     wave_top = models.SmallIntegerField(blank=False, null=False, choices=[(wave, wave) for wave in wave_border_choices])
     patch = models.ForeignKey(
         PatchNew,
@@ -134,9 +131,7 @@ class BattleCondition(models.Model):
 
 
 class TourneyResult(models.Model):
-    result_file = models.FileField(
-        upload_to="uploads/", blank=False, null=False, help_text="CSV file from discord with results."
-    )
+    result_file = models.FileField(upload_to="uploads/", blank=False, null=False, help_text="CSV file from discord with results.")
     date = models.DateField(blank=False, null=False, help_text="Date of the tournament")
     league = models.CharField(
         blank=False,
@@ -145,17 +140,20 @@ class TourneyResult(models.Model):
         help_text="Which league are those results from?",
         max_length=16,
     )
-    public = models.BooleanField(
-        blank=False, null=False, default=False, help_text="Are the results shown to everyone or just to review?"
-    )
-    conditions = models.ManyToManyField(
-        BattleCondition, related_name="results", help_text="Battle conditions for the tourney."
-    )
+    public = models.BooleanField(blank=False, null=False, default=False, help_text="Are the results shown to everyone or just to review?")
+    conditions = models.ManyToManyField(BattleCondition, related_name="results", help_text="Battle conditions for the tourney.")
 
     history = HistoricalRecords()
 
     def __str__(self):
         return f"({self.pk}): {self.league} {self.date.isoformat()}"
+
+
+class NameDayWinner(models.Model):
+    winner = models.ForeignKey(KnownPlayer, null=False, blank=False, related_name="name_day_winners", on_delete=models.CASCADE)
+    tourney = models.ForeignKey(TourneyResult, null=False, blank=False, related_name="name_day_winners", on_delete=models.CASCADE)
+    winning_nickname = models.CharField(max_length=32, null=False, blank=False, help_text="Tourney name that won that day")
+    nameday_theme = models.CharField(max_length=32, null=False, blank=False)
 
 
 # class TourneyRow(models.Model):

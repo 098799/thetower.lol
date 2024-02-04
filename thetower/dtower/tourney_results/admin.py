@@ -4,7 +4,9 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
-from dtower.tourney_results.models import BattleCondition, PatchNew, PositionRole, Role, TourneyResult
+from dtower.sus.models import KnownPlayer
+from dtower.tourney_results.constants import champ
+from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult
 
 
 @admin.action(description="Restart the public app")
@@ -153,3 +155,27 @@ class BattleConditionAdmin(SimpleHistoryAdmin):
         "name",
         "shortcut",
     )
+
+
+@admin.register(NameDayWinner)
+class NameDayWinnerAdmin(SimpleHistoryAdmin):
+    list_display = (
+        "winner",
+        "tourney",
+        "winning_nickname",
+        "nameday_theme",
+    )
+
+    search_fields = (
+        "winning_nickname",
+        "winner__name",
+        "winner__discord_id",
+        "nameday_theme",
+    )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "winner":
+            kwargs["queryset"] = KnownPlayer.objects.filter(approved=True).order_by("name")
+        elif db_field.name == "tourney":
+            kwargs["queryset"] = TourneyResult.objects.filter(public=True, league=champ).order_by("-date")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
