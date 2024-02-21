@@ -1,6 +1,7 @@
 import datetime
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from dtower.tourney_results.constants import champ, league_to_folder
@@ -45,6 +46,7 @@ def compute_fallen_defenders(df):
                         "wave_color": wave_color,
                         "Best #": best_position,
                         "position_color": position_color,
+                        "tourneys_attended": sorted(pdf.date.unique()),
                     }
                 )
 
@@ -69,8 +71,50 @@ def compute_fallen_defenders(df):
     champ_col.write("All hail fallen champions 🫡")
     other_col.write("May your labs still chug along")
 
-    champ_col.dataframe(tbdf_champ, hide_index=True)
-    other_col.dataframe(tbdf_other, hide_index=True)
+    champ_col.dataframe(tbdf_champ, hide_index=True, height=600)
+    other_col.dataframe(tbdf_other, hide_index=True, height=600)
+
+    def gantt(df):
+        def get_borders(dates: list[datetime.date]) -> list[tuple[datetime.date, datetime.date]]:
+            """Get start and finish of each interval. Assuming dates are sorted and tourneys are max 4 days apart."""
+
+            borders = []
+
+            start = dates[0]
+
+            for date, next_date in zip(dates[1:], dates[2:]):
+                if next_date - date > datetime.timedelta(days=4):
+                    end = date
+                    borders.append((start, end))
+                    start = next_date
+
+            borders.append((start, dates[-1]))
+
+            return borders
+
+        gantt_data = []
+
+        for i, row in df.iterrows():
+            borders = get_borders(row.tourneys_attended)
+            name = row.Player
+
+            for start, end in borders:
+                gantt_data.append(
+                    {
+                        "Player": name,
+                        "Start": start,
+                        "Finish": end,
+                        "Resource": name,
+                    }
+                )
+
+        gantt_df = pd.DataFrame(gantt_data)
+
+        fig = px.timeline(gantt_df, x_start="Start", x_end="Finish", y="Player", color="Resource")
+        fig.update_yaxes(autorange="reversed")
+        return fig
+
+    st.plotly_chart(gantt(fallen_champ))
 
 
 if __name__ == "__main__":
