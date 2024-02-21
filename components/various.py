@@ -11,6 +11,7 @@ from dtower.tourney_results.models import PatchNew as Patch
 def compute_various(df, options):
     width = 48
     legend_width = 128
+    numerals = ["1st", "2nd", "3rd"]
 
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
@@ -26,14 +27,16 @@ def compute_various(df, options):
         counter = Counter([avatar for avatar in subdf.avatar if avatar])
         podium = [avatar for avatar, count in counter.most_common(3)]
         counts = [int(count / len(subdf) * 100) for _, count in counter.most_common(3)]
-        podiums.append(
-            {
-                "date": date,
-                "1st": f"<img src='./app/static/Tower_Skins/{podium[0]}.png' width='{width}'> -- {counts[0]}%",
-                "2nd": f"<img src='./app/static/Tower_Skins/{podium[1]}.png' width='{width}'> -- {counts[1]}%",
-                "3rd": f"<img src='./app/static/Tower_Skins/{podium[2]}.png' width='{width}'> -- {counts[2]}%",
-            }
-        )
+
+        get_extension = lambda x: "webp" if x in [35, 36] else "png"
+
+        pod = {"date": date}
+        pod |= {
+            numeral: f"<img src='./app/static/Tower_Skins/{spot}.{get_extension(spot)}' width='{width}'> -- {count}%"
+            for spot, count, numeral in zip(podium, counts, numerals)
+        }
+
+        podiums.append(pod)
 
     podium_df = pd.DataFrame(podiums).set_index("date")
     podium_df.index.name = None
@@ -54,14 +57,15 @@ def compute_various(df, options):
         podium_relics_1 = [all_relics[pod][1] if pod in all_relics else "" for pod in podium]
         podium_relics_2 = [all_relics[pod][2] if pod in all_relics else "" for pod in podium]
 
-        podiums.append(
-            {
-                "date": date,
-                "1st": f"<img src='./app/static/Tower_Relics/{podium[0]}.png' width='{width}' title='{podium_titles[0]}, {podium_relics_1[0]} {podium_relics_2[0]}'> -- {counts[0]}%",
-                "2nd": f"<img src='./app/static/Tower_Relics/{podium[1]}.png' width='{width}' title='{podium_titles[1]}, {podium_relics_1[1]} {podium_relics_2[1]}'> -- {counts[1]}%",
-                "3rd": f"<img src='./app/static/Tower_Relics/{podium[2]}.png' width='{width}' title='{podium_titles[2]}, {podium_relics_1[2]} {podium_relics_2[2]}'> -- {counts[2]}%",
-            }
-        )
+        pod = {"date": date}
+
+        get_extension = lambda x: "webp" if x in [48, 49, 52, 53] else "png"
+
+        pod |= {
+            numeral: f"<img src='./app/static/Tower_Relics/{spot}.{get_extension(spot)}' width='{width}' title='{title}, {relic_1} {relic_2}'> -- {counts[0]}%"
+            for spot, title, relic_1, relic_2, numeral in zip(podium, podium_titles, podium_relics_1, podium_relics_2, numerals)
+        }
+        podiums.append(pod)
 
     podium_df = pd.DataFrame(podiums).set_index("date")
     podium_df.index.name = None
