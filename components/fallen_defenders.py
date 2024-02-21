@@ -104,17 +104,20 @@ def compute_fallen_defenders(df):
                         "Player": name,
                         "Start": start,
                         "Finish": end,
-                        "Resource": name,
+                        "Champion": name,
                     }
                 )
 
         gantt_df = pd.DataFrame(gantt_data)
 
-        fig = px.timeline(gantt_df, x_start="Start", x_end="Finish", y="Player", color="Resource")
+        fig = px.timeline(gantt_df, x_start="Start", x_end="Finish", y="Player", color="Champion")
         fig.update_yaxes(autorange="reversed")
         return fig
 
     st.plotly_chart(gantt(fallen_champ))
+
+    show_others = st.slider("Other fallen defenders", 0, len(fallen_other), (0, 40))
+    st.plotly_chart(gantt(fallen_other[show_others[0] : show_others[1]]))
 
 
 if __name__ == "__main__":
