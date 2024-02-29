@@ -8,3 +8,10 @@ uploads
 results_cache
 backups
 unrelated_scripts
+components/static/
+thetower/dtower/uploads_500*
+Tower_Relics/
+Tower_Skins/
+try_tesseract
+htmx_components/
+secrets
