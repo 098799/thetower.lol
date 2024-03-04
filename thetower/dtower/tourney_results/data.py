@@ -112,6 +112,10 @@ def get_player_id_lookup():
     return dict(PlayerId.objects.filter(player__approved=True).values_list("id", "player__name"))
 
 
+def get_player_id_approved_lookup():
+    return dict(PlayerId.objects.filter(player__approved=True).values_list("id", "player__approved"))
+
+
 def get_id_lookup():
     player_primary_id = {
         name: id_ for id_, name, primary in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name", "primary") if primary
@@ -329,8 +333,12 @@ def get_soft_banned_ids():
     return set(SusPerson.objects.filter(soft_banned=True).values_list("player_id", flat=True))
 
 
-def get_results_for_patch(path: Patch):
-    return TourneyResult.objects.filter(date__gte=path.start_date, date__lte=path.end_date)
+def get_results_for_patch(path: Patch, league=champ):
+    return TourneyResult.objects.filter(date__gte=path.start_date, date__lte=path.end_date, league=league).order_by("-date")
+
+
+def get_patch_for_result(result: TourneyResult) -> Patch:
+    return Patch.objects.get(start_date__lte=result.date, end_date__gte=result.date)
 
 
 def create_tourney_rows(tourney_result: TourneyResult) -> None:
@@ -378,7 +386,27 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
         )
 
 
+def get_tourney_result_details(tourney_result: TourneyResult, offset: int = 0, limit: Optional[int] = None) -> pd.DataFrame:
+    slice_fun = slice(offset, None) if limit is None else slice(offset, offset + limit)
+
+    rows = TourneyRow.objects.filter(result=tourney_result).order_by("position")[slice_fun]
+    df = pd.DataFrame(rows.values("player_id", "position", "nickname", "wave", "avatar_id", "relic_id"))
+    df = df.rename(columns={"player_id": "id", "nickname": "tourney_name", "avatar_id": "avatar", "relic_id": "relic"})
+
+    lookup = get_player_id_lookup()
+    approved_lookup = get_player_id_approved_lookup()
+
+    df["real_name"] = [lookup.get(id, name) for id, name in zip(df.id, df.tourney_name)]
+    df["verified"] = ["✓" if approved_lookup.get(id) else "" for id, name in zip(df.id, df.tourney_name)]
+    df["wave_role"] = [wave_to_role(wave, get_patch_for_result(tourney_result), tourney_result.league) for wave in df["wave"]]
+    df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
+    return df
+
+
 if __name__ == "__main__":
+    df = get_tourney_result_details(TourneyResult.objects.filter(league=champ).last(), offset=0, limit=100)
+    breakpoint()
+
     os.environ["LEAGUE_SWITCHER"] = "true"
     os.environ["HIDDEN_FEATURES"] = "true"
 

@@ -1,12 +1,13 @@
 import streamlit as st
 
 from components.results import compute_results
-from dtower.tourney_results.constants import Graph, Options, league_to_folder, plat
-from dtower.tourney_results.data import load_tourney_results
-from dtower.tourney_results.models import PatchNew as Patch
+from dtower.tourney_results.constants import Graph, Options, plat
+from dtower.tourney_results.data import get_tourney_result_details
+from dtower.tourney_results.models import TourneyResult
 
 if __name__ == "__main__":
     st.set_page_config(layout="centered")
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
-    df = load_tourney_results(league_to_folder[plat], patch_id=Patch.objects.last().id)
+    # df = load_tourney_results(league_to_folder[plat], patch_id=Patch.objects.last().id)
+    df = get_tourney_result_details(TourneyResult.objects.filter(league=plat).last(), offset=0, limit=1000)
     compute_results(df, options, league=plat)
