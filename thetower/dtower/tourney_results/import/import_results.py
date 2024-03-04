@@ -15,6 +15,7 @@ from glob import glob
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from dtower.tourney_results.constants import leagues, us_to_jim
+from dtower.tourney_results.data import create_tourney_rows
 from dtower.tourney_results.get_results import get_file_name, get_last_date
 from dtower.tourney_results.models import TourneyResult
 
@@ -53,13 +54,15 @@ while True:
             content_type="text/csv",
         )
         print("Creating tourney_result")
-        TourneyResult.objects.update_or_create(
+        result, _ = TourneyResult.objects.update_or_create(
             date=last_date,
             league=league,
             defaults=dict(
                 result_file=csv_file,
             ),
         )
+
+        create_tourney_rows(result)
 
         # This is how we invalidate the cache on the hidden version of the site
         # Crude, there should be a better way

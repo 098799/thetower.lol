@@ -156,10 +156,18 @@ class NameDayWinner(models.Model):
     nameday_theme = models.CharField(max_length=32, null=False, blank=False)
 
 
-# class TourneyRow(models.Model):
-#     player = models.ForeignKey(
-#         KnownPlayer, null=False, blank=False, related_name="results", on_delete=models.CASCADE, help_text="Player achieving a given result."
-#     )
-#     nickname = models.CharField(max_length=32, null=False, blank=False, help_text="Tourney name")
-#     wave = models.SmallIntegerField(null=False, blank=False, help_text="Tourney score")
-#     result = models.ForeignKey(TourneyResult, null=False, blank=False, related_name="rows", on_delete=models.CASCADE, help_text="Full results file")
+class TourneyRow(models.Model):
+    # player = models.ForeignKey(
+    #     KnownPlayer, null=False, blank=False, related_name="results", on_delete=models.CASCADE, help_text="Player achieving a given result."
+    # )
+    player_id = models.CharField(max_length=32, null=False, blank=False, help_text="Player id from The Tower")
+    position = models.IntegerField(null=False, blank=False, help_text="Position in a given tourney")
+    nickname = models.CharField(max_length=32, null=False, blank=False, help_text="Tourney name")
+    wave = models.IntegerField(null=False, blank=False, help_text="Tourney score")
+    avatar_id = models.SmallIntegerField(null=True, blank=True, help_text="Avatar id")
+    relic_id = models.SmallIntegerField(null=True, blank=True, help_text="Relic id")
+
+    result = models.ForeignKey(TourneyResult, null=False, blank=False, related_name="rows", on_delete=models.CASCADE, help_text="Full results file")
+
+    def __str__(self):
+        return f"{self.position} {self.player_id} {self.nickname} {self.wave}"
