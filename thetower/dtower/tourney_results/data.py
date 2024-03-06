@@ -333,8 +333,8 @@ def get_soft_banned_ids():
     return set(SusPerson.objects.filter(soft_banned=True).values_list("player_id", flat=True))
 
 
-def get_results_for_patch(path: Patch, league=champ):
-    return TourneyResult.objects.filter(date__gte=path.start_date, date__lte=path.end_date, league=league).order_by("-date")
+def get_results_for_patch(patch: Patch, league=champ):
+    return TourneyResult.objects.filter(date__gte=patch.start_date, date__lte=patch.end_date, league=league).order_by("-date")
 
 
 def get_patch_for_result(result: TourneyResult) -> Patch:
@@ -409,8 +409,12 @@ def get_tourney_result_details(tourney_result: TourneyResult, offset: int = 0, l
     return df
 
 
+def get_tourneys(tourney_results: list[TourneyResult], offset: int = 0, limit: int = how_many_results_public_site) -> pd.DataFrame:
+    return pd.concat([get_tourney_result_details(tourney_result, offset=offset, limit=limit) for tourney_result in tourney_results]).reset_index(drop=True)
+
+
 if __name__ == "__main__":
-    df = get_tourney_result_details(TourneyResult.objects.filter(league=champ).last(), offset=0, limit=100)
+    df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:2])
     breakpoint()
 
     os.environ["LEAGUE_SWITCHER"] = "true"

@@ -8,8 +8,8 @@ from tqdm import tqdm
 
 from discord_bot.util import get_all_members, get_safe_league_prefix, get_tower, role_id_to_position, role_prefix_and_only_tourney_roles_check
 from dtower.sus.models import KnownPlayer, PlayerId
-from dtower.tourney_results.constants import champ, league_to_folder, leagues
-from dtower.tourney_results.data import get_sus_ids, load_tourney_results__uncached
+from dtower.tourney_results.constants import champ, leagues
+from dtower.tourney_results.data import get_results_for_patch, get_sus_ids, get_tourneys
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult
 
@@ -34,7 +34,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     all_leagues = leagues
 
     patch = sorted(await sync_to_async(Patch.objects.all, thread_sensitive=True)())[-1]
-    dfs = {league: load_tourney_results__uncached(league_to_folder[league], patch_id=patch.id) for league in all_leagues}
+
+    dfs = {league: get_tourneys(get_results_for_patch(patch=patch, league=league)[:4], limit=2000) for league in leagues}
+    # dfs = {league: get_tourneys(league_to_folder[league], patch_id=patch.id) for league in all_leagues}
 
     tower = await get_tower(client)
     roles = await tower.fetch_roles()
@@ -197,21 +199,17 @@ async def handle_leagues(
         df = df[~df.id.isin(get_sus_ids())]
         player_df = df[df["real_name"] == player.name]
         player_df = player_df[player_df["id"].isin(ids)]
-        patch_df = player_df[player_df["patch"] == patch]
 
-        if patch_df.empty:
+        if player_df.empty:
             continue
 
-        wave_bottom = patch_df.iloc[-1].name_role.wave_bottom
+        gets_500 = any(wave > 500 for wave in player_df.wave)
 
-        if wave_bottom == 0:
-            continue
-
-        if wave_bottom in league_roles:
-            rightful_role = league_roles[wave_bottom]
+        if league_roles and gets_500:
+            rightful_role = league_roles[500]
+            wave_bottom = 500
         else:
-            rightful_role = league_roles.get(250)
-            wave_bottom = 250
+            continue
 
         if discord_player is None:
             return None, skipped + 1
