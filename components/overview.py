@@ -28,8 +28,8 @@ def compute_overview(dfs, options: Options):
         if filtered_df.empty:
             continue
 
-        results = Results(filtered_df, options)
-        to_be_displayed = results.prepare_data(filtered_df, current_page=1, step=10)
+        results = Results(filtered_df, options, league=league)
+        to_be_displayed = results.prepare_data(current_page=1, step=10, date=last_tourney)
         to_be_displayed_styler = results.regular_preparation(to_be_displayed, filtered_df)
         st.write(
             to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False),

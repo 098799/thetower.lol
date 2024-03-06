@@ -125,7 +125,7 @@ class Results:
         begin = (current_page - 1) * step
         end = current_page * step
 
-        self.df = get_tourney_result_details(TourneyResult.objects.get(league=champ, date=date), offset=begin, limit=end).reset_index(drop=True)
+        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date), offset=begin, limit=end).reset_index(drop=True)
 
         if not self.hidden_features:
             to_be_displayed = self.df[~self.df.id.isin(get_sus_ids())]

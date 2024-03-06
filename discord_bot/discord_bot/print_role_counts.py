@@ -56,7 +56,7 @@ async def print_roles(client, message):
         roles_allowed += [
             (number, role, count)
             for number, role, count in role_counts
-            if role.startswith("Champion ")
+            if "Highest position" in role
             or role.startswith("Platinum ")
             or role.startswith("Gold ")
             or role.startswith("Silver ")
@@ -95,6 +95,14 @@ async def print_roles(client, message):
             or role.startswith("Cash ")
             or role.startswith("Stones ")
             or role.startswith("Waves ")
+            or role.startswith("Module ")
+            or "Turtle" in role
+            or "Blender" in role
+            or "eHP" in role
+            or "Hybrid" in role
+            or "Devo" in role
+            or "Glass Cannon" in role
+            or "Infinity and Beyond" in role
             or "Year Role" in role
         ]
 
