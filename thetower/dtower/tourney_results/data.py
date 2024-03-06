@@ -386,8 +386,14 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
         )
 
 
-def get_tourney_result_details(tourney_result: TourneyResult, offset: int = 0, limit: Optional[int] = None) -> pd.DataFrame:
-    slice_fun = slice(offset, None) if limit is None else slice(offset, offset + limit)
+def get_tourney_result_details(tourney_result: TourneyResult, offset: int = 0, limit: int = how_many_results_public_site) -> pd.DataFrame:
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
+    upper_limit = offset + limit
+
+    if not hidden_features:
+        upper_limit = min(upper_limit, how_many_results_public_site)
+
+    slice_fun = slice(offset, None) if limit is None else slice(offset, upper_limit)
 
     rows = TourneyRow.objects.filter(result=tourney_result).order_by("position")[slice_fun]
     df = pd.DataFrame(rows.values("player_id", "position", "nickname", "wave", "avatar_id", "relic_id"))
@@ -414,7 +420,7 @@ if __name__ == "__main__":
     breakpoint()
     df = df[~df.id.isin(get_sus_ids())]
     sdf = df[df.date.isin(sorted(df.date.unique())[:3])]
-    sdf = sdf[sdf.wave > 1000]
+    sdf = sdf[sdf.wave > how_many_results_public_site]
 
     lasts = {}
 
