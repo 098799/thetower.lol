@@ -7,9 +7,9 @@ from asgiref.sync import sync_to_async
 from tqdm import tqdm
 
 from discord_bot.util import get_all_members, get_safe_league_prefix, get_tower, role_id_to_position, role_prefix_and_only_tourney_roles_check
-from dtower.sus.models import KnownPlayer, PlayerId
+from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import champ, leagues
-from dtower.tourney_results.data import get_results_for_patch, get_sus_ids, get_tourneys
+from dtower.tourney_results.data import get_results_for_patch, get_tourneys
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult
 
@@ -196,12 +196,18 @@ async def handle_leagues(
         league_roles = await get_league_roles(roles, league)
         df = dfs[league]
 
-        df = df[~df.id.isin(get_sus_ids())]
+        sus_ids = {item.player_id for item in await sync_to_async(SusPerson.objects.filter, thread_sensitive=True)(sus=True)}
+
+        df = df[~df.id.isin(sus_ids)]
         player_df = df[df["real_name"] == player.name]
         player_df = player_df[player_df["id"].isin(ids)]
 
         if player_df.empty:
             continue
+
+        if league == champ:
+            await handle_champ_position_roles(player_df, roles, discord_player, changed, unchanged, dates_this_event)
+            return discord_player, skipped  # don't give out wave role for champ
 
         gets_500 = any(wave > 500 for wave in player_df.wave)
 
@@ -213,10 +219,6 @@ async def handle_leagues(
 
         if discord_player is None:
             return None, skipped + 1
-
-        if league == champ:
-            await handle_champ_position_roles(player_df, roles, discord_player, changed, unchanged, dates_this_event)
-            return discord_player, skipped  # don't give out wave role for champ
 
         current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
         current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]

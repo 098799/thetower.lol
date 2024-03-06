@@ -9,12 +9,11 @@ import csv
 import datetime
 import re
 from collections import Counter, defaultdict
-from functools import lru_cache
+from functools import cache
 from glob import glob
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
-import extra_streamlit_components as stx
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -35,7 +34,7 @@ from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import Role, TourneyResult, TourneyRow
 
 
-@lru_cache
+@cache
 def get_patches():
     return Patch.objects.all().order_by("start_date")
 
@@ -46,13 +45,13 @@ def date_to_patch(date: datetime.datetime) -> Optional[Patch]:
             return patch
 
 
-def wave_to_role_in_patch(roles: List[Role], wave: int) -> Optional[Role]:
+def wave_to_role_in_patch(roles: list[Role], wave: int) -> Optional[Role]:
     for role in roles:
         if wave >= role.wave_bottom and wave < role.wave_top:
             return role
 
 
-@lru_cache
+@cache
 def patch_to_roles(league):
     patch_to_roles = defaultdict(list)
 
@@ -123,7 +122,7 @@ def get_id_lookup():
     return {id_: player_primary_id[name] for id_, name in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name")}
 
 
-def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[str, str]:
+def get_id_real_name_mapping(df: pd.DataFrame, lookup: dict[str, str]) -> dict[str, str]:
     def get_most_common(df):
         return Counter(df["tourney_name"]).most_common()[0][0]
 
@@ -131,7 +130,7 @@ def get_id_real_name_mapping(df: pd.DataFrame, lookup: Dict[str, str]) -> Dict[s
 
 
 def get_row_to_role(df: pd.DataFrame, league):
-    name_roles: Dict[int, Optional[Role]] = {}
+    name_roles: dict[int, Optional[Role]] = {}
 
     for patch, roles in patch_to_roles(league).items():
         patch_start = np.datetime64(patch.start_date)
@@ -149,7 +148,7 @@ def get_row_to_role(df: pd.DataFrame, league):
 
 
 def _load_tourney_results(
-    result_files: List[Tuple[str, str, list[BattleCondition]]],
+    result_files: list[tuple[str, str, list[BattleCondition]]],
     league=champ,
     result_cutoff: Optional[int] = None,
 ) -> pd.DataFrame:
@@ -406,6 +405,8 @@ def get_tourney_result_details(tourney_result: TourneyResult, offset: int = 0, l
     df["verified"] = ["✓" if approved_lookup.get(id) else "" for id, name in zip(df.id, df.tourney_name)]
     df["wave_role"] = [wave_to_role(wave, get_patch_for_result(tourney_result), tourney_result.league) for wave in df["wave"]]
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
+    df["date"] = tourney_result.date
+
     return df
 
 
