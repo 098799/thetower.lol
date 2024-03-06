@@ -135,7 +135,7 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
     position_roles = await get_position_roles(roles)
     logging.debug(f"{discord_player=} {df.position=}")
 
-    if df.iloc[-1].position == 1:  # special logic for the winner
+    if df.iloc[0].position == 1:  # special logic for the winner
         rightful_role = position_roles[1]
 
         if rightful_role in discord_player.roles:
@@ -205,6 +205,9 @@ async def handle_leagues(
         if player_df.empty:
             continue
 
+        if discord_player is None:
+            return None, skipped + 1
+
         if league == champ:
             await handle_champ_position_roles(player_df, roles, discord_player, changed, unchanged, dates_this_event)
             return discord_player, skipped  # don't give out wave role for champ
@@ -216,9 +219,6 @@ async def handle_leagues(
             wave_bottom = 500
         else:
             continue
-
-        if discord_player is None:
-            return None, skipped + 1
 
         current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
         current_champ_waves = [int(role.name.strip().split()[-1]) for role in current_champ_roles]
