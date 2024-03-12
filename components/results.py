@@ -33,14 +33,15 @@ class Results:
         st.write(funny_styling, unsafe_allow_html=True)
 
     def top_of_results(self) -> str:
-        patch_col, tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([1.0, 2, 1, 1.2, 1])
+        # patch_col, tourney_col, self.results_col, self.results_col_page, debug_col = st.columns([1.0, 2, 1, 1.2, 1])
+        patch_col, tourney_col, self.results_col, self.results_col_page = st.columns([1.0, 2, 1, 1.2])
 
         patch = patch_col.selectbox("Patch:", Patch.objects.all().order_by("-start_date"), index=0)
 
         possible_results = get_results_for_patch(patch, league=self.league)
         self.dates = possible_results.values_list("date", flat=True)
         bcs = [res.conditions.all() for res in possible_results]
-        self.show_hist = debug_col.checkbox("Hist data", value=False)
+        # self.show_hist = debug_col.checkbox("Hist data", value=False)
 
         date_to_bc = dict(zip(self.dates, bcs))
         tourneys = sorted(self.dates, reverse=True)
