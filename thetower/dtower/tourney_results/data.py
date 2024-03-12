@@ -334,7 +334,9 @@ def get_soft_banned_ids():
 
 
 def get_results_for_patch(patch: Patch, league=champ):
-    return TourneyResult.objects.filter(date__gte=patch.start_date, date__lte=patch.end_date, league=league).order_by("-date")
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
+    public = {"public": True} if not hidden_features else {}
+    return TourneyResult.objects.filter(date__gte=patch.start_date, date__lte=patch.end_date, league=league, **public).order_by("-date")
 
 
 def get_patch_for_result(result: TourneyResult) -> Patch:
