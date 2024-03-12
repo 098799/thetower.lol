@@ -125,7 +125,9 @@ class Results:
         begin = (current_page - 1) * step
         end = current_page * step
 
-        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date), offset=begin, limit=end).reset_index(drop=True)
+        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date, public=True), offset=begin, limit=end).reset_index(
+            drop=True
+        )
 
         if not self.hidden_features:
             to_be_displayed = self.df[~self.df.id.isin(get_sus_ids())]
@@ -287,7 +289,7 @@ if __name__ == "__main__":
     st.set_page_config(layout="centered")
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
     # df = load_tourney_results(league_to_folder[champ], patch_id=Patch.objects.last().id)
-    df = get_tourney_result_details(TourneyResult.objects.filter(league=champ).last(), offset=0, limit=1000)
+    df = get_tourney_result_details(TourneyResult.objects.filter(league=champ, public=True).last(), offset=0, limit=1000)
     compute_results(df, options, league=champ)
 
 

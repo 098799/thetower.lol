@@ -62,8 +62,8 @@ def compute_various(df, options):
         get_extension = lambda x: "webp" if x in [48, 49, 52, 53] else "png"
 
         pod |= {
-            numeral: f"<img src='./app/static/Tower_Relics/{spot}.{get_extension(spot)}' width='{width}' title='{title}, {relic_1} {relic_2}'> -- {counts[0]}%"
-            for spot, title, relic_1, relic_2, numeral in zip(podium, podium_titles, podium_relics_1, podium_relics_2, numerals)
+            numeral: f"<img src='./app/static/Tower_Relics/{spot}.{get_extension(spot)}' width='{width}' title='{title}, {relic_1} {relic_2}'> -- {count}%"
+            for spot, title, relic_1, relic_2, numeral, count in zip(podium, podium_titles, podium_relics_1, podium_relics_2, numerals, counts)
         }
         podiums.append(pod)
 

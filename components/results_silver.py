@@ -9,5 +9,5 @@ if __name__ == "__main__":
     st.set_page_config(layout="centered")
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
     # df = load_tourney_results(league_to_folder[silver], patch_id=Patch.objects.last().id)
-    df = get_tourney_result_details(TourneyResult.objects.filter(league=silver).last(), offset=0, limit=1000)
+    df = get_tourney_result_details(TourneyResult.objects.filter(league=silver, public=True).last(), offset=0, limit=1000)
     compute_results(df, options, league=silver)

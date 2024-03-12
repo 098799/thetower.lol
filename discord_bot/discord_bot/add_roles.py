@@ -35,7 +35,11 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     patch = sorted(await sync_to_async(Patch.objects.all, thread_sensitive=True)())[-1]
 
-    dfs = {league: get_tourneys(get_results_for_patch(patch=patch, league=league)[:4], limit=2000) for league in leagues}
+    dfs = {
+        league: get_tourneys(get_results_for_patch(patch=patch, league=league)[:4], limit=5000) for league in leagues[1:]
+    } | {  # potentially more to reach everyone who cleared 500 waves
+        league: get_tourneys(get_results_for_patch(patch=patch, league=league)[:4], limit=2000) for league in leagues[:1]  # champ goes up to 2k
+    }
     # dfs = {league: get_tourneys(league_to_folder[league], patch_id=patch.id) for league in all_leagues}
 
     tower = await get_tower(client)
