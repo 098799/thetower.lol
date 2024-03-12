@@ -56,18 +56,16 @@ class Results:
 
     def prepare_data(self, current_page: int, step: int, date: datetime.date):
         begin = (current_page - 1) * step
-        end = current_page * step
 
-        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date, public=True), offset=begin, limit=end).reset_index(
-            drop=True
-        )
+        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date, public=True), offset=begin, limit=step)
+        self.df = self.df.reset_index(drop=True)
 
         if not self.hidden_features:
             to_be_displayed = self.df[~self.df.id.isin(get_sus_ids())]
         else:
             to_be_displayed = self.df
 
-        to_be_displayed = to_be_displayed.iloc[begin:end].reset_index(drop=True)
+        to_be_displayed = to_be_displayed.reset_index(drop=True)
 
         if current_page == 1:
             for position, medal in zip([1, 2, 3], [" 🥇", " 🥈", " 🥉"]):

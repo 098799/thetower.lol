@@ -386,7 +386,12 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
         )
 
 
-def get_tourney_result_details(tourney_result: TourneyResult, offset: int = 0, limit: int = how_many_results_public_site) -> pd.DataFrame:
+def get_tourney_result_details(
+    tourney_result: TourneyResult,
+    offset: int = 0,
+    limit: int = how_many_results_public_site,
+    filter_sus: bool = True,
+) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     upper_limit = offset + limit
 
@@ -395,7 +400,12 @@ def get_tourney_result_details(tourney_result: TourneyResult, offset: int = 0, l
 
     slice_fun = slice(offset, None) if limit is None else slice(offset, upper_limit)
 
-    rows = TourneyRow.objects.filter(~Q(player_id__in=get_sus_ids()), result=tourney_result).order_by("position")[slice_fun]
+    rows = TourneyRow.objects.filter(result=tourney_result)
+
+    if filter_sus:
+        rows = rows.filter(~Q(player_id__in=get_sus_ids()))
+
+    rows = rows.order_by("position")[slice_fun]
     df = pd.DataFrame(rows.values("player_id", "position", "nickname", "wave", "avatar_id", "relic_id"))
     df = df.rename(columns={"player_id": "id", "nickname": "tourney_name", "avatar_id": "avatar", "relic_id": "relic"})
 
