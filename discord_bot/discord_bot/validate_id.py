@@ -13,6 +13,9 @@ def only_made_of_hex(message):
 
 
 async def validate_player_id(client, message):
+    if message.author.id in [96626874708430848, 177504210177228801, 778131594132062240]:
+        return
+
     try:
         if 17 > len(message.content) > 12 and message.attachments and only_made_of_hex(message):
             discord_id = message.author.id
