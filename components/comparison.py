@@ -117,6 +117,8 @@ def compute_comparison(df, options: Options):
     else:
         st.dataframe(last_results, use_container_width=True, hide_index=True)
 
+    pd_datas = pd_datas.drop_duplicates()
+
     fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True, custom_data=["bcs", "position"])
     fig.update_traces(hovertemplate="%{y}<br>Postion: %{customdata[1]}<br>BC: %{customdata[0]}")
     fig.update_layout(hovermode="x unified")
