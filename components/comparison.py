@@ -38,7 +38,7 @@ def compute_comparison(df, options: Options):
         df = load_tourney_results(folder=league_to_folder[league])
 
     first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
-    all_tourney_names = [name for name in all_tourney_names if name not in set(first_choices) | set(all_real_names)]
+    all_tourney_names = {name for name in all_tourney_names if name not in set(first_choices) | set(all_real_names)}
     player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
 
     if not hidden_features:
