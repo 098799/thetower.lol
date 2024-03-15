@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from components.util import gantt
 from dtower.tourney_results.data import get_patches, load_tourney_results
 
 patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
@@ -66,6 +67,20 @@ def compute_winners(df, options=None):
     fig = px.pie(graph_df, values="count", names="name", title="Winners of champ, courtesy of Jim", **additional_options)
     fig.update_traces(textinfo="value")
     st.plotly_chart(fig)
+
+    winner_data = sorted(tuple(zip(graph_df["name"], graph_df["count"])), key=lambda x: x[1], reverse=True)
+    winners = [winner for winner, _ in winner_data]
+    sdf = df[df.real_name.isin(winners)]
+
+    winners_data = []
+
+    for winner in winners:
+        dates_attended = sdf[sdf.real_name == winner].date
+        winners_data.append({"Player": winner, "tourneys_attended": sorted(dates_attended)})
+
+    winners_df = pd.DataFrame(winners_data)
+
+    st.plotly_chart(gantt(winners_df))
 
 
 if __name__ == "__main__":

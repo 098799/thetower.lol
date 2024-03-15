@@ -58,7 +58,8 @@ class Results:
     def prepare_data(self, current_page: int, step: int, date: datetime.date):
         begin = (current_page - 1) * step
 
-        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date, public=True), offset=begin, limit=step)
+        public = {"public": True} if not self.hidden_features else {}
+        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date, **public), offset=begin, limit=step)
         self.df = self.df.reset_index(drop=True)
 
         if not self.hidden_features:

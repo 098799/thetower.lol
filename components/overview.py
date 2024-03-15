@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 
 from components.results import Results
@@ -7,7 +9,8 @@ from dtower.tourney_results.models import TourneyResult
 
 
 def compute_overview(options: Options):
-    last_tourney = TourneyResult.objects.latest("date").date
+    public = {"public": True} if not os.environ.get("HIDDEN_FEATURES") else {}
+    last_tourney = TourneyResult.objects.filter(**public).latest("date").date
 
     with open("style.css", "r") as infile:
         st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)

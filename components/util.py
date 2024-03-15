@@ -1,6 +1,8 @@
 import datetime
 from typing import List, Optional
 
+import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from dtower.tourney_results.constants import Graph, Options
@@ -38,3 +40,44 @@ def get_options(links=None):
     options.compare_players = compare_players
 
     return options
+
+
+def gantt(df):
+    def get_borders(dates: list[datetime.date]) -> list[tuple[datetime.date, datetime.date]]:
+        """Get start and finish of each interval. Assuming dates are sorted and tourneys are max 4 days apart."""
+
+        borders = []
+
+        start = dates[0]
+
+        for date, next_date in zip(dates[1:], dates[2:]):
+            if next_date - date > datetime.timedelta(days=4):
+                end = date
+                borders.append((start, end))
+                start = next_date
+
+        borders.append((start, dates[-1]))
+
+        return borders
+
+    gantt_data = []
+
+    for i, row in df.iterrows():
+        borders = get_borders(row.tourneys_attended)
+        name = row.Player
+
+        for start, end in borders:
+            gantt_data.append(
+                {
+                    "Player": name,
+                    "Start": start,
+                    "Finish": end,
+                    "Champion": name,
+                }
+            )
+
+    gantt_df = pd.DataFrame(gantt_data)
+
+    fig = px.timeline(gantt_df, x_start="Start", x_end="Finish", y="Player", color="Champion")
+    fig.update_yaxes(autorange="reversed")
+    return fig
