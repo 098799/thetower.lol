@@ -21,13 +21,13 @@ class SusPersonAdmin(SimpleHistoryAdmin):
 
     list_display = (
         "_created",
-        "_modified",
+        "notes",
         "player_id",
         "sus",
         "soft_banned",
         "banned",
         "_link",
-        "notes",
+        "_modified",
     )
 
     list_editable = (
