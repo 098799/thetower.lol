@@ -57,6 +57,14 @@ async def on_ready():
         exit()
     logging.info(f"We have logged in as {client.user}")
 
+    # await handle_adding(
+    #     client,
+    #     limit=5,
+    #     discord_ids=[249001511957299200],
+    #     channel=None,
+    #     debug_channel=None,
+    #     verbose=False,
+    # )
     if not handle_roles_scheduled.is_running():
         handle_roles_scheduled.start()
 

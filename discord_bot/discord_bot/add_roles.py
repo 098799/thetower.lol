@@ -203,8 +203,8 @@ async def handle_leagues(
         sus_ids = {item.player_id for item in await sync_to_async(SusPerson.objects.filter, thread_sensitive=True)(sus=True)}
 
         df = df[~df.id.isin(sus_ids)]
-        player_df = df[df["real_name"] == player.name]
-        player_df = player_df[player_df["id"].isin(ids)]
+        # player_df = df[df["real_name"] == player.name]
+        player_df = df[df["id"].isin(ids)]
 
         if player_df.empty:
             continue
