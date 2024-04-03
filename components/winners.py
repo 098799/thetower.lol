@@ -70,6 +70,12 @@ def compute_winners(df, options=None):
 
     winner_data = sorted(tuple(zip(graph_df["name"], graph_df["count"])), key=lambda x: x[1], reverse=True)
     winners = [winner for winner, _ in winner_data]
+
+    add_plat = st.checkbox("Add street cred to old guard?", value=False)
+
+    if add_plat:
+        df = pd.concat([load_tourney_results("plat"), df])
+
     sdf = df[df.real_name.isin(winners)]
 
     winners_data = []
