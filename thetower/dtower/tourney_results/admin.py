@@ -6,12 +6,13 @@ from simple_history.admin import SimpleHistoryAdmin
 
 from dtower.sus.models import KnownPlayer
 from dtower.tourney_results.constants import champ
-from dtower.tourney_results.data import create_tourney_rows
 from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult
 
 
 @admin.action(description="Recalculate results (run me if something changed)")
 def recalculate_results(modeladmin, request, queryset):
+    from dtower.tourney_results.data import create_tourney_rows
+
     for tourney in queryset:
         create_tourney_rows(tourney)
 
