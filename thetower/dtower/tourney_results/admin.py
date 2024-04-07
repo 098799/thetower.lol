@@ -6,7 +6,16 @@ from simple_history.admin import SimpleHistoryAdmin
 
 from dtower.sus.models import KnownPlayer
 from dtower.tourney_results.constants import champ
+from dtower.tourney_results.data import create_tourney_rows
 from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult
+
+
+@admin.action(description="Recalculate results (run me if something changed)")
+def recalculate_results(modeladmin, request, queryset):
+    for tourney in queryset:
+        create_tourney_rows(tourney)
+
+    subprocess.call("systemctl restart streamlit2", shell=True)
 
 
 @admin.action(description="Restart the public app")
@@ -66,6 +75,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
     filter_horizontal = ("conditions",)
 
     actions = [
+        recalculate_results,
         publicize,
         restart_public_app,
         restart_hidden_app,
