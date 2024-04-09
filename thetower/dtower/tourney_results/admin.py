@@ -10,7 +10,7 @@ from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.constants import champ
 from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult, TourneyRow
 
-BASE_HIDDEN_URL = os.getenv("BASE_HIDDEN_URL")
+BASE_ADMIN_URL = os.getenv("BASE_ADMIN_URL")
 
 
 @admin.action(description="Recalculate results (run me if something changed)")
@@ -72,9 +72,7 @@ class TourneyRowAdmin(SimpleHistoryAdmin):
 
     def _known_player(self, obj):
         player_pk = PlayerId.objects.get(id=obj.player_id).player.id
-        return format_html(
-            f"<a href='{BASE_HIDDEN_URL}admin/sus/knownplayer/{player_pk}/change/'>{BASE_HIDDEN_URL}<br>admin/sus/<br>knownplayer/{player_pk}/change/</a>"
-        )
+        return format_html(f"<a href='{BASE_ADMIN_URL}sus/knownplayer/{player_pk}/change/'>{BASE_ADMIN_URL}<br>sus/<br>knownplayer/{player_pk}/change/</a>")
 
     list_filter = ["result__league", "result__date", "result__public", "avatar_id", "relic_id"]
 
