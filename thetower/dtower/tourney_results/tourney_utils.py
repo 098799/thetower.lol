@@ -18,7 +18,16 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
 
     sus_ids = get_sus_ids()
 
-    df = pd.read_csv(tourney_result.result_file, header=None)
+    csv_path = tourney_result.result_file.path
+
+    try:
+        df = pd.read_csv(csv_path, header=None)
+    except FileNotFoundError:
+        # try other path
+        csv_path = csv_path.replace("uploads", "thetower/dtower/uploads")
+
+        df = pd.read_csv(csv_path, header=None)
+
     df = df.rename(columns={0: "id", 1: "tourney_name", 2: "wave"})
     df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
     df["avatar"] = df.tourney_name.map(lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1)

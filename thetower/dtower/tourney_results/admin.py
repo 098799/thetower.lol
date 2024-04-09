@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 
@@ -12,14 +13,29 @@ from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchN
 
 BASE_ADMIN_URL = os.getenv("BASE_ADMIN_URL")
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+handler = logging.FileHandler("app.log")
+handler.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
 
 @admin.action(description="Recalculate results (run me if something changed)")
 def recalculate_results(modeladmin, request, queryset):
+    logging.info("Starting to recalculate results")
     from dtower.tourney_results.tourney_utils import create_tourney_rows
 
+    logging.info(f"{queryset=}")
     for tourney in queryset:
+        logging.info(f"{tourney=}")
         create_tourney_rows(tourney)
 
+    logging.info("Restarting services...")
     subprocess.call("systemctl restart streamlit2", shell=True)
 
 
