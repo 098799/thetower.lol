@@ -15,9 +15,9 @@ from glob import glob
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from dtower.tourney_results.constants import leagues, us_to_jim
-from dtower.tourney_results.data import create_tourney_rows
 from dtower.tourney_results.get_results import get_file_name, get_last_date
 from dtower.tourney_results.models import TourneyResult
+from dtower.tourney_results.tourney_utils import create_tourney_rows
 
 while True:
     for league in leagues:

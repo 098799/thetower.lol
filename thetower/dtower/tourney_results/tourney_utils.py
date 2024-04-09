@@ -7,9 +7,14 @@ from dtower.tourney_results.models import TourneyResult, TourneyRow
 
 
 def create_tourney_rows(tourney_result: TourneyResult) -> None:
-    """Idempotent function to process tourney result during the csv import process."""
+    """Idempotent function to process tourney result during the csv import process.
 
-    tourney_result.rows.all().delete()
+    The idea is that:
+     - if there are not rows created, create them,
+     - if there are already rows created, update all positions at least (positions should never
+    be set manually, that doesn't make sense?),
+     - if there are things like wave changed, assume people changed this manually from admin.
+    """
 
     sus_ids = get_sus_ids()
 
@@ -40,12 +45,25 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
     df["position"] = positions
 
     for _, row in df.iterrows():
-        TourneyRow.objects.create(
-            result=tourney_result,
+        current_qs = TourneyRow.objects.filter(
             player_id=row.id,
-            nickname=row.tourney_name,
-            wave=row.wave,
-            avatar_id=row.avatar,
-            relic_id=row.relic,
-            position=row.position,
+            result=tourney_result,
         )
+
+        if current_qs.exists():
+            # weird case that shouldn't happen: if there are multiple results for the same id,
+            # assume it's an error and needs to be corrected
+            if len(current_qs) > 1:
+                current_qs.delete()
+            else:  # update only position, assume other data might have been changed manually?
+                current_qs.update(position=row.position)
+        else:
+            TourneyRow.objects.create(
+                player_id=row.id,
+                result=tourney_result,
+                nickname=row.tourney_name,
+                wave=row.wave,
+                avatar_id=row.avatar,
+                relic_id=row.relic,
+                position=row.position,
+            )

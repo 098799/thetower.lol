@@ -1,17 +1,21 @@
+import os
 import subprocess
 
 from django.contrib import admin
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
-from dtower.sus.models import KnownPlayer
+from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.constants import champ
-from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult
+from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult, TourneyRow
+
+BASE_HIDDEN_URL = os.getenv("BASE_HIDDEN_URL")
 
 
 @admin.action(description="Recalculate results (run me if something changed)")
 def recalculate_results(modeladmin, request, queryset):
-    from dtower.tourney_results.data import create_tourney_rows
+    from dtower.tourney_results.tourney_utils import create_tourney_rows
 
     for tourney in queryset:
         create_tourney_rows(tourney)
@@ -45,6 +49,34 @@ def publicize(modeladmin, request, queryset):
         item.public = True
         item.save()
         # queryset.update(public=True)
+
+
+@admin.register(TourneyRow)
+class TourneyRowAdmin(SimpleHistoryAdmin):
+    list_display = (
+        "player_id",
+        "position",
+        "nickname",
+        "_known_player",
+        "result",
+        "wave",
+        "avatar_id",
+        "relic_id",
+    )
+
+    search_fields = (
+        "player_id",
+        "nickname",
+        "wave",
+    )
+
+    def _known_player(self, obj):
+        player_pk = PlayerId.objects.get(id=obj.player_id).player.id
+        return format_html(
+            f"<a href='{BASE_HIDDEN_URL}admin/sus/knownplayer/{player_pk}/change/'>{BASE_HIDDEN_URL}<br>admin/sus/<br>knownplayer/{player_pk}/change/</a>"
+        )
+
+    list_filter = ["result__league", "result__date", "result__public", "avatar_id", "relic_id"]
 
 
 @admin.register(TourneyResult)
