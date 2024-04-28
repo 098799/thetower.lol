@@ -80,7 +80,7 @@ class Results:
             if avatar_id == -1:
                 return ""
 
-            if avatar_id in [35, 36]:
+            if avatar_id in [35, 36, 39]:
                 extension = "webp"
             else:
                 extension = "png"
@@ -91,7 +91,7 @@ class Results:
             if relic_id == -1 or relic_id not in all_relics:
                 return ""
 
-            if relic_id in [48, 49, 52, 53]:
+            if relic_id in [48, 49, 50, 51, 52, 53, 60, 61]:
                 extension = "webp"
             else:
                 extension = "png"

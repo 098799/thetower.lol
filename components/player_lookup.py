@@ -250,7 +250,7 @@ def draw_info_tab(info_tab, user, player_df, hidden_features):
     avatar = player_df.iloc[0].avatar
     relic = player_df.iloc[0].relic
 
-    if avatar in [35, 36]:
+    if avatar in [35, 36, 39]:
         extension = "webp"
     else:
         extension = "png"
@@ -258,7 +258,7 @@ def draw_info_tab(info_tab, user, player_df, hidden_features):
     avatar_string = f"<img src='./app/static/Tower_Skins/{avatar}.{extension}' width=100>" if avatar > 0 else ""
     title = f"title='{all_relics[relic][0]}, {all_relics[relic][1]} {all_relics[relic][2]}'" if relic in all_relics else ""
 
-    if relic in [48, 49, 52, 53]:
+    if relic in [48, 49, 50, 51, 52, 53, 60, 61]:
         extension = "webp"
     else:
         extension = "png"
