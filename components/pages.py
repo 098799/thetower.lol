@@ -26,7 +26,7 @@ pages = [
     Page("components/results_silver.py", "Results Silver", "🥈"),
     Page("components/results_copper.py", "Results Copper", "🥉"),
     Page("components/search.py", "Search", "🔎"),
-    Page("components/player_lookup.py", "Player Lookup", "🔍"),
+    Page("components/player.py", "Player", "⛹️"),
     Page("components/comparison.py", "Player Comparison", "🔃"),
     Page("components/winners.py", "Winners", "🔥"),
     Page("components/top_scores.py", "Top Scores", "🤑"),

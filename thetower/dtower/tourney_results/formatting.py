@@ -96,7 +96,7 @@ def make_url(username, path, base_url=BASE_URL):
     return f"<a href='{url}?player={quote(username.strip())}'>{original_username}</a>"
 
 
-make_player_url = partial(make_url, path="Player%20Lookup")
+make_player_url = partial(make_url, path="Player")
 
 
 def html_to_rgb(color_code, transparency=None):

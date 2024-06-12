@@ -10,7 +10,7 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from components.util import get_options
-from dtower.sus.models import SusPerson
+from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     Graph,
     Options,
@@ -25,128 +25,150 @@ from dtower.tourney_results.constants import (
     stratas_boundaries,
     stratas_boundaries_018,
 )
-from dtower.tourney_results.data import get_banned_ids, get_id_lookup, get_patches, get_player_list, get_soft_banned_ids, load_tourney_results
+from dtower.tourney_results.data import (
+    get_banned_ids,
+    get_details,
+    get_id_lookup,
+    get_patches,
+    get_player_list,
+    get_soft_banned_ids,
+    load_tourney_results,
+)
 from dtower.tourney_results.formatting import BASE_URL, color_position, html_to_rgb
 from dtower.tourney_results.models import PatchNew as Patch
+from dtower.tourney_results.models import Role, TourneyResult, TourneyRow
 
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 id_mapping = get_id_lookup()
 
 
 def compute_player_lookup(df, options: Options, all_leagues=False):
-    if options.current_player is not None:
-        all_leagues = False
-
     hidden_features = os.environ.get("HIDDEN_FEATURES")
-    player_df = None
 
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
 
     st.write(table_styling, unsafe_allow_html=True)
 
-    if not all_leagues:
-        league_col, user_col = st.columns([1, 2])
-    else:
-        user_col = st
+    if options.current_player is None:
+        st.info("Please use 'Search' option in the side menu to find the appropriate player id.")
+        exit()
 
-    league_choices = leagues
-    user_choices = []
+    # player_df = None
 
-    if options.current_player is not None:
-        user = options.current_player
-        found = find_player_across_leagues(user)
+    # if not all_leagues:
+    #     league_col, user_col = st.columns([1, 2])
+    # else:
+    #     user_col = st
 
-        if found is not None:
-            df, player_df, preselected_league = found
-            league_choices = [preselected_league] + [league_choice for league_choice in leagues if league_choice != preselected_league]
-            user_choices = [user]
+    # league_choices = leagues
+    # user_choices = []
 
-    league = league_col.selectbox("League?", league_choices) if not all_leagues else all
+    # if options.current_player is not None:
+    #     user = options.current_player
+    #     found = find_player_across_leagues(user)
 
-    if df is None or league != preselected_league:
-        limit_no_results = None
+    #     if found is not None:
+    #         df, player_df, preselected_league = found
+    #         league_choices = [preselected_league] + [league_choice for league_choice in leagues if league_choice != preselected_league]
+    #         user_choices = [user]
 
-        if all_leagues:  # limit amount of results to load faster the hidden site
-            user_col, checkbox_col = user_col.columns([5, 1])
-            limit_loading = checkbox_col.slider("last x months", min_value=3, max_value=30, value=3, step=3)
+    # league = league_col.selectbox("League?", league_choices) if not all_leagues else all
 
-            if limit_loading:
-                limit_no_results = 8 * limit_loading
+    # if df is None or league != preselected_league:
+    #     limit_no_results = None
 
-        if not all_leagues:
-            df = load_tourney_results(folder=league_to_folder[league], limit_no_results=limit_no_results)
-            df["league"] = league
-        else:
-            dfs = [load_tourney_results(league, limit_no_results=limit_no_results) for league in leagues]
+    #     if all_leagues:  # limit amount of results to load faster the hidden site
+    #         user_col, checkbox_col = user_col.columns([5, 1])
+    #         limit_loading = checkbox_col.slider("last x months", min_value=3, max_value=30, value=3, step=3)
 
-            for df, league in zip(dfs, leagues):
-                df["league"] = league
+    #         if limit_loading:
+    #             limit_no_results = 8 * limit_loading
 
-            df = pd.concat(dfs)
+    #     if not all_leagues:
+    #         df = load_tourney_results(folder=league_to_folder[league], limit_no_results=limit_no_results)
+    #         df["league"] = league
+    #     else:
+    #         dfs = [load_tourney_results(league, limit_no_results=limit_no_results) for league in leagues]
 
-    first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
-    player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
+    #         for df, league in zip(dfs, leagues):
+    #             df["league"] = league
 
-    if not hidden_features:
-        sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
-        player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
+    #         df = pd.concat(dfs)
 
-    if not all_leagues:
-        user = user_col.selectbox("Which user would you like to lookup?", user_choices + player_list)
-    else:
-        sub_user_col, id_col, tourney_name_col = user_col.columns([1, 1, 1])
-        real_name = sub_user_col.selectbox("Lookup by real name", [""] + first_choices + list((all_real_names - set(first_choices))))
+    # first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
+    # player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
 
-        id_ = None
-        tourney_name = None
+    # if not hidden_features:
+    #     sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
+    #     player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
 
-        if real_name:
-            player_df = df[df.real_name == real_name]
-        else:
-            id_ = id_col.selectbox("Lookup by id", [""] + sorted(all_user_ids))
+    # if not all_leagues:
+    #     user = user_col.selectbox("Which user would you like to lookup?", user_choices + player_list)
+    # else:
+    #     sub_user_col, id_col, tourney_name_col = user_col.columns([1, 1, 1])
+    #     real_name = sub_user_col.selectbox("Lookup by real name", [""] + first_choices + list((all_real_names - set(first_choices))))
 
-            if id_:
-                player_df = df[df.id == id_mapping.get(id_, id_)]
-            else:
-                tourney_name = tourney_name_col.selectbox("Lookup by tourney name", [""] + sorted(all_tourney_names))
-                player_df = df[df.tourney_name == tourney_name]
+    #     id_ = None
+    #     tourney_name = None
 
-        user = real_name or id_ or tourney_name
+    #     if real_name:
+    #         player_df = df[df.real_name == real_name]
+    #     else:
+    #         id_ = id_col.selectbox("Lookup by id", [""] + sorted(all_user_ids))
 
-    # lol
-    if user == "Soelent":
-        st.image("towerfans.jpg")
+    #         if id_:
+    #             player_df = df[df.id == id_mapping.get(id_, id_)]
+    #         else:
+    #             tourney_name = tourney_name_col.selectbox("Lookup by tourney name", [""] + sorted(all_tourney_names))
+    #             player_df = df[df.tourney_name == tourney_name]
 
-    if not user:
-        return
+    #     user = real_name or id_ or tourney_name
+
+    # # lol
+    # if user == "Soelent":
+    #     st.image("towerfans.jpg")
+
+    # if not user:
+    #     return
 
     info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
 
-    if player_df is None:
-        player_df = _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)
+    player_ids = PlayerId.objects.filter(id=options.current_player)
 
-        if player_df is None:
-            st.write("User not found in this league.")
-            return
-
-    # todo should be extracted
-    if len(player_df.id.unique()) >= 2:
-        potential_ids = player_df.id.unique().tolist()
-        aggreg = player_df.groupby("id").count()
-        most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
-        user_ids = graph_tab.multiselect(
-            "Since multiple players had the same username, please choose id. If you are confident the same user used multiple ids, you can select multiple. If it's different users, data below won't make much sense",
-            potential_ids,
-            default=most_common_id,
-        )
-
-        if not user_ids:
-            return
-
-        player_df = df[df.id.isin(user_ids)]
+    if player_ids:
+        player_id = player_ids[0]
+        user = player_id.player
+        rows = TourneyRow.objects.filter(player_id__in=user.ids.all().values_list("id", flat=True))
     else:
-        player_df = df[df.id == player_df.iloc[0].id]
+        rows = TourneyRow.objects.filter(player_id=options.current_player)
+
+    player_df = get_details(rows)
+
+    # if player_df is None:
+    #     player_df = _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)
+
+    #     if player_df is None:
+    #         st.write("User not found in this league.")
+    #         return
+
+    # # todo should be extracted
+    # if len(player_df.id.unique()) >= 2:
+    #     potential_ids = player_df.id.unique().tolist()
+    #     aggreg = player_df.groupby("id").count()
+    #     most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
+    #     user_ids = graph_tab.multiselect(
+    #         "Since multiple players had the same username, please choose id. If you are confident the same user used multiple ids, you can select multiple. If it's different users, data below won't make much sense",
+    #         potential_ids,
+    #         default=most_common_id,
+    #     )
+
+    #     if not user_ids:
+    #         return
+
+    #     player_df = df[df.id.isin(user_ids)]
+    # else:
+    #     player_df = df[df.id == player_df.iloc[0].id]
 
     player_df = player_df.sort_values("date", ascending=False)
 
@@ -158,7 +180,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
     ]
     patch_col, average_col = graph_tab.columns([1, 1])
     patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
-    filter_bcs = patch_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
+    filter_bcs = patch_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in player_df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
     rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
 
     colors, patch_df, stratas = handle_colors_dependant_on_patch(df, patch, player_df)
@@ -202,7 +224,8 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
             player_df[["name", "wave", "#", "date", "patch", "battle"] + additional_column]
             .style.apply(
                 lambda row: [
-                    f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}",
+                    None,
+                    # f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}",
                     f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}",
                     None,
                     None,
@@ -227,19 +250,19 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     write_for_each_patch(patch_tab, player_df)
 
-    for container in [info_tab, graph_tab, raw_data_tab, patch_tab]:
-        container.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
+    # for container in [info_tab, graph_tab, raw_data_tab, patch_tab]:
+    #     container.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
 
 
 def draw_info_tab(info_tab, user, player_df, hidden_features):
     url_tab, comp_tab = info_tab.columns([3, 1])
-    url_tab.code(f"http://{BASE_URL}/Player%20Lookup?" + urlencode({"player": user}, doseq=True))
+    url_tab.code(f"http://{BASE_URL}/Player?" + urlencode({"player": user}, doseq=True))
     url = f"http://{BASE_URL}/Player%20Comparison?" + urlencode({"compare": user}, doseq=True)
     comp_tab.write(f"<a href='{url}'>🔗 Compare with...</a>", unsafe_allow_html=True)
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
 
     real_name = player_df.iloc[0].real_name
-    current_role_color = player_df.iloc[0].name_role.color
+    # current_role_color = player_df.iloc[0].name_role.color
 
     if hidden_features:
         info_tab.write(
@@ -266,7 +289,7 @@ def draw_info_tab(info_tab, user, player_df, hidden_features):
     relic_string = f"<img src='./app/static/Tower_Relics/{relic}.{extension}' width=100, {title}>" if relic >= 0 else ""
 
     info_tab.write(
-        f"<table class='top'><tr><td>{avatar_string}</td><td><div style='font-size: 30px; color: {current_role_color}'><span style='vertical-align: middle;'>{real_name}</span></div><div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div></td><td>{relic_string}</td></tr></table>",
+        f"<table class='top'><tr><td>{avatar_string}</td><td><div style='font-size: 30px'><span style='vertical-align: middle;'>{real_name}</span></div><div style='font-size: 15px'>ID: {player_df.iloc[0].id}</div></td><td>{relic_string}</td></tr></table>",
         unsafe_allow_html=True,
     )
 
@@ -288,7 +311,7 @@ def write_for_each_patch(patch_tab, player_df):
                 "max_wave": max_wave,
                 "tourney_name": max_wave_data.name,
                 "date": max_wave_data.date,
-                "patch_role_color": max_wave_data.name_role.color,
+                # "patch_role_color": max_wave_data.name_role.color,
                 "battle_conditions": ", ".join(max_wave_data.bcs.values_list("shortcut", flat=True)),
             }
         )
@@ -299,7 +322,7 @@ def write_for_each_patch(patch_tab, player_df):
                 "max_position": max_pos,
                 "tourney_name": max_pos_data.name,
                 "date": max_pos_data.date,
-                "max_position_color": max_pos_data.position_role_color,
+                # "max_position_color": max_pos_data.position_role_color,
                 "battle_conditions": ", ".join(max_pos_data.bcs.values_list("shortcut", flat=True)),
             }
         )
@@ -310,7 +333,8 @@ def write_for_each_patch(patch_tab, player_df):
     wave_tbdf = wave_df[["patch", "max_wave", "tourney_name", "date", "battle_conditions"]].style.apply(
         lambda row: [
             None,
-            f"color: {wave_df[wave_df.patch == row.patch].patch_role_color.iloc[0]}",
+            None,
+            # f"color: {wave_df[wave_df.patch == row.patch].patch_role_color.iloc[0]}",
             None,
             None,
             None,
@@ -321,7 +345,8 @@ def write_for_each_patch(patch_tab, player_df):
     position_tbdf = position_df[["patch", "max_position", "tourney_name", "date", "battle_conditions"]].style.apply(
         lambda row: [
             None,
-            f"color: {position_df[position_df.patch == row.patch].max_position_color.iloc[0]}",
+            # f"color: {position_df[position_df.patch == row.patch].max_position_color.iloc[0]}",
+            None,
             None,
             None,
             None,
@@ -404,17 +429,17 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
 
     stratas_for_plot = [strata for strata in tops if strata >= begin and strata <= end]
 
-    champ_df = df[df.league == champ]  # backgrounds on graphs won't make sense for other leagues anyway
-    all_results = champ_df[champ_df.date.isin(tbdf.date.unique())]
-    all_results = all_results[all_results.position != -1]
+    # champ_df = df[df.league == champ]  # backgrounds on graphs won't make sense for other leagues anyway
+    # all_results = champ_df[champ_df.date.isin(tbdf.date.unique())]
+    # all_results = all_results[all_results.position != -1]
 
-    min_by_strata = defaultdict(list)
-    max_by_strata = defaultdict(list)
+    # min_by_strata = defaultdict(list)
+    # max_by_strata = defaultdict(list)
 
-    for date, sdf in all_results.groupby("date"):
-        for strata in tops:
-            min_by_strata[strata].append(sdf[sdf.position <= strata].wave.min())
-            max_by_strata[strata].append(sdf[sdf.position <= strata].wave.max())
+    # for date, sdf in all_results.groupby("date"):
+    #     for strata in tops:
+    #         min_by_strata[strata].append(sdf[sdf.position <= strata].wave.min())
+    #         max_by_strata[strata].append(sdf[sdf.position <= strata].wave.max())
 
     foreground_kwargs = {}
     background_kwargs = dict(line_dash="dot", line_color="#888", opacity=0.6)
@@ -440,32 +465,32 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
         )
     )
 
-    fig.add_trace(
-        go.Scatter(
-            x=tbdf.date[::-1],
-            y=max_by_strata[stratas_for_plot[0]],
-            name=f"Max top {stratas_for_plot[0]}",
-            line_dash="dot",
-            marker=dict(size=0, opacity=0),
-            opacity=0.6,
-            line_color=html_to_rgb(strata_to_color[stratas_for_plot[0]], transparency=0.2),
-        )
-    )
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=tbdf.date[::-1],
+    #         y=max_by_strata[stratas_for_plot[0]],
+    #         name=f"Max top {stratas_for_plot[0]}",
+    #         line_dash="dot",
+    #         marker=dict(size=0, opacity=0),
+    #         opacity=0.6,
+    #         line_color=html_to_rgb(strata_to_color[stratas_for_plot[0]], transparency=0.2),
+    #     )
+    # )
 
-    for strata in stratas_for_plot[1:]:
-        fig.add_trace(
-            go.Scatter(
-                x=tbdf.date[::-1],
-                y=min_by_strata[strata],
-                name=f"Min top {strata}",
-                line_dash="dot",
-                marker=dict(size=0, opacity=0),
-                opacity=0.6,
-                fill="tonexty",
-                line_color=html_to_rgb(strata_to_color[strata], transparency=0.2),
-                fillcolor=html_to_rgb(strata_to_color[strata], transparency=0.1),
-            )
-        )
+    # for strata in stratas_for_plot[1:]:
+    #     fig.add_trace(
+    #         go.Scatter(
+    #             x=tbdf.date[::-1],
+    #             y=min_by_strata[strata],
+    #             name=f"Min top {strata}",
+    #             line_dash="dot",
+    #             marker=dict(size=0, opacity=0),
+    #             opacity=0.6,
+    #             fill="tonexty",
+    #             line_color=html_to_rgb(strata_to_color[strata], transparency=0.2),
+    #             fillcolor=html_to_rgb(strata_to_color[strata], transparency=0.1),
+    #         )
+    #     )
 
     fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
 
@@ -484,9 +509,9 @@ def handle_colors_dependant_on_patch(df, patch, player_df):
             colors, stratas = colors_018, stratas_boundaries_018
         else:
             colors, stratas = colors_017, stratas_boundaries
-    elif patch == Graph.last_16.value:
-        patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
-        colors, stratas = colors_018, stratas_boundaries_018
+    # elif patch == Graph.last_16.value:
+    #     patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
+    #     colors, stratas = colors_018, stratas_boundaries_018
     else:
         patch_df = player_df
         colors, stratas = colors_018, stratas_boundaries_018

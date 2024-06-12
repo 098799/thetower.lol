@@ -17,7 +17,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import streamlit as st
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import (
@@ -369,17 +369,30 @@ def get_tourney_result_details(
         rows = rows.filter(~Q(player_id__in=get_sus_ids()))
 
     rows = rows.order_by("position")[slice_fun]
+    return get_details(rows)
+
+
+def get_details(rows: QuerySet[TourneyRow]) -> pd.DataFrame:
     df = pd.DataFrame(rows.values("player_id", "position", "nickname", "wave", "avatar_id", "relic_id"))
     df = df.rename(columns={"player_id": "id", "nickname": "tourney_name", "avatar_id": "avatar", "relic_id": "relic"})
 
     lookup = get_player_id_lookup()
     approved_lookup = get_player_id_approved_lookup()
 
+    results = [row.result for row in rows]
+    patches = [get_patch_for_result(tourney_result) for tourney_result in results]
+    leagues = [tourney_result.league for tourney_result in results]
+    dates = [tourney_result.date for tourney_result in results]
+    bcs = [tourney_result.conditions.all() for tourney_result in results]
+
     df["real_name"] = [lookup.get(id, name) for id, name in zip(df.id, df.tourney_name)]
     df["verified"] = ["✓" if approved_lookup.get(id) else "" for id, name in zip(df.id, df.tourney_name)]
-    df["wave_role"] = [wave_to_role(wave, get_patch_for_result(tourney_result), tourney_result.league) for wave in df["wave"]]
+    df["wave_role"] = [wave_to_role(wave, patch, league) for wave, patch, league in zip(df["wave"], patches, leagues)]
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
-    df["date"] = tourney_result.date
+    df["date"] = dates
+    df["bcs"] = bcs
+    df["league"] = leagues
+    df["patch"] = patches
 
     return df
 
