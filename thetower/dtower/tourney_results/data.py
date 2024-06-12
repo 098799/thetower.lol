@@ -333,6 +333,12 @@ def get_soft_banned_ids():
     return set(SusPerson.objects.filter(soft_banned=True).values_list("player_id", flat=True))
 
 
+def get_last_tourney(league=champ):
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
+    public = {"public": True} if not hidden_features else {}
+    return TourneyResult.objects.filter(league=league, **public).latest("date")
+
+
 def get_results_for_patch(patch: Patch, league=champ):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     public = {"public": True} if not hidden_features else {}

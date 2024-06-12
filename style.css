@@ -5,8 +5,10 @@
 }
 
 a {
-  text-decoration: none;
   color: var(--text) !important;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: #CCCCCC;
 }
 a:hover {
   text-decoration: underline;
