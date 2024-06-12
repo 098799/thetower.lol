@@ -103,7 +103,9 @@ class Results:
         to_be_displayed["avatar"] = to_be_displayed.avatar.map(make_avatar)
         to_be_displayed["relic"] = to_be_displayed.relic.map(make_relic)
 
-        return to_be_displayed.rename(columns={"position": "#", "verified": "✓", "avatar": "⬡"})
+        to_be_displayed = to_be_displayed.rename(columns={"position": "#", "verified": "✓", "avatar": "⬡"})
+        to_be_displayed["real_name"] = [make_player_url(name, id=id_) for name, id_ in zip(to_be_displayed.real_name, to_be_displayed.id)]
+        return to_be_displayed
 
     def show_hist_preparation(self, to_be_displayed, date: str):
         to_be_displayed = to_be_displayed[["id", "#", "tourney_name", "real_name", "wave", "✓"]]
@@ -199,8 +201,7 @@ class Results:
             self._styler()
             to_be_displayed_styler = self.regular_preparation(to_be_displayed)
 
-        to_be_displayed_styler = to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False)
-        st.write(to_be_displayed_styler, unsafe_allow_html=True)
+        st.write(to_be_displayed_styler.hide(axis="index").to_html(escape=False), unsafe_allow_html=True)
 
 
 def compute_results(options: Options, league: Optional[str] = None):

@@ -26,7 +26,7 @@ def compute_overview(options: Options):
         to_be_displayed = results.prepare_data(current_page=1, step=10, date=last_tourney)
         to_be_displayed_styler = results.regular_preparation(to_be_displayed)
         st.write(
-            to_be_displayed_styler.format(make_player_url, subset=["real_name"]).hide(axis="index").to_html(escape=False),
+            to_be_displayed_styler.hide(axis="index").to_html(escape=False),
             unsafe_allow_html=True,
         )
 

@@ -85,11 +85,14 @@ def get_url(path, base_url=BASE_URL):
     return f"http://{base_url}/{path}"
 
 
-def make_url(username, path, base_url=BASE_URL):
+def make_url(username, path, id=None, base_url=BASE_URL):
     original_username = username
 
-    for medal in medals:
-        username = username.strip(medal)
+    if id:
+        username = id
+    else:
+        for medal in medals:
+            username = username.strip(medal)
 
     url = get_url(path, base_url=base_url)
 
