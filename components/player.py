@@ -51,7 +51,10 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     st.write(table_styling, unsafe_allow_html=True)
 
-    if options.current_player is None:
+    if options.current_player is not None:
+        search_for_new = st.checkbox("Search for another player?")
+
+    if options.current_player is None or search_for_new:
         compute_search()
 
     # player_df = None
