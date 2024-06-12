@@ -5,6 +5,7 @@ streamlit-ext==0.1.7
 streamlit-javascript==0.1.5
 streamlit-js-eval==0.1.5
 extra-streamlit-components==0.1.60
+st-pages==0.4.5
 requests==2.31.0
 pandas==2.1.3
 pydantic==2.5.2
