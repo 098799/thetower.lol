@@ -141,8 +141,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     if player_ids:
         player_id = player_ids[0]
-        user = player_id.player
-        rows = TourneyRow.objects.filter(player_id__in=user.ids.all().values_list("id", flat=True))
+        rows = TourneyRow.objects.filter(player_id__in=player_id.player.ids.all().values_list("id", flat=True))
     else:
         rows = TourneyRow.objects.filter(player_id=options.current_player)
 
@@ -174,6 +173,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
     #     player_df = df[df.id == player_df.iloc[0].id]
 
     player_df = player_df.sort_values("date", ascending=False)
+    user = player_df["real_name"][0]
 
     draw_info_tab(info_tab, user, player_df, hidden_features)
 
