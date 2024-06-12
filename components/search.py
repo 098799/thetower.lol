@@ -28,18 +28,20 @@ def compute_search():
 
     if real_name_part:
         nickname_ids = list(
-            PlayerId.objects.filter(player__name__icontains=real_name_part, primary=True).order_by("player_id").values_list("id", "player__name")
+            PlayerId.objects.filter(player__name__icontains=real_name_part, primary=True).order_by("player_id").values_list("id", "player__name")[:100]
         )
     else:
         nickname_part = st.text_input("Enter part of the tourney name to be queried")
 
         if nickname_part:
-            nickname_ids = list(TourneyRow.objects.filter(nickname__icontains=nickname_part).order_by("player_id").values_list("player_id", "nickname"))
+            nickname_ids = list(TourneyRow.objects.filter(nickname__icontains=nickname_part).order_by("player_id").values_list("player_id", "nickname")[:100])
         else:
             player_id_part = st.text_input("Enter part of the player_id to be queried")
 
             if player_id_part:
-                nickname_ids = list(TourneyRow.objects.filter(player_id__icontains=player_id_part).order_by("player_id").values_list("player_id", "nickname"))
+                nickname_ids = list(
+                    TourneyRow.objects.filter(player_id__icontains=player_id_part).order_by("player_id").values_list("player_id", "nickname")[:100]
+                )
             else:
                 exit()
 
