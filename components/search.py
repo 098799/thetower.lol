@@ -57,6 +57,8 @@ def compute_search():
         df = df.sort_values("how_many_results", ascending=False)[:100]
         st.write(df[["player_id", "nicknames"]].to_html(escape=False, index=False), unsafe_allow_html=True)
 
+    exit()
+
 
 if __name__ == "__main__":
     compute_search()

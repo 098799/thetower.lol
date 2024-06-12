@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
+from components.search import compute_search
 from components.util import get_options
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import (
@@ -51,8 +52,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
     st.write(table_styling, unsafe_allow_html=True)
 
     if options.current_player is None:
-        st.info("Please use 'Search' option in the side menu to find the appropriate player id.")
-        exit()
+        compute_search()
 
     # player_df = None
 
