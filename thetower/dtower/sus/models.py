@@ -1,6 +1,7 @@
 import datetime
 
 from django.db import models
+from django.db.models import Q
 from simple_history.models import HistoricalRecords
 
 
@@ -25,6 +26,12 @@ class PlayerId(models.Model):
 
     def __str__(self):
         return f"{self.id}"
+
+    def save_base(self, *args, force_insert=False, **kwargs):
+        if force_insert and self.primary:
+            self.player.ids.filter(~Q(id=self.id), primary=True).update(primary=False)
+
+        return super().save_base(*args, **kwargs)
 
 
 class SusPerson(models.Model):
