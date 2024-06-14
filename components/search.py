@@ -8,11 +8,10 @@ django.setup()
 
 from itertools import groupby
 
-import pandas as pd
 import streamlit as st
 
+from components.util import add_player_id, add_to_comparison
 from dtower.sus.models import PlayerId
-from dtower.tourney_results.formatting import make_player_url
 from dtower.tourney_results.models import TourneyRow
 
 
@@ -49,17 +48,16 @@ def compute_search():
 
     for player_id, nicknames in groupby(nickname_ids, lambda x: x[0]):
         nicknames = [nickname for _, nickname in nicknames]
-        datum = {"player_id": make_player_url(player_id), "nicknames": ", ".join(set(nicknames)), "how_many_results": len(nicknames)}
+        datum = {"player_id": player_id, "nicknames": ", ".join(set(nicknames)), "how_many_results": len(nicknames)}
 
         data_to_be_shown.append(datum)
 
-    df = pd.DataFrame(data_to_be_shown)
-
-    if not df.empty:
-        df = df.sort_values("how_many_results", ascending=False)[:100]
-        st.write(df[["player_id", "nicknames"]].to_html(escape=False, index=False), unsafe_allow_html=True)
-
-    exit()
+    for datum in data_to_be_shown:
+        nickname_col, player_id_col, button_col, comp_col = st.columns([1, 1, 1, 1])
+        nickname_col.write(datum["nicknames"])
+        player_id_col.write(datum["player_id"])
+        button_col.button("See player page", on_click=add_player_id, args=(datum["player_id"],), key=f'{datum["player_id"]}but')
+        comp_col.button("Add to comparison", on_click=add_to_comparison, args=(datum["player_id"],), key=f'{datum["player_id"]}comp')
 
 
 if __name__ == "__main__":

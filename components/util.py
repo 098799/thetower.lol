@@ -81,3 +81,16 @@ def gantt(df):
     fig = px.timeline(gantt_df, x_start="Start", x_end="Finish", y="Player", color="Champion")
     fig.update_yaxes(autorange="reversed")
     return fig
+
+
+def add_player_id(player_id):
+    st.session_state.player_id = player_id
+
+
+def add_to_comparison(player_id):
+    if "comparison" in st.session_state:
+        st.session_state.comparison.add(player_id)
+    else:
+        st.session_state.comparison = {player_id}
+
+    st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1

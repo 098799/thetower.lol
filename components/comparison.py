@@ -1,5 +1,4 @@
 import datetime
-import os
 from statistics import median, stdev
 from urllib.parse import urlencode
 
@@ -7,63 +6,62 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from components.search import compute_search
 from components.util import get_options
-from dtower.sus.models import SusPerson
-from dtower.tourney_results.constants import (
-    Graph,
-    Options,
-    champ,
-    colors_017,
-    colors_018,
-    league_to_folder,
-    leagues,
-    stratas_boundaries,
-    stratas_boundaries_018,
-)
-from dtower.tourney_results.data import get_id_lookup, get_patches, get_player_list, load_tourney_results
+from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
+from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
+from dtower.tourney_results.data import get_details, get_patches
 from dtower.tourney_results.formatting import BASE_URL, color_top_18, make_player_url
 from dtower.tourney_results.models import PatchNew as Patch
+from dtower.tourney_results.models import TourneyRow
 
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 
 
 def compute_comparison(df, options: Options):
-    hidden_features = os.environ.get("HIDDEN_FEATURES")
+    def diplay_comparison():
+        st.session_state.display_comparison = True
+        options.compare_players = st.session_state.get("comparison", [])
+        st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
 
-    league_col, user_col = st.columns([1, 3])
+    def search_for_new():
+        st.session_state.pop("display_comparison", None)
+        st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
 
-    league = league_col.selectbox("League?", leagues)
+    if (currently := st.session_state.get("comparison", [])) and st.session_state.get("display_comparison") is not True:
+        st.write(f"Currently added: {currently}")
 
-    if league != champ:
-        df = load_tourney_results(folder=league_to_folder[league])
+    if not options.compare_players and (st.session_state.get("display_comparison") is None):
+        compute_search()
+        st.button("Show comparison", on_click=diplay_comparison)
+        exit()
+    else:
+        users = options.compare_players or st.session_state.comparison
 
-    first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
-    all_tourney_names = {name for name in all_tourney_names if name not in set(first_choices) | set(all_real_names)}
-    player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
-
-    if not hidden_features:
-        sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
-        player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
-
-    default_value = list(options.compare_players) if options.compare_players else []
-    users = user_col.multiselect("Which players to compare?", player_list, default=default_value)
-
-    if not users:
-        return
+    search_for_new = st.button("Search for another player?", on_click=search_for_new)
 
     st.code(f"http://{BASE_URL}/Player%20Comparison?" + urlencode({"compare": users}, doseq=True))
+
+    player_ids = PlayerId.objects.filter(id__in=users)
+    known_players = KnownPlayer.objects.filter(ids__in=player_ids)
+    all_player_ids = set(known_players.values_list("ids", flat=True)) | set(users)
+    rows = TourneyRow.objects.filter(player_id__in=all_player_ids)
+
+    player_df = get_details(rows)
 
     patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
     graph_options = [options.default_graph.value] + [
         value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
     ]
     patch_col, bc_col = st.columns([1, 1])
-    patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
-    filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
+    # patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
+    # filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
 
-    id_mapping = get_id_lookup()
+    # id_mapping = get_id_lookup()
 
-    datas = create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users)
+    datas = [(sdf, real_name) for real_name, sdf in player_df.groupby("real_name")]
+
+    # datas = create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users)
 
     if not datas:
         return
@@ -140,39 +138,39 @@ def compute_comparison(df, options: Options):
         st.json(data)
 
 
-def create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users):
-    datas = []
+# def create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users):
+#     datas = []
 
-    for user in users:
-        player_df = get_player_df(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
+#     for user in users:
+#         player_df = get_player_df(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
 
-        if len(player_df.id.unique()) >= 2:
-            aggreg = player_df.groupby("id").count()
-            most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
-            player_df = df[df.id == most_common_id]
-        else:
-            player_df = df[df.id == player_df.iloc[0].id]
+#         if len(player_df.id.unique()) >= 2:
+#             aggreg = player_df.groupby("id").count()
+#             most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
+#             player_df = df[df.id == most_common_id]
+#         else:
+#             player_df = df[df.id == player_df.iloc[0].id]
 
-        player_df = player_df.sort_values("date", ascending=False)
+#         player_df = player_df.sort_values("date", ascending=False)
 
-        real_name = player_df.iloc[0].real_name
-        id_ = player_df.iloc[0].id
+#         real_name = player_df.iloc[0].real_name
+#         id_ = player_df.iloc[0].id
 
-        if id_ in sus_ids:
-            st.error(f"Player {real_name} is considered sus.")
+#         if id_ in sus_ids:
+#             st.error(f"Player {real_name} is considered sus.")
 
-        patch_df = get_patch_df(df, player_df, patch)
+#         patch_df = get_patch_df(df, player_df, patch)
 
-        if filter_bcs:
-            sbcs = set(filter_bcs)
-            patch_df = patch_df[patch_df.bcs.map(lambda table_bcs: sbcs & set(table_bcs) == sbcs)]
+#         if filter_bcs:
+#             sbcs = set(filter_bcs)
+#             patch_df = patch_df[patch_df.bcs.map(lambda table_bcs: sbcs & set(table_bcs) == sbcs)]
 
-        tbdf = patch_df.reset_index(drop=True)
+#         tbdf = patch_df.reset_index(drop=True)
 
-        if len(tbdf) >= 2:
-            datas.append((tbdf, user))
+#         if len(tbdf) >= 2:
+#             datas.append((tbdf, user))
 
-    return datas
+#     return datas
 
 
 def enrich_plot(fig, max_, min_, pd_datas):
@@ -222,18 +220,17 @@ def get_patch_df(df, player_df, patch):
     return patch_df
 
 
-def get_player_df(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
-    if user in (set(first_choices) | all_real_names | all_tourney_names):
-        player_df = df[(df.real_name == user) | (df.tourney_name == user)]
-    elif user in all_user_ids:
-        player_df = df[df.id == id_mapping.get(user, user)]
-    else:
-        raise ValueError("Incorrect user, don't be a smartass.")
-    return player_df
+# def get_player_df(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
+#     if user in (set(first_choices) | all_real_names | all_tourney_names):
+#         player_df = df[(df.real_name == user) | (df.tourney_name == user)]
+#     elif user in all_user_ids:
+#         player_df = df[df.id == id_mapping.get(user, user)]
+#     else:
+#         raise ValueError("Incorrect user, don't be a smartass.")
+#     return player_df
 
 
 if __name__ == "__main__":
     st.set_page_config(layout="centered")
-    df = load_tourney_results("data")
     options = get_options(links=False)
-    compute_comparison(df, options=options)
+    compute_comparison(None, options=options)

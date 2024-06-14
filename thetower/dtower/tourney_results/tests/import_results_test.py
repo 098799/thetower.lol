@@ -4,7 +4,7 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from dtower.tourney_results.models import TourneyResult, TourneyRow
-from dtower.tourney_results.tourney_utils import create_tourney_rows
+from dtower.tourney_results.tourney_utils import create_tourney_rows, reposition
 
 
 @pytest.mark.django_db(True)
@@ -46,17 +46,18 @@ def test_import_results__update():
         league="Champion",
         public=True,
     )
+    create_tourney_rows(result)
 
-    TourneyRow.objects.create(
+    # when
+    TourneyRow.objects.filter(
         result=result,
         player_id="6D221A1DA7174B6E",
         nickname="GrimLord",
+    ).update(
         wave=3360,  # different from the file
         position=2,  # different from the file
     )
-
-    # when
-    create_tourney_rows(result)
+    reposition(result)
 
     # then
     assert TourneyRow.objects.get(player_id="6D221A1DA7174B6E").wave == 3360  # not updated

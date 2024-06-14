@@ -1,6 +1,5 @@
 import datetime
 import os
-from collections import defaultdict
 from html import escape
 from urllib.parse import urlencode
 
@@ -11,12 +10,11 @@ from plotly.subplots import make_subplots
 
 from components.search import compute_search
 from components.util import get_options
-from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
+from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     Graph,
     Options,
     all_relics,
-    champ,
     colors_017,
     colors_018,
     league_to_folder,
@@ -35,9 +33,9 @@ from dtower.tourney_results.data import (
     get_soft_banned_ids,
     load_tourney_results,
 )
-from dtower.tourney_results.formatting import BASE_URL, color_position, html_to_rgb
+from dtower.tourney_results.formatting import BASE_URL, color_position
 from dtower.tourney_results.models import PatchNew as Patch
-from dtower.tourney_results.models import Role, TourneyResult, TourneyRow
+from dtower.tourney_results.models import TourneyRow
 
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 id_mapping = get_id_lookup()
@@ -46,94 +44,23 @@ id_mapping = get_id_lookup()
 def compute_player_lookup(df, options: Options, all_leagues=False):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
+    def search_for_new():
+        st.session_state.pop("player_id")
+
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
 
     st.write(table_styling, unsafe_allow_html=True)
 
+    if player_id := st.session_state.get("player_id"):
+        options.current_player = player_id
+
     if options.current_player is not None:
-        search_for_new = st.checkbox("Search for another player?")
+        st.button("Search for another player?", on_click=search_for_new)
 
-    if options.current_player is None or search_for_new:
+    if options.current_player is None:
         compute_search()
-
-    # player_df = None
-
-    # if not all_leagues:
-    #     league_col, user_col = st.columns([1, 2])
-    # else:
-    #     user_col = st
-
-    # league_choices = leagues
-    # user_choices = []
-
-    # if options.current_player is not None:
-    #     user = options.current_player
-    #     found = find_player_across_leagues(user)
-
-    #     if found is not None:
-    #         df, player_df, preselected_league = found
-    #         league_choices = [preselected_league] + [league_choice for league_choice in leagues if league_choice != preselected_league]
-    #         user_choices = [user]
-
-    # league = league_col.selectbox("League?", league_choices) if not all_leagues else all
-
-    # if df is None or league != preselected_league:
-    #     limit_no_results = None
-
-    #     if all_leagues:  # limit amount of results to load faster the hidden site
-    #         user_col, checkbox_col = user_col.columns([5, 1])
-    #         limit_loading = checkbox_col.slider("last x months", min_value=3, max_value=30, value=3, step=3)
-
-    #         if limit_loading:
-    #             limit_no_results = 8 * limit_loading
-
-    #     if not all_leagues:
-    #         df = load_tourney_results(folder=league_to_folder[league], limit_no_results=limit_no_results)
-    #         df["league"] = league
-    #     else:
-    #         dfs = [load_tourney_results(league, limit_no_results=limit_no_results) for league in leagues]
-
-    #         for df, league in zip(dfs, leagues):
-    #             df["league"] = league
-
-    #         df = pd.concat(dfs)
-
-    # first_choices, all_real_names, all_tourney_names, all_user_ids, last_top_scorer = get_player_list(df)
-    # player_list = [""] + first_choices + sorted(all_real_names | all_tourney_names) + all_user_ids
-
-    # if not hidden_features:
-    #     sus_nicknames = set(SusPerson.objects.filter(sus=True).values_list("name", flat=True))
-    #     player_list = [player for player in player_list if player not in sus_ids | sus_nicknames]
-
-    # if not all_leagues:
-    #     user = user_col.selectbox("Which user would you like to lookup?", user_choices + player_list)
-    # else:
-    #     sub_user_col, id_col, tourney_name_col = user_col.columns([1, 1, 1])
-    #     real_name = sub_user_col.selectbox("Lookup by real name", [""] + first_choices + list((all_real_names - set(first_choices))))
-
-    #     id_ = None
-    #     tourney_name = None
-
-    #     if real_name:
-    #         player_df = df[df.real_name == real_name]
-    #     else:
-    #         id_ = id_col.selectbox("Lookup by id", [""] + sorted(all_user_ids))
-
-    #         if id_:
-    #             player_df = df[df.id == id_mapping.get(id_, id_)]
-    #         else:
-    #             tourney_name = tourney_name_col.selectbox("Lookup by tourney name", [""] + sorted(all_tourney_names))
-    #             player_df = df[df.tourney_name == tourney_name]
-
-    #     user = real_name or id_ or tourney_name
-
-    # # lol
-    # if user == "Soelent":
-    #     st.image("towerfans.jpg")
-
-    # if not user:
-    #     return
+        exit()
 
     info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
 
@@ -143,39 +70,15 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         player_id = player_ids[0]
         rows = TourneyRow.objects.filter(player_id__in=player_id.player.ids.all().values_list("id", flat=True))
     else:
-        rows = TourneyRow.objects.filter(player_id=options.current_player)
+        player_id = options.current_player
+        rows = TourneyRow.objects.filter(player_id=player_id)
 
     player_df = get_details(rows)
-
-    # if player_df is None:
-    #     player_df = _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)
-
-    #     if player_df is None:
-    #         st.write("User not found in this league.")
-    #         return
-
-    # # todo should be extracted
-    # if len(player_df.id.unique()) >= 2:
-    #     potential_ids = player_df.id.unique().tolist()
-    #     aggreg = player_df.groupby("id").count()
-    #     most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
-    #     user_ids = graph_tab.multiselect(
-    #         "Since multiple players had the same username, please choose id. If you are confident the same user used multiple ids, you can select multiple. If it's different users, data below won't make much sense",
-    #         potential_ids,
-    #         default=most_common_id,
-    #     )
-
-    #     if not user_ids:
-    #         return
-
-    #     player_df = df[df.id.isin(user_ids)]
-    # else:
-    #     player_df = df[df.id == player_df.iloc[0].id]
 
     player_df = player_df.sort_values("date", ascending=False)
     user = player_df["real_name"][0]
 
-    draw_info_tab(info_tab, user, player_df, hidden_features)
+    draw_info_tab(info_tab, user, player_id, player_df, hidden_features)
 
     patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
     graph_options = [options.default_graph.value] + [
@@ -228,7 +131,6 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
             .style.apply(
                 lambda row: [
                     None,
-                    # f"color: {player_df[player_df['date']==row.date].name_role_color.iloc[0]}",
                     f"color: {player_df[player_df['date']==row.date].wave_role_color.iloc[0]}",
                     None,
                     None,
@@ -239,7 +141,6 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
                 axis=1,
             )
             .map(color_position, subset=["#"])
-            # .bar(subset=["wave"], color="#222222", vmin=0, vmax=max(player_df.wave))
         )
 
     player_df = player_df.rename({"tourney_name": "name", "position": "#"}, axis=1)
@@ -253,14 +154,11 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     write_for_each_patch(patch_tab, player_df)
 
-    # for container in [info_tab, graph_tab, raw_data_tab, patch_tab]:
-    #     container.write(f"User id(s) used: <b>{tbdf.raw_id.unique()}</b>", unsafe_allow_html=True)
 
-
-def draw_info_tab(info_tab, user, player_df, hidden_features):
+def draw_info_tab(info_tab, user, player_id, player_df, hidden_features):
     url_tab, comp_tab = info_tab.columns([3, 1])
-    url_tab.code(f"http://{BASE_URL}/Player?" + urlencode({"player": user}, doseq=True))
-    url = f"http://{BASE_URL}/Player%20Comparison?" + urlencode({"compare": user}, doseq=True)
+    url_tab.code(f"http://{BASE_URL}/Player?" + urlencode({"player": player_id}, doseq=True))
+    url = f"http://{BASE_URL}/Player?" + urlencode({"compare": user}, doseq=True)
     comp_tab.write(f"<a href='{url}'>🔗 Compare with...</a>", unsafe_allow_html=True)
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
 

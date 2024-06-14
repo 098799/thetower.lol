@@ -16,8 +16,6 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
      - if there are things like wave changed, assume people changed this manually from admin.
     """
 
-    sus_ids = get_sus_ids()
-
     csv_path = tourney_result.result_file.path
 
     try:
@@ -34,16 +32,39 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
     df["relic"] = df.tourney_name.map(lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1)
     df["tourney_name"] = df.tourney_name.map(lambda name: name.split("#")[0])
 
+    positions = calculate_positions(df.id, df.index, df.wave, get_sus_ids())
+
+    df["position"] = positions
+
+    create_data = []
+
+    for _, row in df.iterrows():
+        create_data.append(
+            dict(
+                player_id=row.id,
+                result=tourney_result,
+                nickname=row.tourney_name,
+                wave=row.wave,
+                position=row.position,
+                avatar_id=row.avatar,
+                relic_id=row.relic,
+            )
+        )
+
+    TourneyRow.objects.bulk_create([TourneyRow(**data) for data in create_data])
+
+
+def calculate_positions(ids, indexs, waves, sus_ids) -> list[int]:
     positions = []
     current = 0
     borrow = 1
 
-    for id_, idx, wave in zip(df.id, df.index, df.wave):
+    for id_, idx, wave in zip(ids, indexs, waves):
         if id_ in sus_ids:
             positions.append(-1)
             continue
 
-        if idx - 1 in df.index and wave == df.loc[idx - 1, "wave"]:
+        if idx - 1 in indexs and wave == waves[idx - 1]:
             borrow += 1
         else:
             current += borrow
@@ -51,28 +72,22 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
 
         positions.append(current)
 
-    df["position"] = positions
+    return positions
 
-    for _, row in df.iterrows():
-        current_qs = TourneyRow.objects.filter(
-            player_id=row.id,
-            result=tourney_result,
-        )
 
-        if current_qs.exists():
-            # weird case that shouldn't happen: if there are multiple results for the same id,
-            # assume it's an error and needs to be corrected
-            if len(current_qs) > 1:
-                current_qs.delete()
-            else:  # update only position, assume other data might have been changed manually?
-                current_qs.update(position=row.position)
-        else:
-            TourneyRow.objects.create(
-                player_id=row.id,
-                result=tourney_result,
-                nickname=row.tourney_name,
-                wave=row.wave,
-                avatar_id=row.avatar,
-                relic_id=row.relic,
-                position=row.position,
-            )
+def reposition(tourney_result: TourneyResult) -> None:
+    qs = tourney_result.rows.all().order_by("-wave")
+    bulk_data = qs.values_list("player_id", "wave")
+    indexes = [idx for idx, _ in enumerate(bulk_data)]
+    ids = [datum for datum, _ in bulk_data]
+    waves = [wave for _, wave in bulk_data]
+
+    positions = calculate_positions(ids, indexes, waves, get_sus_ids())
+
+    bulk_update_data = []
+
+    for index, obj in enumerate(qs):
+        obj.position = positions[index]
+        bulk_update_data.append(obj)
+
+    TourneyRow.objects.bulk_update(bulk_update_data, ["position"])

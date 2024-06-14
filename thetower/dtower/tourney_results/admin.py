@@ -25,18 +25,15 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-@admin.action(description="Recalculate results (run me if something changed)")
+@admin.action(description="Recalculate position in results")
 def recalculate_results(modeladmin, request, queryset):
     logging.info("Starting to recalculate results")
-    from dtower.tourney_results.tourney_utils import create_tourney_rows
+    from dtower.tourney_results.tourney_utils import reposition
 
     logging.info(f"{queryset=}")
     for tourney in queryset:
         logging.info(f"{tourney=}")
-        create_tourney_rows(tourney)
-
-    logging.info("Restarting services...")
-    subprocess.call("systemctl restart streamlit2", shell=True)
+        reposition(tourney)
 
 
 @admin.action(description="Restart the public app")
@@ -44,7 +41,7 @@ def restart_public_app(modeladmin, request, queryset):
     subprocess.call("systemctl restart streamlit2", shell=True)
 
 
-@admin.action(description="Restart the hidden app instance (thetower.lol:8502)")
+@admin.action(description="Restart the hidden app instance (hidden.thetower.lol)")
 def restart_hidden_app(modeladmin, request, queryset):
     subprocess.call("systemctl restart streamlit", shell=True)
 
