@@ -24,16 +24,27 @@ def compute_comparison(df, options: Options):
         options.compare_players = st.session_state.get("comparison", [])
         st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
 
+    def remove_from_comparison(player):
+        st.session_state.comparison.remove(player)
+        st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
+
     def search_for_new():
         st.session_state.pop("display_comparison", None)
         st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
 
     if (currently := st.session_state.get("comparison", [])) and st.session_state.get("display_comparison") is not True:
-        st.write(f"Currently added: {currently}")
+        st.write("Currently added:")
+
+        for player in currently:
+            addee_col, pop_col = st.columns([1, 1])
+
+            addee_col.write(f"{st.session_state.addee_map[player]} ({player})")
+            pop_col.button("Remove", on_click=remove_from_comparison, args=(player,), key=f"{player}remove")
+
+        st.button("Show comparison", on_click=diplay_comparison, key="show_comparison_top")
 
     if not options.compare_players and (st.session_state.get("display_comparison") is None):
-        compute_search()
-        st.button("Show comparison", on_click=diplay_comparison)
+        compute_search(player=False, comparison=True)
         exit()
     else:
         users = options.compare_players or st.session_state.comparison
@@ -54,14 +65,11 @@ def compute_comparison(df, options: Options):
         value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
     ]
     patch_col, bc_col = st.columns([1, 1])
-    # patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
-    # filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
+    patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
+    filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in player_df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
 
-    # id_mapping = get_id_lookup()
-
-    datas = [(sdf, real_name) for real_name, sdf in player_df.groupby("real_name")]
-
-    # datas = create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users)
+    datas = [(sdf, real_name) for real_name, sdf in player_df.groupby("real_name") if len(sdf) >= 2]
+    datas = filter_plot_datas(datas, patch, filter_bcs)
 
     if not datas:
         return
@@ -138,39 +146,22 @@ def compute_comparison(df, options: Options):
         st.json(data)
 
 
-# def create_plot_datas(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, patch, filter_bcs, users):
-#     datas = []
+def filter_plot_datas(datas, patch, filter_bcs):
+    filtered_datas = []
 
-#     for user in users:
-#         player_df = get_player_df(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user)
+    for sdf, name in datas:
+        patch_df = get_patch_df(sdf, sdf, patch)
 
-#         if len(player_df.id.unique()) >= 2:
-#             aggreg = player_df.groupby("id").count()
-#             most_common_id = aggreg[aggreg.tourney_name == aggreg.tourney_name.max()].index[0]
-#             player_df = df[df.id == most_common_id]
-#         else:
-#             player_df = df[df.id == player_df.iloc[0].id]
+        if filter_bcs:
+            sbcs = set(filter_bcs)
+            patch_df = patch_df[patch_df.bcs.map(lambda table_bcs: sbcs & set(table_bcs) == sbcs)]
 
-#         player_df = player_df.sort_values("date", ascending=False)
+        tbdf = patch_df.reset_index(drop=True)
 
-#         real_name = player_df.iloc[0].real_name
-#         id_ = player_df.iloc[0].id
+        if len(tbdf) >= 2:
+            filtered_datas.append((tbdf, name))
 
-#         if id_ in sus_ids:
-#             st.error(f"Player {real_name} is considered sus.")
-
-#         patch_df = get_patch_df(df, player_df, patch)
-
-#         if filter_bcs:
-#             sbcs = set(filter_bcs)
-#             patch_df = patch_df[patch_df.bcs.map(lambda table_bcs: sbcs & set(table_bcs) == sbcs)]
-
-#         tbdf = patch_df.reset_index(drop=True)
-
-#         if len(tbdf) >= 2:
-#             datas.append((tbdf, user))
-
-#     return datas
+    return filtered_datas
 
 
 def enrich_plot(fig, max_, min_, pd_datas):
@@ -214,20 +205,10 @@ def get_patch_df(df, player_df, patch):
     if isinstance(patch, Patch):
         patch_df = player_df[player_df.patch == patch]
     elif patch == Graph.last_16.value:
-        patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
+        patch_df = player_df[player_df.date.isin(sorted(df.date.unique())[-16:])]
     else:
         patch_df = player_df
     return patch_df
-
-
-# def get_player_df(all_real_names, all_tourney_names, all_user_ids, df, first_choices, id_mapping, user):
-#     if user in (set(first_choices) | all_real_names | all_tourney_names):
-#         player_df = df[(df.real_name == user) | (df.tourney_name == user)]
-#     elif user in all_user_ids:
-#         player_df = df[df.id == id_mapping.get(user, user)]
-#     else:
-#         raise ValueError("Incorrect user, don't be a smartass.")
-#     return player_df
 
 
 if __name__ == "__main__":

@@ -43,7 +43,6 @@ hidden_features = os.environ.get("HIDDEN_FEATURES")
 if hidden_features:
     pages += [
         Page("components/sus_overview.py", "SUS overview", "🔨"),
-        Page("components/search_all_leagues.py", "Search all leagues", "🔨"),
     ]
 
 show_pages(pages)

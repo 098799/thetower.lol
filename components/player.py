@@ -17,6 +17,7 @@ from dtower.tourney_results.constants import (
     all_relics,
     colors_017,
     colors_018,
+    how_many_results_public_site,
     league_to_folder,
     leagues,
     position_colors,
@@ -59,21 +60,30 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         st.button("Search for another player?", on_click=search_for_new)
 
     if options.current_player is None:
-        compute_search()
+        compute_search(player=True, comparison=False)
         exit()
 
     info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
 
     player_ids = PlayerId.objects.filter(id=options.current_player)
 
+    position_query = {}
+
+    if not hidden_features:
+        position_query = {"position__lt": how_many_results_public_site, "position__gt": 0}
+
     if player_ids:
         player_id = player_ids[0]
-        rows = TourneyRow.objects.filter(player_id__in=player_id.player.ids.all().values_list("id", flat=True))
+        rows = TourneyRow.objects.filter(player_id__in=player_id.player.ids.all().values_list("id", flat=True), **position_query)
     else:
         player_id = options.current_player
-        rows = TourneyRow.objects.filter(player_id=player_id)
+        rows = TourneyRow.objects.filter(player_id=player_id, **position_query)
 
     player_df = get_details(rows)
+
+    if player_df.empty:
+        st.error(f"No results found for the player {player_id}.")
+        return
 
     player_df = player_df.sort_values("date", ascending=False)
     user = player_df["real_name"][0]
@@ -308,27 +318,27 @@ def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
 
 
 def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf, df):
-    tops = position_stratas[:-1][::-1]
-    strata_to_color = dict(zip(tops, position_colors[2:][::-1] + ["#FFFFFF"]))
+    # tops = position_stratas[:-1][::-1]
+    # strata_to_color = dict(zip(tops, position_colors[2:][::-1] + ["#FFFFFF"]))
 
-    best_position = tbdf.position.min()
-    worst_position = tbdf.position.max()
+    # best_position = tbdf.position.min()
+    # worst_position = tbdf.position.max()
 
-    for strata in tops:
-        if strata <= best_position:
-            begin = strata
-            break
-    else:
-        begin = tops[0]
+    # for strata in tops:
+    #     if strata <= best_position:
+    #         begin = strata
+    #         break
+    # else:
+    #     begin = tops[0]
 
-    for strata in tops:
-        if strata >= worst_position:
-            end = strata
-            break
-    else:
-        end = tops[-1]
+    # for strata in tops:
+    #     if strata >= worst_position:
+    #         end = strata
+    #         break
+    # else:
+    #     end = tops[-1]
 
-    stratas_for_plot = [strata for strata in tops if strata >= begin and strata <= end]
+    # stratas_for_plot = [strata for strata in tops if strata >= begin and strata <= end]
 
     # champ_df = df[df.league == champ]  # backgrounds on graphs won't make sense for other leagues anyway
     # all_results = champ_df[champ_df.date.isin(tbdf.date.unique())]

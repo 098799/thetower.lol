@@ -1,6 +1,7 @@
 import os
 
 from django.contrib import admin
+from django.db import transaction
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
@@ -53,6 +54,23 @@ class SusPersonAdmin(SimpleHistoryAdmin):
 
     def _modified(self, obj):
         return mark_safe(obj.modified.strftime("%Y-%m-%d<br>%H:%M:%S"))
+
+    def save_model(self, request, obj, form, change):
+        player_id = obj.player_id
+
+        obj = super().save_model(request, obj, form, change)
+        self.recalc_all(player_id)
+        return obj
+
+    @transaction.atomic
+    def recalc_all(self, player_id):
+        from dtower.tourney_results.models import TourneyResult, TourneyRow
+        from dtower.tourney_results.tourney_utils import reposition
+
+        all_results = TourneyResult.objects.filter(id__in=TourneyRow.objects.filter(player_id=player_id).values_list("result", flat=True))
+
+        for res in all_results:
+            reposition(res)
 
 
 class IdInline(admin.TabularInline):

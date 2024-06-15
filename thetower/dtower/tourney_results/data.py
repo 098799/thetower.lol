@@ -366,7 +366,7 @@ def get_tourney_result_details(
     rows = TourneyRow.objects.filter(result=tourney_result)
 
     if filter_sus:
-        rows = rows.filter(~Q(player_id__in=get_sus_ids()))
+        rows = rows.filter(~Q(player_id__in=get_sus_ids()) | ~Q(position__lt=0))
 
     rows = rows.order_by("position")[slice_fun]
     return get_details(rows)
@@ -375,6 +375,9 @@ def get_tourney_result_details(
 def get_details(rows: QuerySet[TourneyRow]) -> pd.DataFrame:
     df = pd.DataFrame(rows.values("player_id", "position", "nickname", "wave", "avatar_id", "relic_id"))
     df = df.rename(columns={"player_id": "id", "nickname": "tourney_name", "avatar_id": "avatar", "relic_id": "relic"})
+
+    if df.empty:
+        return df
 
     lookup = get_player_id_lookup()
     approved_lookup = get_player_id_approved_lookup()

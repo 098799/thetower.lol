@@ -176,3 +176,22 @@ class TourneyRow(models.Model):
 
     class Meta:
         ordering = ["-result__date", "position"]
+
+
+class Avatar(models.Model):
+    id = models.SmallIntegerField(primary_key=True, help_text="Avatar id from The Tower")
+    file_name = models.CharField(max_length=32, null=False, blank=False, help_text="Avatar file name")
+
+    def __str__(self):
+        return f"{self.id}: {self.file_name}"
+
+
+class Relic(models.Model):
+    id = models.SmallIntegerField(primary_key=True, help_text="Avatar id from The Tower")
+    file_name = models.CharField(max_length=32, null=False, blank=False, help_text="Avatar file name")
+    name = models.CharField(max_length=32, null=False, blank=False, help_text="Relic name")
+    bonus_amount = models.SmallIntegerField(null=False, blank=False, help_text="Relic bonus amount")
+    bonus_type = models.CharField(max_length=16, null=False, blank=False, help_text="Relic bonus type")
+
+    def __str__(self):
+        return f"{self.id}: {self.file_name}"
