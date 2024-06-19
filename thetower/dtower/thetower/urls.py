@@ -11,12 +11,11 @@ base_patterns = [path("admin/", admin.site.urls)]
 
 urlpatterns = base_patterns
 
-if os.environ.get("LEAGUE_SWITCHER"):
-    league_text_patterns = [
-        path("<str:league>/text/<str:tourney_date>/", plaintext_results),
-        path("<str:league>/text/", plaintext_results),
-    ]
-    urlpatterns += league_text_patterns
+league_text_patterns = [
+    path("<str:league>/text/<str:tourney_date>/", plaintext_results),
+    path("<str:league>/text/", plaintext_results),
+]
+urlpatterns += league_text_patterns
 
 
 text_patterns = [

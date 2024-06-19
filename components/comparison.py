@@ -19,7 +19,7 @@ from dtower.tourney_results.models import TourneyRow
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 
 
-def compute_comparison(df, options: Options):
+def compute_comparison(options: Options):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
     def diplay_comparison():
@@ -232,4 +232,4 @@ def filter_lower_leagues(rows):
 if __name__ == "__main__":
     st.set_page_config(layout="centered")
     options = get_options(links=False)
-    compute_comparison(None, options=options)
+    compute_comparison(options=options)

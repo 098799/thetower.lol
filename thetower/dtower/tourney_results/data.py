@@ -154,7 +154,6 @@ def _load_tourney_results(
     result_cutoff: Optional[int] = None,
 ) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
-    league_switcher = os.environ.get("LEAGUE_SWITCHER")
     debug = os.environ.get("DEBUG")
 
     dfs = []
@@ -166,7 +165,7 @@ def _load_tourney_results(
     for index, (result_file, date, bcs) in enumerate(result_files, 1):
         df = pd.read_csv(result_file, header=None)
 
-        cutoff = handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff, debug)
+        cutoff = handle_result_cutoff(hidden_features, league, result_cutoff, debug)
 
         df = df.iloc[:cutoff]
 
@@ -239,17 +238,14 @@ def _load_tourney_results(
     return df
 
 
-def handle_result_cutoff(hidden_features, league, league_switcher, result_cutoff, debug):
+def handle_result_cutoff(hidden_features, league, result_cutoff, debug):
     if result_cutoff:
         cutoff = result_cutoff
     elif not hidden_features:
-        if league_switcher:
-            cutoff = how_many_results_public_site
+        cutoff = how_many_results_public_site
 
-            if league != champ:
-                cutoff = how_many_results_public_site_other
-        else:
-            cutoff = how_many_results_legacy
+        if league != champ:
+            cutoff = how_many_results_public_site_other
 
     else:
         cutoff = how_many_results_hidden_site
@@ -408,7 +404,6 @@ if __name__ == "__main__":
     df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:2])
     breakpoint()
 
-    os.environ["LEAGUE_SWITCHER"] = "true"
     os.environ["HIDDEN_FEATURES"] = "true"
 
     df = load_tourney_results__uncached("data", patch_id=Patch.objects.last().id)

@@ -42,11 +42,13 @@ sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=T
 id_mapping = get_id_lookup()
 
 
-def compute_player_lookup(df, options: Options, all_leagues=False):
+def compute_player_lookup():
+    options = get_options(links=False)
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
     def search_for_new():
-        st.session_state.pop("player_id")
+        if "player_id" in st.session_state:
+            st.session_state.pop("player_id")
 
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
@@ -132,7 +134,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         if not graph_position_instead:
-            handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf, df)
+            handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf)
         else:
             handle_is_graph_position(average_foreground, fig, rolling_average, tbdf)
 
@@ -233,7 +235,7 @@ def write_for_each_patch(patch_tab, player_df):
             {
                 "patch": f"0.{patch.version_minor}.{patch.version_patch}",
                 "max_wave": max_wave,
-                "tourney_name": max_wave_data.name,
+                "tourney_name": max_wave_data["name"],
                 "date": max_wave_data.date,
                 # "patch_role_color": max_wave_data.name_role.color,
                 "battle_conditions": ", ".join(max_wave_data.bcs.values_list("shortcut", flat=True)),
@@ -244,7 +246,7 @@ def write_for_each_patch(patch_tab, player_df):
             {
                 "patch": f"0.{patch.version_minor}.{patch.version_patch}",
                 "max_position": max_pos,
-                "tourney_name": max_pos_data.name,
+                "tourney_name": max_pos_data["name"],
                 "date": max_pos_data.date,
                 # "max_position_color": max_pos_data.position_role_color,
                 "battle_conditions": ", ".join(max_pos_data.bcs.values_list("shortcut", flat=True)),
@@ -330,7 +332,7 @@ def handle_is_graph_position(average_foreground, fig, rolling_average, tbdf):
     fig.update_yaxes(secondary_y=True, range=[tbdf.position.max() + 20, 0])
 
 
-def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf, df):
+def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_average, stratas, tbdf):
     # tops = position_stratas[:-1][::-1]
     # strata_to_color = dict(zip(tops, position_colors[2:][::-1] + ["#FFFFFF"]))
 
@@ -473,14 +475,12 @@ def find_player_across_leagues(user):
 
 if __name__ == "__main__":
     st.set_page_config(layout="centered")
-    options = get_options(links=False)
-    compute_player_lookup(None, options=options, all_leagues=True)
+    compute_player_lookup()
 
 
 # import cProfile
 # import pstats
 
-# os.environ["LEAGUE_SWITCHER"] = "true"
 # os.environ["HIDDEN_FEATURES"] = "false"
 
 # pr = cProfile.Profile()

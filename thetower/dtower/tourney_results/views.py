@@ -15,8 +15,6 @@ cache = TTLCache(maxsize=10, ttl=600)
 
 @cached(cache=cache)
 def get_data(league, tourney_date=None):
-    os.environ["LEAGUE_SWITCHER"] = "True"
-
     df = load_tourney_results(league)
     df = df[~df.id.isin(get_sus_ids())]
 
