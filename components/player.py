@@ -122,6 +122,7 @@ def compute_player_lookup():
         player_df = player_df[player_df.bcs.map(lambda table_bcs: sbcs & set(table_bcs) == sbcs)]
 
     tbdf = patch_df.reset_index(drop=True)
+    tbdf = filter_lower_leagues(tbdf)
     tbdf["average"] = tbdf.wave.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
     tbdf["position_average"] = tbdf.position.rolling(rolling_average, min_periods=1, center=True).mean().astype(int)
     tbdf["bcs"] = tbdf.bcs.map(lambda bc_qs: " / ".join([bc.shortcut for bc in bc_qs]))
@@ -178,6 +179,17 @@ def compute_player_lookup():
     )
 
     write_for_each_patch(patch_tab, player_df)
+
+
+def filter_lower_leagues(df):
+    leagues_in = set(df.league)
+
+    for league in leagues:
+        if league in leagues_in:
+            break
+
+    df = df[df.league == league]
+    return df
 
 
 def draw_info_tab(info_tab, user, player_id, player_df, hidden_features):

@@ -1,4 +1,6 @@
 import os
+from functools import reduce
+from operator import and_, or_
 
 import django
 
@@ -29,10 +31,14 @@ def compute_search(player=False, comparison=False):
 
     real_name_part = name_col.text_input("Enter part of the player name")
 
-    if real_name_part:
+    fragments = [part.strip() for part in real_name_part.strip().split()]
+
+    if fragments:
+        match_part = reduce(and_, [Q(player__name__icontains=fragment) for fragment in fragments[1:]]) if fragments[1:] else Q()
+
         nickname_ids = list(
             PlayerId.objects.filter(
-                player__name__istartswith=real_name_part,
+                Q(player__name__istartswith=fragments[0]) & match_part,
                 primary=True,
             )
             .order_by("player_id")
@@ -40,10 +46,12 @@ def compute_search(player=False, comparison=False):
         )
 
         if len(nickname_ids) < page:
+            match_part = reduce(and_, [Q(player__name__icontains=fragment) for fragment in fragments[1:]]) if fragments[1:] else Q()
+
             nickname_ids += list(
                 TourneyRow.objects.filter(
                     ~Q(player_id__in=[player_id for player_id, _ in nickname_ids]),
-                    nickname__istartswith=real_name_part,
+                    Q(nickname__istartswith=fragments[0]) & match_part,
                     position__lte=how_many_results_public_site,
                 )
                 .distinct()
@@ -52,10 +60,12 @@ def compute_search(player=False, comparison=False):
             )
 
         if len(nickname_ids) < page:
+            query = reduce(and_, [Q(player__name__icontains=fragment) for fragment in fragments])
+
             nickname_ids += list(
                 PlayerId.objects.filter(
                     ~Q(id__in=[player_id for player_id, _ in nickname_ids]),
-                    player__name__icontains=real_name_part,
+                    query,
                     primary=True,
                 )
                 .order_by("player_id")
@@ -63,10 +73,12 @@ def compute_search(player=False, comparison=False):
             )
 
         if len(nickname_ids) < page:
+            query = reduce(and_, [Q(nickname__icontains=fragment) for fragment in fragments])
+
             nickname_ids += list(
                 TourneyRow.objects.filter(
                     ~Q(player_id__in=[player_id for player_id, _ in nickname_ids]),
-                    nickname__icontains=real_name_part,
+                    query,
                     position__lte=how_many_results_public_site,
                 )
                 .distinct()
@@ -75,16 +87,25 @@ def compute_search(player=False, comparison=False):
             )
     else:
         player_id_part = id_col.text_input("Enter part of the player_id to be queried")
+        player_id_fragments = [part.strip() for part in player_id_part.strip().split()]
 
-        if player_id_part:
-            nickname_ids = list(
+        if player_id_fragments:
+            match_part = reduce(and_, [Q(player_id__icontains=fragment) for fragment in player_id_fragments[1:]]) if player_id_fragments[1:] else Q()
+
+            nickname_ids_data = (
                 TourneyRow.objects.filter(
-                    player_id__icontains=player_id_part,
+                    Q(player_id__istartswith=player_id_fragments[0]) & match_part,
                     position__lte=how_many_results_public_site,
                 )
                 .order_by("player_id")
-                .values_list("player_id", "nickname")[:page]
+                .values_list("player_id", "nickname")
             )
+
+            nickname_ids = []
+
+            for _, group in groupby(sorted(nickname_ids_data), lambda x: x[0]):
+                group = list(group)
+                nickname_ids.append((group[0][0], ", ".join(list(set(nickname for _, nickname in group))[:page])))
         else:
             exit()
 
@@ -102,7 +123,7 @@ def compute_search(player=False, comparison=False):
         player_id_col.write(datum["player_id"])
 
         if player:
-            button_col.button("See player page", on_click=add_player_id, args=(datum["player_id"],), key=f'{datum["player_id"]}but')
+            button_col.button("See player page", on_click=add_player_id, args=(datum["player_id"],), key=f'{datum["player_id"]}{datum["nicknames"]}but')
 
         if comparison:
             comp_col.button("Add to comparison", on_click=add_to_comparison, args=(datum["player_id"], datum["nicknames"]), key=f'{datum["player_id"]}comp')
