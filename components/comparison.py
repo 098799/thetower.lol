@@ -1,4 +1,5 @@
 import datetime
+import os
 from statistics import median, stdev
 from urllib.parse import urlencode
 
@@ -9,7 +10,7 @@ import streamlit as st
 from components.search import compute_search
 from components.util import get_options
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
-from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, stratas_boundaries, stratas_boundaries_018
+from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, leagues, stratas_boundaries, stratas_boundaries_018
 from dtower.tourney_results.data import get_details, get_patches
 from dtower.tourney_results.formatting import BASE_URL, color_top_18, make_player_url
 from dtower.tourney_results.models import PatchNew as Patch
@@ -19,6 +20,8 @@ sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=T
 
 
 def compute_comparison(df, options: Options):
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
+
     def diplay_comparison():
         st.session_state.display_comparison = True
         options.compare_players = st.session_state.get("comparison", [])
@@ -55,8 +58,11 @@ def compute_comparison(df, options: Options):
 
     player_ids = PlayerId.objects.filter(id__in=users)
     known_players = KnownPlayer.objects.filter(ids__in=player_ids)
-    all_player_ids = set(known_players.values_list("ids", flat=True)) | set(users)
-    rows = TourneyRow.objects.filter(player_id__in=all_player_ids)
+    all_player_ids = set(PlayerId.objects.filter(player__in=known_players).values_list("id", flat=True)) | set(users)
+
+    hidden_query = {} if hidden_features else {"result__public": True}
+    rows = TourneyRow.objects.filter(player_id__in=all_player_ids, **hidden_query)
+    rows = filter_lower_leagues(rows)
 
     player_df = get_details(rows)
 
@@ -209,6 +215,18 @@ def get_patch_df(df, player_df, patch):
     else:
         patch_df = player_df
     return patch_df
+
+
+def filter_lower_leagues(rows):
+    # only leave top league results -- otherwise results are not comparable?
+    leagues_in = rows.values_list("result__league", flat=True).distinct()
+
+    for league in leagues:
+        if league in leagues_in:
+            break
+
+    rows = rows.filter(result__league=league)
+    return rows
 
 
 if __name__ == "__main__":

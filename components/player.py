@@ -67,6 +67,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     player_ids = PlayerId.objects.filter(id=options.current_player)
 
+    hidden_query = {} if hidden_features else {"result__public": True}
     position_query = {}
 
     if not hidden_features:
@@ -74,10 +75,22 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 
     if player_ids:
         player_id = player_ids[0]
-        rows = TourneyRow.objects.filter(player_id__in=player_id.player.ids.all().values_list("id", flat=True), **position_query)
+        rows = TourneyRow.objects.filter(
+            player_id__in=player_id.player.ids.all().values_list("id", flat=True),
+            **position_query,
+            **hidden_query,
+        )
     else:
         player_id = options.current_player
-        rows = TourneyRow.objects.filter(player_id=player_id, **position_query)
+        rows = TourneyRow.objects.filter(
+            player_id=player_id,
+            **position_query,
+            **hidden_query,
+        )
+
+    if not rows:
+        st.error(f"No results found for the player {player_id}.")
+        return
 
     player_df = get_details(rows)
 
@@ -99,7 +112,7 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
     filter_bcs = patch_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in player_df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
     rolling_average = average_col.slider("Use rolling average for results from how many tourneys?", min_value=1, max_value=10, value=5)
 
-    colors, patch_df, stratas = handle_colors_dependant_on_patch(df, patch, player_df)
+    colors, patch_df, stratas = handle_colors_dependant_on_patch(patch, player_df)
 
     if filter_bcs:
         sbcs = set(filter_bcs)
@@ -168,8 +181,8 @@ def compute_player_lookup(df, options: Options, all_leagues=False):
 def draw_info_tab(info_tab, user, player_id, player_df, hidden_features):
     url_tab, comp_tab = info_tab.columns([3, 1])
     url_tab.code(f"http://{BASE_URL}/Player?" + urlencode({"player": player_id}, doseq=True))
-    url = f"http://{BASE_URL}/Player?" + urlencode({"compare": user}, doseq=True)
-    comp_tab.write(f"<a href='{url}'>🔗 Compare with...</a>", unsafe_allow_html=True)
+    # url = f"http://{BASE_URL}/Player?" + urlencode({"compare": user}, doseq=True)
+    # comp_tab.write(f"<a href='{url}'>🔗 Compare with...</a>", unsafe_allow_html=True)
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
 
     real_name = player_df.iloc[0].real_name
@@ -412,7 +425,7 @@ def handle_not_graph_position_instead(average_foreground, colors, fig, rolling_a
     #         fig.add_hline(y=strata, line_color=color_, line_dash="dash", opacity=0.4, line_width=3)
 
 
-def handle_colors_dependant_on_patch(df, patch, player_df):
+def handle_colors_dependant_on_patch(patch, player_df):
     if isinstance(patch, Patch):
         patch_df = player_df[player_df.patch == patch]
 
@@ -420,9 +433,9 @@ def handle_colors_dependant_on_patch(df, patch, player_df):
             colors, stratas = colors_018, stratas_boundaries_018
         else:
             colors, stratas = colors_017, stratas_boundaries
-    # elif patch == Graph.last_16.value:
-    #     patch_df = player_df[player_df.date.isin(df.date.unique()[-16:])]
-    #     colors, stratas = colors_018, stratas_boundaries_018
+    elif patch == Graph.last_16.value:
+        patch_df = player_df[player_df.date.isin(sorted(player_df.date.unique())[-16:])]
+        colors, stratas = colors_018, stratas_boundaries_018
     else:
         patch_df = player_df
         colors, stratas = colors_018, stratas_boundaries_018
