@@ -69,24 +69,18 @@ def compute_player_lookup():
 
     player_ids = PlayerId.objects.filter(id=options.current_player)
 
-    hidden_query = {} if hidden_features else {"result__public": True}
-    position_query = {}
-
-    if not hidden_features:
-        position_query = {"position__lt": how_many_results_public_site, "position__gt": 0}
+    hidden_query = {} if hidden_features else {"result__public": True, "position__lt": how_many_results_public_site, "position__gt": 0}
 
     if player_ids:
         player_id = player_ids[0]
         rows = TourneyRow.objects.filter(
             player_id__in=player_id.player.ids.all().values_list("id", flat=True),
-            **position_query,
             **hidden_query,
         )
     else:
         player_id = options.current_player
         rows = TourneyRow.objects.filter(
             player_id=player_id,
-            **position_query,
             **hidden_query,
         )
 

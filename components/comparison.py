@@ -10,7 +10,17 @@ import streamlit as st
 from components.search import compute_search
 from components.util import get_options
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
-from dtower.tourney_results.constants import Graph, Options, colors_017, colors_018, leagues, stratas_boundaries, stratas_boundaries_018
+from dtower.tourney_results.constants import (
+    Graph,
+    Options,
+    all_relics,
+    colors_017,
+    colors_018,
+    how_many_results_public_site,
+    leagues,
+    stratas_boundaries,
+    stratas_boundaries_018,
+)
 from dtower.tourney_results.data import get_details, get_patches
 from dtower.tourney_results.formatting import BASE_URL, color_top_18, make_player_url
 from dtower.tourney_results.models import PatchNew as Patch
@@ -60,7 +70,7 @@ def compute_comparison(options: Options):
     known_players = KnownPlayer.objects.filter(ids__in=player_ids)
     all_player_ids = set(PlayerId.objects.filter(player__in=known_players).values_list("id", flat=True)) | set(users)
 
-    hidden_query = {} if hidden_features else {"result__public": True}
+    hidden_query = {} if hidden_features else {"result__public": True, "position__lt": how_many_results_public_site, "position__gt": 0}
     rows = TourneyRow.objects.filter(player_id__in=all_player_ids, **hidden_query)
     rows = filter_lower_leagues(rows)
 
