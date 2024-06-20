@@ -35,7 +35,6 @@ from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import Role, TourneyResult, TourneyRow
 
 
-@cache
 def get_patches():
     return Patch.objects.all().order_by("start_date")
 
