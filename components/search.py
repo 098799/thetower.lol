@@ -118,7 +118,7 @@ def compute_search(player=False, comparison=False):
         data_to_be_shown.append(datum)
 
     for datum in data_to_be_shown:
-        nickname_col, player_id_col, button_col, comp_col = st.columns([1, 1, 1, 1])
+        nickname_col, player_id_col, button_col = st.columns([1, 1, 1])
         nickname_col.write(datum["nicknames"])
         player_id_col.write(datum["player_id"])
 
@@ -126,7 +126,7 @@ def compute_search(player=False, comparison=False):
             button_col.button("See player page", on_click=add_player_id, args=(datum["player_id"],), key=f'{datum["player_id"]}{datum["nicknames"]}but')
 
         if comparison:
-            comp_col.button("Add to comparison", on_click=add_to_comparison, args=(datum["player_id"], datum["nicknames"]), key=f'{datum["player_id"]}comp')
+            button_col.button("Add to comparison", on_click=add_to_comparison, args=(datum["player_id"], datum["nicknames"]), key=f'{datum["player_id"]}comp')
 
     if not data_to_be_shown:
         st.info("No results found")
