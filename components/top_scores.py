@@ -59,8 +59,7 @@ def compute_top(df, options: Options):
         st.dataframe(overall_tbd, use_container_width=True, height=400)
 
 
-if __name__ == "__main__":
-    st.set_page_config(layout="centered")
+def get_top_scores():
     df = load_tourney_results("data")
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     compute_top(df, options)

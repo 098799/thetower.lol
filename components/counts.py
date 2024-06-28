@@ -41,8 +41,3 @@ def compute_counts():
 
     to_be_displayed = pd.DataFrame(results).sort_values("date", ascending=False).reset_index(drop=True)
     st.dataframe(to_be_displayed, use_container_width=True, height=807, hide_index=True)
-
-
-if __name__ == "__main__":
-    st.set_page_config(layout="wide")
-    compute_counts()

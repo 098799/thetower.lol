@@ -81,7 +81,7 @@ def compute_fallen_defenders(df):
     st.plotly_chart(gantt(fallen_other[show_others[0] : show_others[1]]))
 
 
-if __name__ == "__main__":
+def get_fallen_defenders():
     df = load_tourney_results(league_to_folder[champ])
     df = df[~df.id.isin(get_sus_ids())]
     compute_fallen_defenders(df)

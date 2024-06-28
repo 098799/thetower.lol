@@ -84,8 +84,7 @@ def compute_various(df, options):
             )
 
 
-if __name__ == "__main__":
-    st.set_page_config(layout="centered")
+def get_various():
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     df = load_tourney_results(league_to_folder[champ])
     compute_various(df, options)

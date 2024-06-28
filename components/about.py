@@ -1,13 +1,9 @@
-import pandas as pd
 import streamlit as st
-
-from dtower.sus.models import SusPerson
-from dtower.tourney_results.data import get_sus_data
 
 
 def compute_about(*args, **kwargs):
     st.title("About")
-    st.markdown("Site by <a href='mailto:admin@thetower.lol'>`098799`</a>.")
+    st.markdown("Site by <a href='mailto:admin@thetower.lol'>`098799`</a>.", unsafe_allow_html=True)
     st.markdown("Thanks to `andreasjn` for the help with the discord bot.")
     st.markdown("Thanks to `Milamber33` for a lot of help with css and other things.")
     st.markdown("Thanks to `Jim808`, `ObsUK` and `Bartek` for a graph ideas and encouragement.")
@@ -29,8 +25,3 @@ def compute_about(*args, **kwargs):
     # # st.header("Vindicated")
     # # st.write("Previously on the sus list but vindicated by the tower staff:")
     # # st.write(sorted([nickname for nickname, id_ in rehabilitated]))
-
-
-if __name__ == "__main__":
-    st.set_page_config(layout="centered")
-    compute_about()

@@ -12,7 +12,7 @@ from dtower.tourney_results.models import TourneyResult
 patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
 
 
-def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> None:
+def compute_breakdown(options: Optional[Options] = None) -> None:
     sus_ids = get_sus_ids()
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
@@ -114,25 +114,6 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
         counts_df = pd.DataFrame({role.wave_bottom: count_data for role, count_data in counts_data.items()})
         patch_tab.dataframe(counts_df.sort_index(axis=1, ascending=False))
 
-    # glory_patch = Patch.objects.get(version_minor=16)
-
-    # plot_data = {
-    #     role: go.Bar(
-    #         name=f"{role.wave_bottom} v{role.patch.version_minor}",
-    #         x=[date for date in dates if date >= glory_patch.start_date and date <= glory_patch.end_date],
-    #         y=[value for date, value in count_data.items() if date >= glory_patch.start_date and date <= glory_patch.end_date],
-    #         marker_color=role.color,
-    #         opacity=0.8,
-    #     )
-    #     for role, count_data in counts_data.items()
-    #     if role.patch.version_minor == glory_patch.version_minor
-    # }
-
-    # fig = go.Figure(data=list(plot_data.values()))
-    # fig.update_layout(barmode="stack", title="Glory days of 0.16-0.17")
-
-    # st.plotly_chart(fig)
-
 
 # import cProfile
 # import pstats
@@ -144,9 +125,3 @@ def compute_breakdown(df: pd.DataFrame, options: Optional[Options] = None) -> No
 # stats = pstats.Stats(pr)
 # stats.sort_stats("cumtime")
 # stats.print_stats(50)
-
-if __name__ == "__main__":
-    st.set_page_config(layout="centered")
-    options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
-    # df = load_tourney_results(league_to_folder[champ], result_cutoff=200)
-    compute_breakdown(None, options)

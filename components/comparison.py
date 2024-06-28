@@ -13,7 +13,6 @@ from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     Graph,
     Options,
-    all_relics,
     colors_017,
     colors_018,
     how_many_results_public_site,
@@ -31,6 +30,11 @@ sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=T
 
 def compute_comparison(options: Options):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
+
+    with open("style.css", "r") as infile:
+        table_styling = f"<style>{infile.read()}</style>"
+
+    st.write(table_styling, unsafe_allow_html=True)
 
     def diplay_comparison():
         st.session_state.display_comparison = True
@@ -240,6 +244,5 @@ def filter_lower_leagues(rows):
 
 
 if __name__ == "__main__":
-    st.set_page_config(layout="centered")
     options = get_options(links=False)
     compute_comparison(options=options)

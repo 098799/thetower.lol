@@ -89,7 +89,6 @@ def compute_winners(df, options=None):
     st.plotly_chart(gantt(winners_df))
 
 
-if __name__ == "__main__":
-    st.set_page_config(layout="centered")
+def get_winners():
     df = load_tourney_results("data")
     compute_winners(df)

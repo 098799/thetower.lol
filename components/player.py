@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from natsort import natsorted
 from plotly.subplots import make_subplots
 
 from components.search import compute_search
@@ -259,8 +260,11 @@ def write_for_each_patch(patch_tab, player_df):
             }
         )
 
-    wave_df = pd.DataFrame(wave_data).sort_values("patch", ascending=False).reset_index(drop=True)
-    position_df = pd.DataFrame(position_data).sort_values("patch", ascending=False).reset_index(drop=True)
+    wave_data = natsorted(wave_data, key=lambda x: x["patch"], reverse=True)
+    position_data = natsorted(position_data, key=lambda x: x["patch"], reverse=True)
+
+    wave_df = pd.DataFrame(wave_data).reset_index(drop=True)
+    position_df = pd.DataFrame(position_data).reset_index(drop=True)
 
     wave_tbdf = wave_df[["patch", "max_wave", "tourney_name", "date", "battle_conditions"]].style.apply(
         lambda row: [

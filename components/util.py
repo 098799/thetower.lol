@@ -22,7 +22,7 @@ def get_options(links=None):
 
     options = Options(links_toggle=links, default_graph=Graph.last_16.value, average_foreground=True)
 
-    query = st.experimental_get_query_params()
+    query = st.query_params
 
     if query:
         print(datetime.datetime.now(), query)
@@ -31,7 +31,7 @@ def get_options(links=None):
     compare_players: Optional[List[str]]
 
     player = query.get("player")
-    compare_players = st.experimental_get_query_params().get("compare")
+    compare_players = st.query_params.get("compare")
 
     if player:
         current_player = player[0]
