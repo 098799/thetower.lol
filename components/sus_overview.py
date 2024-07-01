@@ -131,7 +131,7 @@ def get_copper_to_champ(df):
     return data
 
 
-if __name__ == "__main__":
+def get_sus_overview():
     st.set_page_config(layout="centered")
     last_patch = Patch.objects.last()
 

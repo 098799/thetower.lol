@@ -18,6 +18,7 @@ from components.namechangers import get_namechangers
 from components.overview import compute_overview
 from components.player import compute_player_lookup
 from components.results import compute_results
+from components.sus_overview import get_sus_overview
 from components.top_scores import get_top_scores
 from components.various import get_various
 from components.winners import compute_winners
@@ -60,7 +61,7 @@ hidden_features = os.environ.get("HIDDEN_FEATURES")
 
 if hidden_features:
     pages += [
-        st.Page("components/sus_overview.py", title="SUS overview", icon="🔨"),
+        st.Page(get_sus_overview, title="SUS overview", icon="🔨", url_path="sus"),
     ]
 
 pg = st.navigation(pages)
