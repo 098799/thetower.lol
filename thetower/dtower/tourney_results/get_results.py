@@ -12,6 +12,11 @@ wednesday = 2
 saturday = 5
 
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+
 def get_current_time__game_server():
     """Game server runs on utc time, but we don't want to try accessing results until 1 hour after the tourney is done."""
     return datetime.datetime.utcnow() - datetime.timedelta(hours=1)
@@ -80,14 +85,14 @@ def make_request(league):
 
 def execute(league):
     if not get_date_offset():
-        print(f"{datetime.datetime.now()} Skipping cause tourney day!!")
+        logging.info("Skipping cause tourney day!!")
         return
 
     file_path = get_file_path(get_file_name(), league)
     file_path_raw = file_path + "_raw.csv"
 
     if os.path.isfile(file_path):
-        print(f"{datetime.datetime.now()} Using cached file {file_path}")
+        logging.info(f"Using cached file {file_path}")
         return
 
     csv_contents = make_request(league)
@@ -102,7 +107,7 @@ def execute(league):
     with open(file_path, "w") as outfile:
         outfile.write(csv_contents)
 
-    print(f"Successfully stored file {file_path}")
+    logging.info(f"Successfully stored file {file_path}")
 
 
 def check():
