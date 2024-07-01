@@ -20,7 +20,7 @@ from components.player import compute_player_lookup
 from components.results import compute_results
 from components.top_scores import get_top_scores
 from components.various import get_various
-from components.winners import get_winners
+from components.winners import compute_winners
 from dtower.tourney_results.constants import Graph, Options, champ, copper, gold, plat, silver
 
 st.set_page_config(
@@ -45,7 +45,7 @@ pages = [
     st.Page(partial(compute_results, league=copper, options=options), title="Results Copper", icon="🥉", url_path="copper"),
     st.Page(compute_player_lookup, title="Player", icon="⛹️", url_path="player"),
     st.Page(partial(compute_comparison, options=options), title="Player Comparison", icon="🔃", url_path="comparison"),
-    st.Page(get_winners, title="Winners", icon="🔥", url_path="winners"),
+    st.Page(compute_winners, title="Winners", icon="🔥", url_path="winners"),
     st.Page(get_top_scores, title="Top Scores", icon="🤑", url_path="top"),
     st.Page(partial(compute_breakdown, options=options), title="Breakdown", icon="🪁", url_path="breakdown"),
     st.Page(get_namechangers, title="Namechangers", icon="💩", url_path="namechangers"),

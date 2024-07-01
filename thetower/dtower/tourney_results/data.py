@@ -17,6 +17,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import streamlit as st
+from cachetools.func import ttl_cache
 from django.db.models import Q, QuerySet
 
 from dtower.sus.models import PlayerId, SusPerson
@@ -25,7 +26,6 @@ from dtower.tourney_results.constants import (
     data_folder_name_mapping,
     how_many_results_debug,
     how_many_results_hidden_site,
-    how_many_results_legacy,
     how_many_results_public_site,
     how_many_results_public_site_other,
 )
@@ -35,10 +35,12 @@ from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import Role, TourneyResult, TourneyRow
 
 
+@ttl_cache(maxsize=128, ttl=60)
 def get_patches():
     return Patch.objects.all().order_by("start_date")
 
 
+@ttl_cache(maxsize=512, ttl=60)
 def date_to_patch(date: datetime.datetime) -> Optional[Patch]:
     for patch in get_patches():
         if date >= patch.start_date and date <= patch.end_date:
@@ -344,11 +346,12 @@ def get_patch_for_result(result: TourneyResult) -> Patch:
     return Patch.objects.get(start_date__lte=result.date, end_date__gte=result.date)
 
 
-def get_tourney_result_details(
-    tourney_result: TourneyResult,
+def get_tourneys(
+    tourney_results: QuerySet[TourneyResult],
     offset: int = 0,
     limit: int = how_many_results_public_site,
     filter_sus: bool = True,
+    ids: list[int] | None = None,
 ) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     upper_limit = offset + limit
@@ -356,14 +359,14 @@ def get_tourney_result_details(
     if not hidden_features:
         upper_limit = min(upper_limit, how_many_results_public_site)
 
-    slice_fun = slice(offset, None) if limit is None else slice(offset, upper_limit)
+    id_filtering = {"player_id__in": ids} if ids else {}
 
-    rows = TourneyRow.objects.filter(result=tourney_result)
+    rows = TourneyRow.objects.filter(result__in=tourney_results, position__gte=offset, position__lt=upper_limit, **id_filtering)
 
     if filter_sus:
-        rows = rows.filter(~Q(player_id__in=get_sus_ids()) | ~Q(position__lt=0))
+        rows = rows.filter(~Q(player_id__in=get_sus_ids()) & Q(position__gt=0))
 
-    rows = rows.order_by("position")[slice_fun]
+    rows = rows.order_by("result__date", "position")
     return get_details(rows)
 
 
@@ -395,18 +398,12 @@ def get_details(rows: QuerySet[TourneyRow]) -> pd.DataFrame:
     return df
 
 
-def get_tourneys(tourney_results: list[TourneyResult], offset: int = 0, limit: int = how_many_results_public_site) -> pd.DataFrame:
-    return pd.concat([get_tourney_result_details(tourney_result, offset=offset, limit=limit) for tourney_result in tourney_results]).reset_index(drop=True)
-
-
 if __name__ == "__main__":
     df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:2])
-    breakpoint()
 
     os.environ["HIDDEN_FEATURES"] = "true"
 
     df = load_tourney_results__uncached("data", patch_id=Patch.objects.last().id)
-    breakpoint()
     df = df[~df.id.isin(get_sus_ids())]
     sdf = df[df.date.isin(sorted(df.date.unique())[:3])]
     sdf = sdf[sdf.wave > how_many_results_public_site]
@@ -417,8 +414,6 @@ if __name__ == "__main__":
         ddf = df[df.real_name == person]
         last = sorted(ddf.date.unique())[-1]
         lasts[person] = last
-
-    breakpoint()
 
 
 # import cProfile

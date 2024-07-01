@@ -5,7 +5,7 @@ from typing import Optional
 import streamlit as st
 
 from dtower.tourney_results.constants import Graph, Options, all_relics, champ, sus_person
-from dtower.tourney_results.data import get_results_for_patch, get_sus_ids, get_tourney_result_details
+from dtower.tourney_results.data import get_results_for_patch, get_sus_ids, get_tourneys
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_player_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult
@@ -59,7 +59,7 @@ class Results:
         begin = (current_page - 1) * step
 
         public = {"public": True} if not self.hidden_features else {}
-        self.df = get_tourney_result_details(TourneyResult.objects.get(league=self.league, date=date, **public), offset=begin, limit=step)
+        self.df = get_tourneys(TourneyResult.objects.filter(league=self.league, date=date, **public), offset=begin, limit=step)
         self.df = self.df.reset_index(drop=True)
 
         if not self.hidden_features:

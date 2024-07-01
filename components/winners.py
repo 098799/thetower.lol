@@ -1,21 +1,27 @@
+import os
 from collections import defaultdict
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.util import gantt
-from dtower.tourney_results.data import get_patches, load_tourney_results
+from dtower.tourney_results.constants import champ
+from dtower.tourney_results.data import get_patches, get_tourneys
+from dtower.tourney_results.models import TourneyResult
 
 patches = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
 
 
-def compute_winners(df, options=None):
+def compute_winners():
     selected_patches_slider = st.select_slider(
         "Limit results to a patch?",
         options=sorted([patch for patch in patches if not patch.interim], reverse=True),
         value=patches[-1],
     )
+
+    hidden_features = os.environ.get("HIDDEN_FEATURES")
+    public = {"public": True} if not hidden_features else {}
+    df = get_tourneys(TourneyResult.objects.filter(league=champ, **public), offset=0, limit=10)
 
     selected_patches = [patch for patch in patches if patch.version_minor >= selected_patches_slider.version_minor]
 
@@ -55,11 +61,14 @@ def compute_winners(df, options=None):
 
     total_score = defaultdict(int)
 
+    id_name_map = {}
+
     for position, score in winner_score.items():
         position_df = df[df.position == position]
 
-        for real_name in position_df.real_name:
+        for real_name, id_ in zip(position_df.real_name, position_df.id):
             total_score[real_name] += score
+            id_name_map[real_name] = id_
 
     total_score = {name: score for name, score in total_score.items() if score > 0}
     graph_df = pd.DataFrame(total_score.items(), columns=["name", "count"])
@@ -68,27 +77,39 @@ def compute_winners(df, options=None):
     fig.update_traces(textinfo="value")
     st.plotly_chart(fig)
 
-    winner_data = sorted(tuple(zip(graph_df["name"], graph_df["count"])), key=lambda x: x[1], reverse=True)
-    winners = [winner for winner, _ in winner_data]
-
-    add_plat = st.checkbox("Add street cred to old guard?", value=False)
-
-    if add_plat:
-        df = pd.concat([load_tourney_results("plat"), df])
-
-    sdf = df[df.real_name.isin(winners)]
-
-    winners_data = []
-
-    for winner in winners:
-        dates_attended = sdf[sdf.real_name == winner].date
-        winners_data.append({"Player": winner, "tourneys_attended": sorted(dates_attended)})
-
-    winners_df = pd.DataFrame(winners_data)
-
-    st.plotly_chart(gantt(winners_df))
+    # winner_data = sorted(tuple(zip(graph_df["name"], graph_df["count"])), key=lambda x: x[1], reverse=True)
+    # winners = [winner for winner, _ in winner_data]
 
 
-def get_winners():
-    df = load_tourney_results("data")
-    compute_winners(df)
+#     id_name_map.values()
+#     df = get_tourneys(TourneyResult.objects.filter(league=champ, **public), ids=list(id_name_map.values()))
+
+#     # add_plat = st.checkbox("Add street cred to old guard?", value=False)
+
+#     # if add_plat:
+#     #     df = pd.concat([load_tourney_results("plat"), df])
+
+#     sdf = df[df.real_name.isin(winners)]
+
+#     winners_data = []
+
+#     for winner in winners:
+#         dates_attended = sdf[sdf.real_name == winner].date
+#         winners_data.append({"Player": winner, "tourneys_attended": sorted(dates_attended)})
+
+#     winners_df = pd.DataFrame(winners_data)
+
+#     st.plotly_chart(gantt(winners_df))
+
+
+# def get_winners():
+#     if winners_results := st.session_state.get("winners_results"):
+#         compute_winners(winners_results)
+#     else:
+#         print("starting to load")
+#         df = load_tourney_results("data")
+#         print("loaded")
+#         compute_winners(df)
+
+
+# compute_winners()
