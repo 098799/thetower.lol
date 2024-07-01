@@ -56,6 +56,16 @@ def restart_discord_bot(modeladmin, request, queryset):
     subprocess.call("systemctl restart discord_bot", shell=True)
 
 
+@admin.action(description="Restart import results (run me if you don't see TourneyResult objects from previous tourney when it should be there)")
+def restart_import_results(modeladmin, request, queryset):
+    subprocess.call("systemctl restart import_results", shell=True)
+
+
+@admin.action(description="Restart get results (run me if import results is failing?)")
+def restart_get_results(modeladmin, request, queryset):
+    subprocess.call("systemctl restart get_results", shell=True)
+
+
 @admin.action(description="Publicize")
 def publicize(modeladmin, request, queryset):
     for item in queryset:
