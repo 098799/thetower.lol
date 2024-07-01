@@ -135,6 +135,8 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
         restart_hidden_app,
         restart_django,
         restart_discord_bot,
+        restart_import_results,
+        restart_get_results,
     ]
 
 
