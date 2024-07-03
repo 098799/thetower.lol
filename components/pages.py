@@ -11,7 +11,7 @@ import streamlit as st
 
 from components.about import compute_about
 from components.breakdown import compute_breakdown
-from components.comparison import compute_comparison
+from components.comparison import get_comparison
 from components.counts import compute_counts
 from components.fallen_defenders import get_fallen_defenders
 from components.namechangers import get_namechangers
@@ -37,6 +37,10 @@ st.set_page_config(
 options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
 
 
+if st.session_state.get("options") is None:
+    st.session_state.options = options
+
+
 pages = [
     st.Page(partial(compute_overview, options=options), title="Overview", icon="🏠", url_path="overview"),
     st.Page(partial(compute_results, league=champ, options=options), title="Results Champions", icon="🏆", url_path="results"),
@@ -45,7 +49,7 @@ pages = [
     st.Page(partial(compute_results, league=silver, options=options), title="Results Silver", icon="🥈", url_path="silver"),
     st.Page(partial(compute_results, league=copper, options=options), title="Results Copper", icon="🥉", url_path="copper"),
     st.Page(compute_player_lookup, title="Player", icon="⛹️", url_path="player"),
-    st.Page(partial(compute_comparison, options=options), title="Player Comparison", icon="🔃", url_path="comparison"),
+    st.Page(get_comparison, title="Player Comparison", icon="🔃", url_path="comparison"),
     st.Page(compute_winners, title="Winners", icon="🔥", url_path="winners"),
     st.Page(get_top_scores, title="Top Scores", icon="🤑", url_path="top"),
     st.Page(partial(compute_breakdown, options=options), title="Breakdown", icon="🪁", url_path="breakdown"),

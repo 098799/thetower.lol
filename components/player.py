@@ -69,16 +69,19 @@ def compute_player_lookup():
     info_tab, graph_tab, raw_data_tab, patch_tab = st.tabs(["Info", "Tourney performance graph", "Full results data", "Patch best"])
 
     player_ids = PlayerId.objects.filter(id=options.current_player)
+    print(f"{player_ids=} {options.current_player=}")
 
     hidden_query = {} if hidden_features else {"result__public": True, "position__lt": how_many_results_public_site, "position__gt": 0}
 
     if player_ids:
         player_id = player_ids[0]
+        print(f"{player_ids=} {player_id=}")
         rows = TourneyRow.objects.filter(
             player_id__in=player_id.player.ids.all().values_list("id", flat=True),
             **hidden_query,
         )
     else:
+        print(f"{player_id=} {options.current_player=}")
         player_id = options.current_player
         rows = TourneyRow.objects.filter(
             player_id=player_id,
@@ -189,7 +192,7 @@ def filter_lower_leagues(df):
 
 def draw_info_tab(info_tab, user, player_id, player_df, hidden_features):
     url_tab, comp_tab = info_tab.columns([3, 1])
-    url_tab.code(f"http://{BASE_URL}/Player?" + urlencode({"player": player_id}, doseq=True))
+    url_tab.code(f"http://{BASE_URL}/player?" + urlencode({"player": player_id}, doseq=True))
     # url = f"http://{BASE_URL}/Player?" + urlencode({"compare": user}, doseq=True)
     # comp_tab.write(f"<a href='{url}'>🔗 Compare with...</a>", unsafe_allow_html=True)
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)

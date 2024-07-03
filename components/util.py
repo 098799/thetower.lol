@@ -27,16 +27,11 @@ def get_options(links=None):
     if query:
         print(datetime.datetime.now(), query)
 
-    current_player: Optional[str] = None
-    compare_players: Optional[List[str]]
-
     player = query.get("player")
-    compare_players = st.query_params.get("compare")
+    compare_players = query.get_all("compare")
+    print(f"{player=}, {compare_players=}")
 
-    if player:
-        current_player = player[0]
-
-    options.current_player = current_player
+    options.current_player = player
     options.compare_players = compare_players
 
     return options
@@ -95,4 +90,5 @@ def add_to_comparison(player_id, nicknames):
         st.session_state.comparison = {player_id}
         st.session_state.addee_map = {player_id: nicknames}
 
+    print(f"{st.session_state.comparison=} {st.session_state.addee_map=}")
     st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1

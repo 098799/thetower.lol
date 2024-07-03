@@ -1,6 +1,6 @@
 import os
 from functools import reduce
-from operator import and_, or_
+from operator import and_
 
 import django
 

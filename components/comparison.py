@@ -8,11 +8,9 @@ import plotly.express as px
 import streamlit as st
 
 from components.search import compute_search
-from components.util import get_options
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     Graph,
-    Options,
     colors_017,
     colors_018,
     how_many_results_public_site,
@@ -28,7 +26,7 @@ from dtower.tourney_results.models import TourneyRow
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
 
 
-def compute_comparison(options: Options):
+def compute_comparison():
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
     with open("style.css", "r") as infile:
@@ -38,7 +36,7 @@ def compute_comparison(options: Options):
 
     def diplay_comparison():
         st.session_state.display_comparison = True
-        options.compare_players = st.session_state.get("comparison", [])
+        st.session_state.options.compare_players = st.session_state.get("comparison", [])
         st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
 
     def remove_from_comparison(player):
@@ -60,16 +58,24 @@ def compute_comparison(options: Options):
 
         st.button("Show comparison", on_click=diplay_comparison, key="show_comparison_top")
 
-    if not options.compare_players and (st.session_state.get("display_comparison") is None):
+    if not st.session_state.options.compare_players:
+        st.session_state.options.compare_players = st.query_params.get_all("compare")
+
+        if st.session_state.options.compare_players:
+            st.session_state.display_comparison = True
+
+    print(f"{st.session_state.options.compare_players=} {st.session_state.get("display_comparison")=}")
+    if (not st.session_state.options.compare_players) or (st.session_state.get("display_comparison") is None):
         compute_search(player=False, comparison=True)
         exit()
     else:
-        users = options.compare_players or st.session_state.comparison
+        users = st.session_state.options.compare_players or st.session_state.comparison
 
     search_for_new = st.button("Search for another player?", on_click=search_for_new)
 
-    st.code(f"http://{BASE_URL}/Player%20Comparison?" + urlencode({"compare": users}, doseq=True))
+    st.code(f"http://{BASE_URL}/comparison?" + urlencode({"compare": users}, doseq=True))
 
+    print(f"{users=}")
     player_ids = PlayerId.objects.filter(id__in=users)
     known_players = KnownPlayer.objects.filter(ids__in=player_ids)
     all_player_ids = set(PlayerId.objects.filter(player__in=known_players).values_list("id", flat=True)) | set(users)
@@ -81,8 +87,8 @@ def compute_comparison(options: Options):
     player_df = get_details(rows)
 
     patches_options = sorted([patch for patch in get_patches() if patch.version_minor], key=lambda patch: patch.start_date, reverse=True)
-    graph_options = [options.default_graph.value] + [
-        value for value in list(Graph.__members__.keys()) + patches_options if value != options.default_graph.value
+    graph_options = [st.session_state.options.default_graph.value] + [
+        value for value in list(Graph.__members__.keys()) + patches_options if value != st.session_state.options.default_graph.value
     ]
     patch_col, bc_col = st.columns([1, 1])
     patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
@@ -113,7 +119,7 @@ def compute_comparison(options: Options):
     )
     summary.set_index(keys="Name")
 
-    if options.links_toggle:
+    if st.session_state.options.links_toggle:
         to_be_displayed = summary.style.format(make_player_url, subset=["Name"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
@@ -137,7 +143,7 @@ def compute_comparison(options: Options):
 
     last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
 
-    if options.links_toggle:
+    if st.session_state.options.links_toggle:
         to_be_displayed = last_results.format(make_player_url, subset=["Name"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
@@ -243,6 +249,5 @@ def filter_lower_leagues(rows):
     return rows
 
 
-if __name__ == "__main__":
-    options = get_options(links=False)
-    compute_comparison(options=options)
+def get_comparison():
+    compute_comparison()
