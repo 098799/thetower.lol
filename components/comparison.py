@@ -64,7 +64,6 @@ def compute_comparison():
         if st.session_state.options.compare_players:
             st.session_state.display_comparison = True
 
-    print(f"{st.session_state.options.compare_players=} {st.session_state.get("display_comparison")=}")
     if (not st.session_state.options.compare_players) or (st.session_state.get("display_comparison") is None):
         compute_search(player=False, comparison=True)
         exit()
@@ -75,7 +74,6 @@ def compute_comparison():
 
     st.code(f"http://{BASE_URL}/comparison?" + urlencode({"compare": users}, doseq=True))
 
-    print(f"{users=}")
     player_ids = PlayerId.objects.filter(id__in=users)
     known_players = KnownPlayer.objects.filter(ids__in=player_ids)
     all_player_ids = set(PlayerId.objects.filter(player__in=known_players).values_list("id", flat=True)) | set(users)
@@ -94,7 +92,7 @@ def compute_comparison():
     patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
     filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in player_df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
 
-    datas = [(sdf, real_name) for real_name, sdf in player_df.groupby("real_name") if len(sdf) >= 2]
+    datas = [(sdf, player_id) for player_id, sdf in player_df.groupby("id") if len(sdf) >= 2]
     datas = filter_plot_datas(datas, patch, filter_bcs)
 
     if not datas:
@@ -120,7 +118,7 @@ def compute_comparison():
     summary.set_index(keys="Name")
 
     if st.session_state.options.links_toggle:
-        to_be_displayed = summary.style.format(make_player_url, subset=["Name"]).to_html(escape=False)
+        to_be_displayed = summary.style.format(make_player_url, subset=["Search term"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
         st.dataframe(summary, use_container_width=True, hide_index=True)
@@ -134,17 +132,18 @@ def compute_comparison():
         [
             [
                 data.real_name.unique()[0],
+                user,
             ]
             + [wave_serie.iloc[0] if not (wave_serie := data[data.date == date].wave).empty else 0 for date in last_5_tourneys]
-            for data, _ in datas
+            for data, user in datas
         ],
-        columns=["Name", *[f"{date.month}/{date.day}: {bc}" for date, bc in zip(last_5_tourneys, last_5_bcs)]],
+        columns=["Name", "id", *[f"{date.month}/{date.day}: {bc}" for date, bc in zip(last_5_tourneys, last_5_bcs)]],
     )
 
-    last_results = last_results.style.apply(lambda row: [None, *[color_top_18(wave=row[i + 1]) for i in range(len(last_5_tourneys))]], axis=1)
+    last_results = last_results.style.apply(lambda row: [None, None, *[color_top_18(wave=row[i + 2]) for i in range(len(last_5_tourneys))]], axis=1)
 
     if st.session_state.options.links_toggle:
-        to_be_displayed = last_results.format(make_player_url, subset=["Name"]).to_html(escape=False)
+        to_be_displayed = last_results.format(make_player_url, subset=["id"]).to_html(escape=False)
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
         st.dataframe(last_results, use_container_width=True, hide_index=True)
