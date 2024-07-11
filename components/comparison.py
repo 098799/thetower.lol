@@ -1,5 +1,6 @@
 import datetime
 import os
+from collections import Counter, defaultdict
 from statistics import median, stdev
 from urllib.parse import urlencode
 
@@ -11,6 +12,7 @@ from components.search import compute_search
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     Graph,
+    champ,
     colors_017,
     colors_018,
     how_many_results_public_site,
@@ -21,14 +23,13 @@ from dtower.tourney_results.constants import (
 from dtower.tourney_results.data import get_details, get_patches
 from dtower.tourney_results.formatting import BASE_URL, color_top_18, make_player_url
 from dtower.tourney_results.models import PatchNew as Patch
-from dtower.tourney_results.models import TourneyRow
+from dtower.tourney_results.models import TourneyResult, TourneyRow
 
 sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=True))
+hidden_features = os.environ.get("HIDDEN_FEATURES")
 
 
 def compute_comparison():
-    hidden_features = os.environ.get("HIDDEN_FEATURES")
-
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
 
@@ -103,7 +104,7 @@ def compute_comparison():
     summary = pd.DataFrame(
         [
             [
-                data.real_name.unique()[0],
+                data.real_name.mode().iloc[0],
                 user,
                 len(data),
                 max(data.wave),
@@ -122,6 +123,9 @@ def compute_comparison():
         st.write(to_be_displayed, unsafe_allow_html=True)
     else:
         st.dataframe(summary, use_container_width=True, hide_index=True)
+
+    for data, _ in datas:
+        data["real_name"] = data["real_name"].mode().iloc[0]
 
     pd_datas = pd.concat([data for data, _ in datas])
     pd_datas["bcs"] = pd_datas.bcs.map(lambda bc_qs: " / ".join([bc.shortcut for bc in bc_qs]))
@@ -230,7 +234,9 @@ def get_patch_df(df, player_df, patch):
     if isinstance(patch, Patch):
         patch_df = player_df[player_df.patch == patch]
     elif patch == Graph.last_16.value:
-        patch_df = player_df[player_df.date.isin(sorted(df.date.unique())[-16:])]
+        hidden_query = {} if hidden_features else dict(public=True)
+        qs = set(TourneyResult.objects.filter(league=champ, **hidden_query).order_by("-date").values_list("date", flat=True)[:16])
+        patch_df = player_df[player_df.date.isin(qs)]
     else:
         patch_df = player_df
     return patch_df

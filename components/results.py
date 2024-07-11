@@ -4,7 +4,7 @@ from typing import Optional
 
 import streamlit as st
 
-from dtower.tourney_results.constants import Graph, Options, all_relics, champ, sus_person
+from dtower.tourney_results.constants import Graph, Options, all_relics, champ, how_many_results_hidden_site, how_many_results_public_site, sus_person
 from dtower.tourney_results.data import get_results_for_patch, get_sus_ids, get_tourneys
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_player_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
@@ -187,7 +187,7 @@ class Results:
         date = self.top_of_results()
 
         step = 100
-        total_results = 1000  # FIXME
+        total_results = how_many_results_hidden_site if self.hidden_features else how_many_results_public_site
 
         step = self.results_col_page.number_input("Results per page", min_value=100, max_value=max(total_results, 100), step=100)
         total_pages = total_results // step if total_results // step == total_results / step else total_results // step + 1
