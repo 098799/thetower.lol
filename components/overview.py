@@ -3,8 +3,8 @@ import os
 import streamlit as st
 
 from components.results import Results
-from dtower.tourney_results.constants import Graph, Options, leagues
-from dtower.tourney_results.formatting import get_url, make_player_url
+from dtower.tourney_results.constants import Graph, Options, champ, leagues
+from dtower.tourney_results.formatting import get_url
 from dtower.tourney_results.models import TourneyResult
 
 
@@ -19,7 +19,7 @@ def compute_overview(options: Options):
         st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
 
     for league in leagues:
-        url = get_url(path=f"Results%20{league}")
+        url = get_url(path=league.lower() if league != champ else "results")
         st.write(f"<h2><a href='{url}'>{league}</a></h2>", unsafe_allow_html=True)
 
         results = Results(options, league=league)
