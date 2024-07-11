@@ -55,6 +55,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     dates_this_event = tourneys_champ.order_by("-date").values_list("date", flat=True)[:tourneys_this_event]
 
     ids_by_player = defaultdict(set)
+    sus_ids = {item.player_id for item in await sync_to_async(SusPerson.objects.filter, thread_sensitive=True)(sus=True)}
 
     for id in all_ids:
         ids_by_player[id.player.id].add(id.id)
@@ -74,6 +75,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
             patch,
             player,
             dates_this_event,
+            sus_ids,
             roles,
             skipped,
             member_lookup,
@@ -139,7 +141,7 @@ async def handle_champ_position_roles(df, roles, discord_player, changed, unchan
     position_roles = await get_position_roles(roles)
     logging.debug(f"{discord_player=} {df.position=}")
 
-    if df.iloc[0].position == 1:  # special logic for the winner
+    if df.sort_values("date", ascending=False).iloc[0].position == 1:  # special logic for the winner
         rightful_role = position_roles[1]
 
         if rightful_role in discord_player.roles:
@@ -189,6 +191,7 @@ async def handle_leagues(
     patch,
     player,
     dates_this_event,
+    sus_ids,
     roles,
     skipped,
     member_lookup,
@@ -199,8 +202,6 @@ async def handle_leagues(
         discord_player = member_lookup.get(int(player.discord_id))
         league_roles = await get_league_roles(roles, league)
         df = dfs[league]
-
-        sus_ids = {item.player_id for item in await sync_to_async(SusPerson.objects.filter, thread_sensitive=True)(sus=True)}
 
         df = df[~df.id.isin(sus_ids)]
         # player_df = df[df["real_name"] == player.name]
