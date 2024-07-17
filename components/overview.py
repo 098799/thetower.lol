@@ -23,7 +23,7 @@ def compute_overview(options: Options):
         st.write(f"<h2><a href='{url}'>{league}</a></h2>", unsafe_allow_html=True)
 
         results = Results(options, league=league)
-        to_be_displayed = results.prepare_data(current_page=1, step=10, date=last_tourney)
+        to_be_displayed = results.prepare_data(current_page=1, step=11, date=last_tourney)
 
         if to_be_displayed is None:
             st.warning("Failed to display results, likely loss of data.")
