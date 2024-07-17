@@ -118,10 +118,9 @@ def get_player_id_approved_lookup():
 
 
 def get_id_lookup():
-    player_primary_id = {
-        name: id_ for id_, name, primary in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name", "primary") if primary
-    }
-    return {id_: player_primary_id[name] for id_, name in PlayerId.objects.filter(player__approved=True).values_list("id", "player__name")}
+    id_objs = PlayerId.objects.filter(player__approved=True).values_list("id", "player__name", "primary")
+    player_primary_id = {name: id_ for id_, name, primary in id_objs if primary}
+    return {id_: player_primary_id[name] for id_, name, _ in id_objs if name in player_primary_id}
 
 
 def get_id_real_name_mapping(df: pd.DataFrame, lookup: dict[str, str]) -> dict[str, str]:
