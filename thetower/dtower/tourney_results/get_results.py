@@ -12,7 +12,10 @@ wednesday = 2
 saturday = 5
 
 
+import io
 import logging
+
+import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
 
@@ -97,6 +100,10 @@ def execute(league):
 
     csv_contents = make_request(league)
 
+    if csv_contents.strip() == "upstream request timeout":
+        logging.error(f"upstream request timeout {league=}")
+        return False
+
     with open(file_path_raw, "w") as outfile:
         outfile.write(csv_contents)
 
@@ -104,10 +111,18 @@ def execute(league):
     csv_contents = csv_contents.replace(",", "$$$$$")
     csv_contents = csv_contents.replace("%%%%%", ", ")
 
+    df = pd.read_csv(io.StringIO(csv_contents.strip()))
+
+    if df.empty:
+        logging.error(f"Empty csv file: {file_path_raw}, {league=}")
+        return False
+
     with open(file_path, "w") as outfile:
         outfile.write(csv_contents)
 
     logging.info(f"Successfully stored file {file_path}")
+
+    return True
 
 
 def check():
@@ -117,6 +132,9 @@ def check():
 if __name__ == "__main__":
     while True:
         for league in ["Champion", "Platinum", "Gold", "Silver", "Copper"]:
-            execute(league)
+            out = execute(league)
+
+            if out:
+                time.sleep(10)
 
         time.sleep(1800)  # this can run in a loop cause we will request the tourney data only once per tourney and cache

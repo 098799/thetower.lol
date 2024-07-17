@@ -62,6 +62,9 @@ class Results:
         self.df = get_tourneys(TourneyResult.objects.filter(league=self.league, date=date, **public), offset=begin, limit=step)
         self.df = self.df.reset_index(drop=True)
 
+        if self.df.empty:
+            return None
+
         if not self.hidden_features:
             to_be_displayed = self.df[~self.df.id.isin(get_sus_ids())]
         else:
@@ -194,6 +197,10 @@ class Results:
         current_page = self.results_col.number_input("Page", min_value=1, max_value=total_pages, step=1)
 
         to_be_displayed = self.prepare_data(current_page=current_page, step=step, date=date)
+
+        if to_be_displayed is None:
+            st.warning("Failed to display results, likely loss of data.")
+            return None
 
         if self.show_hist:
             to_be_displayed_styler = self.show_hist_preparation(to_be_displayed, date)

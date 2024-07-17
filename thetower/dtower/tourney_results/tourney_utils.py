@@ -1,9 +1,12 @@
+import logging
 import re
 
 import pandas as pd
 
 from dtower.tourney_results.data import get_sus_ids
 from dtower.tourney_results.models import TourneyResult, TourneyRow
+
+logging.basicConfig(level=logging.INFO)
 
 
 def create_tourney_rows(tourney_result: TourneyResult) -> None:
@@ -25,6 +28,10 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
         csv_path = csv_path.replace("uploads", "thetower/dtower/uploads")
 
         df = pd.read_csv(csv_path, header=None)
+
+    if df.empty:
+        logging.error(f"Empty csv file: {csv_path}")
+        return
 
     df = df.rename(columns={0: "id", 1: "tourney_name", 2: "wave"})
     df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())

@@ -24,6 +24,11 @@ def compute_overview(options: Options):
 
         results = Results(options, league=league)
         to_be_displayed = results.prepare_data(current_page=1, step=10, date=last_tourney)
+
+        if to_be_displayed is None:
+            st.warning("Failed to display results, likely loss of data.")
+            return None
+
         to_be_displayed_styler = results.regular_preparation(to_be_displayed)
         st.write(
             to_be_displayed_styler.hide(axis="index").to_html(escape=False),
