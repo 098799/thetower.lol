@@ -28,6 +28,7 @@ def compute_namechangers(df, options=None):
         combined_data.append(
             {
                 "real_name": real_name,
+                "id": id,
                 "namechanged_times": how_many_names,
                 "no_in_champ": how_many_rows,
                 "mean_last_5_tourneys": int(round(last_performance, 0)),
@@ -37,7 +38,7 @@ def compute_namechangers(df, options=None):
     new_df = pd.DataFrame(combined_data)
     new_df = new_df.sort_values("namechanged_times", ascending=False).reset_index(drop=True)
 
-    to_be_displayed = new_df.style.format(make_player_url, subset=["real_name"])
+    to_be_displayed = new_df.style.format(make_player_url, subset=["id"])
 
     st.write(to_be_displayed.to_html(escape=False, index=False), unsafe_allow_html=True)
 
