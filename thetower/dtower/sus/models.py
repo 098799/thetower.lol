@@ -13,6 +13,8 @@ class KnownPlayer(models.Model):
     def __str__(self):
         return f"{self.name} ({self.ids.filter(primary=True).first().id if self.ids.filter(primary=True).first() else ''})"
 
+    history = HistoricalRecords()
+
 
 # class RoleAward(models.Model):
 #     player = models.ForeignKey(KnownPlayer, null=False, blank=False, related_name="ids", on_delete=models.CASCADE, help_text="Player")
@@ -32,6 +34,8 @@ class PlayerId(models.Model):
             self.player.ids.filter(~Q(id=self.id), primary=True).update(primary=False)
 
         return super().save_base(*args, **kwargs)
+
+    history = HistoricalRecords()
 
 
 class SusPerson(models.Model):
