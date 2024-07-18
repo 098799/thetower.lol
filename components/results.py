@@ -83,7 +83,7 @@ class Results:
             if avatar_id == -1:
                 return ""
 
-            if avatar_id in [35, 36, 39]:
+            if avatar_id in [35, 36, 39, 42, 44, 45, 46]:
                 extension = "webp"
             else:
                 extension = "png"
