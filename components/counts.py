@@ -26,7 +26,7 @@ def compute_counts():
 
     champ_results = champ_results[(which_page - 1) * per_page : which_page * per_page]
 
-    rows = TourneyRow.objects.filter(result__in=champ_results, position__lt=limit).order_by("-wave").values("result_id", "wave")
+    rows = TourneyRow.objects.filter(result__in=champ_results, position__lt=limit, position__gt=0).order_by("-wave").values("result_id", "wave")
 
     results = []
 
