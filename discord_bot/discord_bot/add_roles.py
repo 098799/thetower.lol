@@ -35,10 +35,11 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     patch = sorted(await sync_to_async(Patch.objects.all, thread_sensitive=True)())[-1]
 
+    # only limit to at most 4 tourneys? or maybe not?
     dfs = {
-        league: get_tourneys(get_results_for_patch(patch=patch, league=league)[:4], limit=5000) for league in leagues[1:]
+        league: get_tourneys(get_results_for_patch(patch=patch, league=league), limit=5000) for league in leagues[1:]
     } | {  # potentially more to reach everyone who cleared 500 waves
-        league: get_tourneys(get_results_for_patch(patch=patch, league=league)[:4], limit=2000) for league in leagues[:1]  # champ goes up to 2k
+        league: get_tourneys(get_results_for_patch(patch=patch, league=league), limit=2000) for league in leagues[:1]  # champ goes up to 2k
     }
     # dfs = {league: get_tourneys(league_to_folder[league], patch_id=patch.id) for league in all_leagues}
 
@@ -51,8 +52,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     all_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(player__in=players)
 
     tourneys_champ = await sync_to_async(TourneyResult.objects.filter, thread_sensitive=True)(date__gt=event_starts, league=champ)
-    tourneys_this_event = tourneys_champ.count() % 4 or 4  # 4 tourneys per event
-    dates_this_event = tourneys_champ.order_by("-date").values_list("date", flat=True)[:tourneys_this_event]
+    # tourneys_this_event = tourneys_champ.count() % 4 or 4  # 4 tourneys per event
+    # dates_this_event = tourneys_champ.order_by("-date").values_list("date", flat=True)[:tourneys_this_event]
+    dates_this_event = tourneys_champ.order_by("-date").values_list("date", flat=True)  # or not?
 
     ids_by_player = defaultdict(set)
     sus_ids = {item.player_id for item in await sync_to_async(SusPerson.objects.filter, thread_sensitive=True)(sus=True)}
