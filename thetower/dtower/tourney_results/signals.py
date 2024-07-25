@@ -36,14 +36,14 @@ def recalculate_results(sender, instance, signal, created, update_fields, raw, u
             if instance.public == True:  # result release to the public
                 client.run(os.getenv("DISCORD_TOKEN"))
 
-            if bcs := instance.conditions.all():
-                other_results = TourneyResult.objects.filter(~Q(league__in=[champ, copper]), date=instance.date)
+            # if bcs := instance.conditions.all():
+            #     other_results = TourneyResult.objects.filter(~Q(league__in=[champ, copper]), date=instance.date)
 
-                for result in other_results:
-                    result.conditions.clear()
+            #     for result in other_results:
+            #         result.conditions.clear()
 
-                    for bc in bcs:
-                        result.conditions.add(bc)
+            #         for bc in bcs:
+            #             result.conditions.add(bc)
 
             # subprocess.call("systemctl restart streamlit2", shell=True)
             # subprocess.call("systemctl restart streamlit", shell=True)
