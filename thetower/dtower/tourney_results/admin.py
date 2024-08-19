@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+import threading
 
 from django.contrib import admin
 from django.utils.html import format_html
@@ -74,6 +75,20 @@ def publicize(modeladmin, request, queryset):
         # queryset.update(public=True)
 
 
+def update_summary(queryset):
+    from dtower.tourney_results.tourney_utils import get_summary
+
+    last_date = sorted(queryset.values_list("date", flat=True))[-1]
+    summary = get_summary(last_date)
+    queryset.update(overview=summary)
+
+
+@admin.action(description="Generate summary with the help of AI")
+def generate_summary(modeladmin, request, queryset):
+    thread = threading.Thread(target=update_summary, args=(queryset,))
+    thread.start()
+
+
 @admin.register(TourneyRow)
 class TourneyRowAdmin(SimpleHistoryAdmin):
     list_display = (
@@ -137,6 +152,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
         restart_discord_bot,
         restart_import_results,
         restart_get_results,
+        generate_summary,
     ]
 
 

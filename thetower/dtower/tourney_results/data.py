@@ -398,7 +398,48 @@ def get_details(rows: QuerySet[TourneyRow]) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:2])
+    df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:20], offset=0, limit=50)
+
+    import anthropic
+
+    ranking = "\n".join(
+        [f"{row.position}. {row.real_name} - {row.wave} ({row.date})" for _, row in df[["position", "real_name", "wave", "date", "bcs"]].iterrows()]
+    )
+
+    text = f"""Hello! I'm going to attach a list of results from an online mobile idle tower defense game called The Tower. This is top100 tourney from last 10 tournamets. I'd like you to analyze this and write a cool report from the last tournament with interesting findings and tidbits -- something you might imagine an old school newspaper would write after a big sports event.
+
+The results include placement and the highest wave achieved. Remember, this is an idle tower defense game that requires your tower to survive to the highest wave you can manage.
+
+Please give us some interesting tidbits about longer term trends too.
+
+Feel free to add easter eggs for the audience on discord. You can weave in a subtle jab at reddit.
+
+Feel free to use markdown to accentuate interesting parts.
+
+Here's the list of results:
+
+{ranking}"""
+
+    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    message = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        max_tokens=4096,
+        temperature=0,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": text,
+                    }
+                ],
+            }
+        ],
+    )
+
+    response = message.content[0].text
+    breakpoint()
 
     os.environ["HIDDEN_FEATURES"] = "true"
 

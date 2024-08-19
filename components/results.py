@@ -59,7 +59,14 @@ class Results:
         begin = (current_page - 1) * step
 
         public = {"public": True} if not self.hidden_features else {}
-        self.df = get_tourneys(TourneyResult.objects.filter(league=self.league, date=date, **public), offset=begin, limit=step)
+
+        qs = TourneyResult.objects.filter(league=self.league, date=date, **public)
+
+        if qs and qs[0].overview:
+            with st.expander("Writeup..."):
+                st.write(qs[0].overview)
+
+        self.df = get_tourneys(qs, offset=begin, limit=step)
         self.df = self.df.reset_index(drop=True)
 
         if self.df.empty:

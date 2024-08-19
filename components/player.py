@@ -209,7 +209,7 @@ def draw_info_tab(info_tab, user, player_id, player_df, hidden_features):
     avatar = player_df.iloc[0].avatar
     relic = player_df.iloc[0].relic
 
-    if avatar in [35, 36, 39]:
+    if avatar in [35, 36, 39, 42, 44, 45, 46]:
         extension = "webp"
     else:
         extension = "png"

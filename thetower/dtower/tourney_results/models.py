@@ -142,6 +142,7 @@ class TourneyResult(models.Model):
     )
     public = models.BooleanField(blank=False, null=False, default=False, help_text="Are the results shown to everyone or just to review?")
     conditions = models.ManyToManyField(BattleCondition, related_name="results", help_text="Battle conditions for the tourney.")
+    overview = models.TextField(null=True, blank=True, help_text="Overview of the tourney.")
 
     history = HistoricalRecords()
 

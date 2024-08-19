@@ -10,7 +10,8 @@ from dtower.tourney_results.models import TourneyResult
 
 def compute_overview(options: Options):
     public = {"public": True} if not os.environ.get("HIDDEN_FEATURES") else {}
-    last_tourney = TourneyResult.objects.filter(**public).latest("date").date
+    last_tourney = TourneyResult.objects.filter(**public).latest("date")
+    last_tourney_date = last_tourney.date
 
     with open("style.css", "r") as infile:
         st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
@@ -18,12 +19,16 @@ def compute_overview(options: Options):
     with open("funny.css", "r") as infile:
         st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
 
+    # st.markdown(get_summary())
+    if overview := TourneyResult.objects.filter(league=champ, **public).latest("date").overview:
+        st.markdown(overview)
+
     for league in leagues:
         url = get_url(path=league.lower() if league != champ else "results")
         st.write(f"<h2><a href='{url}'>{league}</a></h2>", unsafe_allow_html=True)
 
         results = Results(options, league=league)
-        to_be_displayed = results.prepare_data(current_page=1, step=11, date=last_tourney)
+        to_be_displayed = results.prepare_data(current_page=1, step=11, date=last_tourney_date)
 
         if to_be_displayed is None:
             st.warning("Failed to display results, likely loss of data.")

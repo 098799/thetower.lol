@@ -2,9 +2,9 @@ import os
 import subprocess
 
 import discord
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db.models import Q
 
 from discord_bot.util import role_log_room_id, testing_room_id
 from dtower.tourney_results.constants import champ, copper
@@ -32,6 +32,7 @@ def recalculate_results(sender, instance, signal, created, update_fields, raw, u
         # subprocess.call("systemctl restart streamlit", shell=True)
         ...
     else:
+        return
         if instance.league == champ:
             if instance.public == True:  # result release to the public
                 client.run(os.getenv("DISCORD_TOKEN"))
