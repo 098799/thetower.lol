@@ -219,7 +219,7 @@ async def handle_leagues(
             await handle_champ_position_roles(player_df, roles, discord_player, changed, unchanged, dates_this_event)
             return discord_player, skipped  # don't give out wave role for champ
 
-        gets_500 = any(wave > 500 for wave in player_df.wave)
+        gets_500 = any(wave >= 500 for wave in player_df.wave)
 
         if league_roles and gets_500:
             rightful_role = league_roles[500]
