@@ -1,6 +1,5 @@
 import datetime
 import os
-from collections import Counter, defaultdict
 from statistics import median, stdev
 from urllib.parse import urlencode
 
@@ -155,6 +154,9 @@ def compute_comparison():
     pd_datas = pd_datas.drop_duplicates()
 
     fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True, custom_data=["bcs", "position"])
+    fig.update_layout(showlegend=False)
+    fig.update_yaxes(title_text=None)
+    fig.update_layout(margin=dict(l=20))
     fig.update_traces(hovertemplate="%{y}<br>Postion: %{customdata[1]}<br>BC: %{customdata[0]}")
     fig.update_layout(hovermode="x unified")
 
@@ -166,6 +168,9 @@ def compute_comparison():
     st.plotly_chart(fig)
 
     fig = px.line(pd_datas, x="date", y="position", color="real_name", markers=True)
+    fig.update_layout(showlegend=False)
+    fig.update_yaxes(title_text=None)
+    fig.update_layout(margin=dict(l=20))
     fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
     st.plotly_chart(fig)
 
