@@ -205,7 +205,9 @@ async def handle_leagues(
         league_roles = await get_league_roles(roles, league)
         df = dfs[league]
 
-        df = df[~df.id.isin(sus_ids)]
+        # df = df[~df.id.isin(sus_ids)]
+        mask = ~df["id"].isin(sus_ids)
+        df = df.loc[mask]
         # player_df = df[df["real_name"] == player.name]
         player_df = df[df["id"].isin(ids)]
 

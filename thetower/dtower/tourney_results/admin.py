@@ -57,6 +57,11 @@ def restart_discord_bot(modeladmin, request, queryset):
     subprocess.call("systemctl restart discord_bot", shell=True)
 
 
+@admin.action(description="Restart discord bot")
+def restart_verify_bot(modeladmin, request, queryset):
+    subprocess.call("systemctl restart validation_bot", shell=True)
+
+
 @admin.action(description="Restart import results (run me if you don't see TourneyResult objects from previous tourney when it should be there)")
 def restart_import_results(modeladmin, request, queryset):
     subprocess.call("systemctl restart import_results", shell=True)
