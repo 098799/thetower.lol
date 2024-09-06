@@ -57,7 +57,7 @@ def restart_discord_bot(modeladmin, request, queryset):
     subprocess.call("systemctl restart discord_bot", shell=True)
 
 
-@admin.action(description="Restart discord bot")
+@admin.action(description="Restart verification bot")
 def restart_verify_bot(modeladmin, request, queryset):
     subprocess.call("systemctl restart validation_bot", shell=True)
 
