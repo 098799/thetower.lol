@@ -129,6 +129,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
         "_conditions",
         "result_file",
         "public",
+        "_overview",
     )
 
     search_fields = (
@@ -140,6 +141,9 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
     )
 
     list_filter = ["date", "league", "public", "conditions"]
+
+    def _overview(self, obj):
+        return obj.overview[:500] + "..." if obj.overview else ""
 
     def _conditions(self, obj):
         return mark_safe("<br>".join([str(condition) for condition in obj.conditions.all()]))
@@ -155,6 +159,7 @@ class TourneyResultAdmin(SimpleHistoryAdmin):
         restart_hidden_app,
         restart_django,
         restart_discord_bot,
+        restart_verify_bot,
         restart_import_results,
         restart_get_results,
         generate_summary,
