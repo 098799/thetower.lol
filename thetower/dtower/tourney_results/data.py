@@ -47,18 +47,24 @@ def date_to_patch(date: datetime.datetime) -> Optional[Patch]:
             return patch
 
 
-def wave_to_role_in_patch(roles: list[Role], wave: int) -> Optional[Role]:
-    for role in roles:
-        if wave >= role.wave_bottom and wave < role.wave_top:
+@ttl_cache(maxsize=512, ttl=60)
+def wave_to_role_in_patch(roles: list[Role], role_bot_top: list[tuple[int, int]], wave: int) -> Optional[Role]:
+    for role, (wave_bottom, wave_top) in zip(roles, role_bot_top):
+        if wave >= wave_bottom and wave < wave_top:
             return role
 
 
-@cache
+@ttl_cache(maxsize=512, ttl=60)
 def patch_to_roles(league):
     patch_to_roles = defaultdict(list)
 
-    for role in Role.objects.filter(league=league):
-        patch_to_roles[role.patch].append(role)
+    patches = set(Role.objects.filter(league=league).values_list("patch"))
+
+    for patch in patches:
+        patch_to_roles[patch] = Role.objects.filter(patch=patch, league=league)
+
+    # for role in Role.objects.filter(league=league):
+    #     patch_to_roles[role.patch].append(role)
 
     return patch_to_roles
 
@@ -72,7 +78,8 @@ def wave_to_role(wave: int, patch: Optional[Patch], league: str) -> Optional[Rol
     if not roles:
         return None
 
-    return wave_to_role_in_patch(roles, wave)
+    roless_bot_top = roles.values_list("wave_bottom", "wave_top")
+    return wave_to_role_in_patch(roles, roless_bot_top, wave)
 
 
 def load_data(folder):
@@ -341,8 +348,9 @@ def get_results_for_patch(patch: Patch, league=champ):
     return TourneyResult.objects.filter(date__gte=patch.start_date, date__lte=patch.end_date, league=league, **public).order_by("-date")
 
 
-def get_patch_for_result(result: TourneyResult) -> Patch:
-    return Patch.objects.get(start_date__lte=result.date, end_date__gte=result.date)
+@ttl_cache(maxsize=128, ttl=60)
+def get_patch_for_result(date: datetime) -> Patch:
+    return Patch.objects.get(start_date__lte=date, end_date__gte=date)
 
 
 def get_tourneys(
@@ -370,8 +378,19 @@ def get_tourneys(
 
 
 def get_details(rows: QuerySet[TourneyRow]) -> pd.DataFrame:
-    df = pd.DataFrame(rows.values("player_id", "position", "nickname", "wave", "avatar_id", "relic_id"))
-    df = df.rename(columns={"player_id": "id", "nickname": "tourney_name", "avatar_id": "avatar", "relic_id": "relic"})
+    rows = rows.prefetch_related("result")
+
+    df = pd.DataFrame(rows.values("player_id", "position", "nickname", "wave", "avatar_id", "relic_id", "result__date", "result__league", "result_id"))
+    df = df.rename(
+        columns={
+            "player_id": "id",
+            "nickname": "tourney_name",
+            "avatar_id": "avatar",
+            "relic_id": "relic",
+            "result__date": "date",
+            "result__league": "league",
+        }
+    )
 
     if df.empty:
         return df
@@ -379,26 +398,24 @@ def get_details(rows: QuerySet[TourneyRow]) -> pd.DataFrame:
     lookup = get_player_id_lookup()
     approved_lookup = get_player_id_approved_lookup()
 
-    results = [row.result for row in rows]
-    patches = [get_patch_for_result(tourney_result) for tourney_result in results]
-    leagues = [tourney_result.league for tourney_result in results]
-    dates = [tourney_result.date for tourney_result in results]
-    bcs = [tourney_result.conditions.all() for tourney_result in results]
+    conditions_mapping = {result.id: result.conditions.all() for result in TourneyResult.objects.filter(id__in=df.result_id.unique())}
+
+    patches = [get_patch_for_result(date) for date in df.date]
+    bcs = [conditions_mapping.get(id_) for id_ in df.result_id]
 
     df["real_name"] = [lookup.get(id, name) for id, name in zip(df.id, df.tourney_name)]
     df["verified"] = ["✓" if approved_lookup.get(id) else "" for id, name in zip(df.id, df.tourney_name)]
-    df["wave_role"] = [wave_to_role(wave, patch, league) for wave, patch, league in zip(df["wave"], patches, leagues)]
+    df["wave_role"] = [wave_to_role(wave, patch, league) for wave, patch, league in zip(df["wave"], patches, df.league)]
     df["wave_role_color"] = df.wave_role.map(lambda role: getattr(role, "color", None))
-    df["date"] = dates
     df["bcs"] = bcs
-    df["league"] = leagues
     df["patch"] = patches
 
     return df
 
 
 if __name__ == "__main__":
-    df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:20], offset=0, limit=50)
+    df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:20], offset=0, limit=5000)
+    breakpoint()
 
     import anthropic
 
