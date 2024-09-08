@@ -153,3 +153,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Whitenoise settings
 WSGI_APPLICATION = "thetower.wsgi.application"
 ASGI_APPLICATION = "thetower.asgi.application"
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django.db.backends": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+        },
+    },
+}

@@ -62,7 +62,14 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     for id in all_ids:
         ids_by_player[id.player.id].add(id.id)
 
+    i = 0
+
     for player in tqdm(player_iter):
+        i += 1
+
+        if i % 1000 == 0:
+            logging.info(f"Processed {i} players")
+
         ids = ids_by_player[player.id]
 
         discord_player = None
