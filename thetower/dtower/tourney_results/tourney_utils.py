@@ -111,7 +111,7 @@ def get_summary(last_date):
     logging.info("Collecting ai summary data...")
 
     qs = TourneyResult.objects.filter(league=champ, date__lte=last_date).order_by("-date")[:10]
-    previous_summaries = "\n\n".join([format_previous_summary(summary, date) for summary, date in qs.values_list("overview", "date")])
+    # previous_summaries = "\n\n".join([format_previous_summary(summary, date) for summary, date in qs.values_list("overview", "date")])
 
     df = get_tourneys(qs, offset=0, limit=50)
 
@@ -178,12 +178,6 @@ Here's the list of results:
 -------
 
 Today is {last_date.isoformat()}!
-
--------
-
-For consistency, I'm including also the previous summaries you've written for the last few tourneys. Make sure not to blatantly copy previous summaries!! We need diversity!
-
-{previous_summaries}
 
 -------
 
