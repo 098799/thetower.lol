@@ -1,10 +1,8 @@
 import os
-import re
 from functools import partial
 
 from asyncstdlib.functools import lru_cache
 
-from dtower.tourney_results.constants import top
 
 handle_outside = bool(os.getenv("GO"))
 
@@ -14,6 +12,7 @@ helpers_room_id = 1006900314588336139
 role_log_room_id = 1128308502130081842
 id_098799 = 177504210177228801
 meme_channel_id = 1159121488931209328
+t50_channel_id = 903354378403065949
 role_count_channel_id = 1164883276243140638
 
 
@@ -33,6 +32,7 @@ def is_channel(channel, id_):
     return channel.id == id_
 
 
+is_t50_room = partial(is_channel, id_=t50_channel_id)
 is_meme_room = partial(is_channel, id_=meme_channel_id)
 is_testing_room = partial(is_channel, id_=testing_room_id)
 is_helpers_room = partial(is_channel, id_=helpers_room_id)

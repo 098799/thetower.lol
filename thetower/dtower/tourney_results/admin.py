@@ -10,7 +10,7 @@ from simple_history.admin import SimpleHistoryAdmin
 
 from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.constants import champ
-from dtower.tourney_results.models import BattleCondition, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult, TourneyRow
+from dtower.tourney_results.models import BattleCondition, Injection, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult, TourneyRow
 
 BASE_ADMIN_URL = os.getenv("BASE_ADMIN_URL")
 
@@ -271,3 +271,16 @@ class NameDayWinnerAdmin(SimpleHistoryAdmin):
         elif db_field.name == "tourney":
             kwargs["queryset"] = TourneyResult.objects.filter(public=True, league=champ).order_by("-date")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(Injection)
+class InjectionAdmin(SimpleHistoryAdmin):
+    list_display = (
+        "text",
+        "user",
+    )
+
+    search_fields = (
+        "text",
+        "user",
+    )

@@ -196,3 +196,8 @@ class Relic(models.Model):
 
     def __str__(self):
         return f"{self.id}: {self.file_name}"
+
+
+class Injection(models.Model):
+    text = models.TextField(null=False, blank=False, max_length=100, help_text="Prompt injection for AI summary")
+    user = models.CharField(max_length=100, null=False, blank=False, help_text="Discord id of the user who injected the prompt")
