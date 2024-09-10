@@ -181,6 +181,10 @@ Now, I'm going to include one more thing here. I've added an option for the prev
 
 -------
 
+Here's a message from RathianRuby: "I may never be #1 for real, but as long as skye thinks I'm number 1, that's all that matters! (Even though skye really is #1)"
+
+-------
+
 Here's the list of results:
 
 {ranking}
