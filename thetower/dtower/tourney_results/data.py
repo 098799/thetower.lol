@@ -58,13 +58,23 @@ def wave_to_role_in_patch(roles: list[Role], role_bot_top: list[tuple[int, int]]
 def patch_to_roles(league):
     patch_to_roles = defaultdict(list)
 
-    patches = set(Role.objects.filter(league=league).values_list("patch", flat=True))
+    patches = get_patches()
+    last_patch_with_roles = None
 
-    for patch in patches:
-        patch_to_roles[patch] = Role.objects.filter(patch=patch, league=league)
+    for i, patch in enumerate(patches):
+        roles_qs = Role.objects.filter(patch=patch, league=league)
 
-    # for role in Role.objects.filter(league=league):
-    #     patch_to_roles[role.patch].append(role)
+        if not roles_qs:
+            if not last_patch_with_roles:
+                last_patch_with_roles = i - 1
+                print(last_patch_with_roles)
+
+            roles_qs = patch_to_roles[patches[last_patch_with_roles]]
+
+        if not roles_qs:
+            print("WARNING")
+
+        patch_to_roles[patch] = roles_qs
 
     return patch_to_roles
 
@@ -73,7 +83,7 @@ def wave_to_role(wave: int, patch: Optional[Patch], league: str) -> Optional[Rol
     if not patch:
         return None
 
-    roles = patch_to_roles(league)[patch.id]
+    roles = patch_to_roles(league)[patch]
 
     if not roles:
         return None
