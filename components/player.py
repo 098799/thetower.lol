@@ -14,15 +14,12 @@ from components.util import get_options
 from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     Graph,
-    Options,
     all_relics,
     colors_017,
     colors_018,
     how_many_results_public_site,
     league_to_folder,
     leagues,
-    position_colors,
-    position_stratas,
     stratas_boundaries,
     stratas_boundaries_018,
 )
