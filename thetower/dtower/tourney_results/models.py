@@ -201,3 +201,10 @@ class Relic(models.Model):
 class Injection(models.Model):
     text = models.TextField(null=False, blank=False, max_length=100, help_text="Prompt injection for AI summary")
     user = models.CharField(max_length=100, null=False, blank=False, help_text="Discord id of the user who injected the prompt")
+
+    history = HistoricalRecords()
+
+
+class PromptTemplate(models.Model):
+    text = models.TextField(null=False, blank=False, help_text="Prompt injection for AI summary")
+    history = HistoricalRecords()

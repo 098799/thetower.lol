@@ -10,7 +10,17 @@ from simple_history.admin import SimpleHistoryAdmin
 
 from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.constants import champ
-from dtower.tourney_results.models import BattleCondition, Injection, NameDayWinner, PatchNew, PositionRole, Role, TourneyResult, TourneyRow
+from dtower.tourney_results.models import (
+    BattleCondition,
+    Injection,
+    NameDayWinner,
+    PatchNew,
+    PositionRole,
+    PromptTemplate,
+    Role,
+    TourneyResult,
+    TourneyRow,
+)
 
 BASE_ADMIN_URL = os.getenv("BASE_ADMIN_URL")
 
@@ -284,3 +294,9 @@ class InjectionAdmin(SimpleHistoryAdmin):
         "text",
         "user",
     )
+
+
+@admin.register(PromptTemplate)
+class PromptTemplateAdmin(SimpleHistoryAdmin):
+    list_display = ("text",)
+    search_fields = ("text",)
