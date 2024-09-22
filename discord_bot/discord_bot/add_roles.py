@@ -99,6 +99,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
             logging.info(f"Processed {i} players")
             await asyncio.sleep(0)
 
+        if i % 1000 == 0:
+            debug_channel.send(f"Processed {i} players")
+
         ids = ids_by_player[player_id]
 
         discord_player = member_lookup.get(int(player_discord_id))
