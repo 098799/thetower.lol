@@ -44,10 +44,18 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     dfs = {}
 
     dfs[leagues[0]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[0]), limit=2000)  # champ goes up to 2k
+
+    if verbose:
+        await debug_channel.send("Loaded champ tourney data")
+
     await asyncio.sleep(0)
 
     for league in leagues[1:]:
         dfs[league] = get_tourneys(get_results_for_patch(patch=patch, league=league), limit=5000)
+
+        if verbose:
+            await debug_channel.send(f"Loaded {league} tourney data")
+
         await asyncio.sleep(0)
 
     # dfs = {
@@ -72,10 +80,14 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     members = await get_all_members(client)
     logging.info("got all members")
 
+    if verbose:
+        await debug_channel.send(f"Fetched all discord members {len(members)=}")
+
     member_lookup = {member.id: member for member in members}
 
     player_iter = players.order_by("-id")[:limit] if limit else players.order_by("-id")
     player_data = player_iter.values_list("id", "discord_id")
+    total = player_iter.count()
     all_ids = await sync_to_async(PlayerId.objects.filter, thread_sensitive=True)(player__in=players)
 
     # tourneys_champ = await sync_to_async(TourneyResult.objects.filter, thread_sensitive=True)(date__gt=event_starts, league=champ)
@@ -95,12 +107,11 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
         i += 1
 
         if i % 100 == 0:
-            print(f"Processed {i} players")
             logging.info(f"Processed {i} players")
             await asyncio.sleep(0)
 
-        if i % 1000 == 0:
-            debug_channel.send(f"Processed {i} players")
+        if i % 1000 == 0 and verbose:
+            await debug_channel.send(f"Processed {i} out of {total} players")
 
         ids = ids_by_player[player_id]
 
@@ -138,23 +149,21 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     unchanged_summary = {league: len(unchanged_data) for league, unchanged_data in unchanged.items()}
 
-    if verbose:
-        await channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
-    else:
-        # the only thing bot outputs in the continuous mode, should be easy to review in the channel, not exceed the limit of the message etc.
-        added_roles = [f"{name}: {league}" for league, contents in changed.items() for name, league in contents]
+    await channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
 
-        chunk_by = 10
+    added_roles = [f"{name}: {league}" for league, contents in changed.items() for name, league in contents]
 
-        try:
-            for chunk in range(ceil(len(added_roles) / chunk_by)):
-                added_roles_message = "\n".join(added_roles[chunk * chunk_by : (chunk + 1) * chunk_by])
-                await channel.send(added_roles_message)
+    chunk_by = 10
 
-                if channel != debug_channel:
-                    await debug_channel.send(added_roles_message)
-        except Exception:
-            pass
+    try:
+        for chunk in range(ceil(len(added_roles) / chunk_by)):
+            added_roles_message = "\n".join(added_roles[chunk * chunk_by : (chunk + 1) * chunk_by])
+            await channel.send(added_roles_message)
+
+            if channel != debug_channel:
+                await debug_channel.send(added_roles_message)
+    except Exception:
+        pass
 
     logging.info("**********Done**********")
 
