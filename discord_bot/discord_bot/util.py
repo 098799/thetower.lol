@@ -3,7 +3,6 @@ from functools import partial
 
 from asyncstdlib.functools import lru_cache
 
-
 handle_outside = bool(os.getenv("GO"))
 
 verified_role_id = 1119950199209611274
@@ -53,7 +52,7 @@ def get_safe_league_prefix(league):
 
 
 async def role_prefix_and_only_tourney_roles_check(role, safe_league_prefix):
-    return role.name.strip().startswith(safe_league_prefix) and role.name.strip().endswith("0")
+    return role.name.strip().startswith(safe_league_prefix) and "500" in role.name.strip()
 
 
 top1_id = 993947001232298126
