@@ -113,7 +113,7 @@ async def handle_roles_scheduled():
     async with semaphore:
         try:
             tower = await get_tower(client)
-            channel = client.get_channel(role_log_room_id)
+            channel = await client.fetch_channel(role_log_room_id)
             test_channel = await tower.fetch_channel(testing_room_id)
 
             try:

@@ -149,7 +149,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     unchanged_summary = {league: len(unchanged_data) for league, unchanged_data in unchanged.items()}
 
-    await channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
+    await debug_channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
 
     added_roles = [f"{name}: {league}" for league, contents in changed.items() for name, league in contents]
 
