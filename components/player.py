@@ -173,7 +173,7 @@ def xsolla_things(player_id, hidden_features, info_tab):
         </script>
         """
 
-        components.html(html_code, height=100)
+        components.html(html_code, height=50)
 
 
 def compute_player_lookup():
@@ -312,7 +312,9 @@ def compute_player_lookup():
     write_for_each_patch(patch_tab, player_df)
 
     player_id = player_df.iloc[0].id
-    xsolla_things(player_id, hidden_features, info_tab)
+
+    if player_id != "9D24669E32746D27":  # please don't buy me stones
+        xsolla_things(player_id, hidden_features, info_tab)
 
 
 def filter_lower_leagues(df):
