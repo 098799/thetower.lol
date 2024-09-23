@@ -149,7 +149,18 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     unchanged_summary = {league: len(unchanged_data) for league, unchanged_data in unchanged.items()}
 
-    await debug_channel.send(f"Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.")
+    if verbose:
+        await debug_channel.send(f"""Successfully reviewed all players :tada: \n\n{skipped=} (no role eligible), \n{unchanged_summary=}, \n{changed=}.""")
+    else:
+        total_players = skipped + sum(unchanged_summary.values()) + sum(len(values) for values in changed.values())
+
+        league_data = {league: contents for league, contents, in unchanged_summary.items()}
+
+        for league, contents in changed.items():
+            league_data[league] += len(contents)
+
+        league_updates = ", ".join(f"{league}: {league_count}" for league, league_count in league_data.items())
+        await debug_channel.send(f"""Bot hourly update: total players: {total_players}, {league_updates}""")
 
     added_roles = [f"{name}: {league}" for league, contents in changed.items() for name, league in contents]
 
@@ -162,6 +173,8 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
             if channel != debug_channel:
                 await debug_channel.send(added_roles_message)
+
+            await asyncio.sleep(1)
     except Exception:
         pass
 
