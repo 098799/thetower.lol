@@ -66,7 +66,7 @@ async def on_message(message):
         #     if "Top 1" in {role.name for role in message.author.roles}:
         #         new_name = message.content.split(" ", 1)[1]
 
-        #         channel = await client.fetch_channel(meme_channel_id)
+        #         channel = await client.fetch_channel(meme_room_id)
         #         await channel.edit(name=new_name)
         #         await message.channel.send(f"🔥 Renamed channel to {new_name} 🔥")
 
