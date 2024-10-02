@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path
 
 from dtower.sus.views import SusView
-from dtower.tourney_results.views import plaintext_results, plaintext_results__champ
+from dtower.tourney_results.views import plaintext_results, plaintext_results__champ, results_per_tourney
 
 base_patterns = [path("admin/", admin.site.urls)]
 
@@ -24,6 +24,13 @@ text_patterns = [
 ]
 
 urlpatterns += text_patterns
+
+json_patterns = [
+    path("<str:league>/results/<str:tourney_date>/", results_per_tourney),
+]
+
+urlpatterns += json_patterns
+
 
 sus_patterns = [
     path("sus/", SusView.as_view()),
