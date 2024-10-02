@@ -77,21 +77,25 @@ def results_per_user(request, player_id):
     if player_ids:
         player_id = player_ids[0]
         all_player_ids = player_id.player.ids.all().values_list("id", flat=True)
-        rows = TourneyRow.objects.filter(
-            player_id__in=all_player_ids,
-            result__public=True,
-            position__gt=0,
-        ).order_by(
-            "-result__date"
-        )[:how_many]
+        rows = (
+            TourneyRow.objects.select_related("result")
+            .filter(
+                player_id__in=all_player_ids,
+                result__public=True,
+                position__gt=0,
+            )
+            .order_by("-result__date")[:how_many]
+        )
     else:
-        rows = TourneyRow.objects.filter(
-            player_id=player_id,
-            result__public=True,
-            position__gt=0,
-        ).order_by(
-            "-result__date"
-        )[:how_many]
+        rows = (
+            TourneyRow.objects.select_related("result")
+            .filter(
+                player_id=player_id,
+                result__public=True,
+                position__gt=0,
+            )
+            .order_by("-result__date")[:how_many]
+        )
 
     df = get_details(rows)
     df["wave_role"] = df.wave_role.map(lambda x: x.wave_bottom)
