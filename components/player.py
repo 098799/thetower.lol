@@ -107,11 +107,11 @@ def get_stones(player_id):
     )
     print(response.json())
 
-    return response.json()
+    return response.json(), token
 
 
 def xsolla_things(player_id, hidden_features, info_tab):
-    stone_info = get_stones(player_id)
+    stone_info, token = get_stones(player_id)
     available = stone_info["items"][1]["limits"]["per_user"]["available"]
 
     if hidden_features:
@@ -124,48 +124,7 @@ def xsolla_things(player_id, hidden_features, info_tab):
         <script>
             document.getElementById('combinedButton').addEventListener('click', async function() {{
                 try {{
-                    // Request to get the token
-                    const tokenResponse = await fetch('https://sb-user-id-service.xsolla.com/api/v1/user-id', {{
-                        method: 'POST',
-                        headers: {{
-                            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0",
-                            "Accept": "application/json, text/plain, */*",
-                            "Accept-Language": "en-US,en;q=0.5",
-                            "Content-Type": "application/json",
-                            "Origin": "https://thetower.xsollasitebuilder.com",
-                            "DNT": "1",
-                            "Connection": "keep-alive",
-                            "Referer": "https://thetower.xsollasitebuilder.com/",
-                            "Sec-Fetch-Dest": "empty",
-                            "Sec-Fetch-Mode": "cors",
-                            "Sec-Fetch-Site": "cross-site",
-                            "Priority": "u=0"
-                        }},
-                        body: JSON.stringify({{
-                            "settings": {{
-                                "projectId": 264652,
-                                "merchantId": 706526,
-                            }},
-                            "loginId": "11f7ad60-c267-4747-9a0d-7613e9711fe5",
-                            "webhookUrl": "https://nowebhook.com",
-                            "user": {{
-                                "id": "{player_id}",
-                                "country": "CH",
-                            }},
-                            "isUserIdFromWebhook": false,
-                        }})
-                    }});
-
-                    if (!tokenResponse.ok) {{
-                        throw new Error('Network response was not ok');
-                    }}
-
-                    const tokenData = await tokenResponse.json();
-                    const token = tokenData.token;
-
-                    // Open the new page with the token
-                    window.open(`https://thetower.xsollasitebuilder.com/?token=${{token}}`, '_blank');
-
+                    window.open(`https://thetower.xsollasitebuilder.com/?token=${token}`, '_blank');
                 }} catch (error) {{
                     console.error('There was a problem:', error);
                 }}
