@@ -1,3 +1,4 @@
+import logging
 import re
 
 import easyocr
@@ -34,7 +35,12 @@ async def check_image(content, image_bytes):
         if subresult:
             player_id_candidates.append(subresult[0])
 
-    return any([hamming_distance(candidate, content) < 0.2 for candidate in player_id_candidates])
+    passes_score = any([hamming_distance(candidate, content) < 0.2 for candidate in player_id_candidates])
+
+    if not passes_score:
+        logging.info(f"{content}\n\n{player_id_candidates}\n\n{ocr_results}")
+
+    return passes_score
 
 
 async def validate_player_id(client, message):
