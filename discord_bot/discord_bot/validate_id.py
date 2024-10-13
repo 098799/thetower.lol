@@ -1,5 +1,4 @@
 import logging
-import re
 
 import easyocr
 from asgiref.sync import sync_to_async
@@ -25,17 +24,21 @@ def hamming_distance(s1, s2):
 
 
 async def check_image(content, image_bytes):
+    content = content.replace("O", "0")
+
     ocr_results = reader.readtext(image_bytes)
 
     player_id_candidates = []
 
     for _, line, _ in ocr_results:
-        subresult = [item for item in re.findall(r"\S{16}", line) if "uppor" not in item]
+        subresult = [item for item in line.split()]
 
         if subresult:
             player_id_candidates.append(subresult[0])
 
-    passes_score = any([hamming_distance(candidate, content) < 0.2 for candidate in player_id_candidates])
+    player_id_candidates = [candidate.replace("O", "0") for candidate in player_id_candidates]
+
+    passes_score = any([hamming_distance(candidate, content) < 0.4 for candidate in player_id_candidates if len(candidate) == len(content)])
 
     if not passes_score:
         logging.info(f"{content}\n\n{player_id_candidates}\n\n{ocr_results}")
@@ -48,7 +51,7 @@ async def validate_player_id(client, message):
         return
 
     try:
-        if len(message.content) == 16 and message.attachments and only_made_of_hex(message):
+        if len(message.content) > 13 and len(message.content) < 17 and message.attachments and only_made_of_hex(message):
             image_bytes = await message.attachments[0].read()
 
             if not (await check_image(message.content, image_bytes)):

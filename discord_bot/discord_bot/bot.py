@@ -21,6 +21,8 @@ intents.presences = True
 intents.message_content = True
 intents.members = True
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 client = discord.Client(intents=intents)
 

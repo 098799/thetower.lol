@@ -11,7 +11,7 @@ django.setup()
 from asgiref.sync import sync_to_async
 
 from discord_bot.print_role_counts import print_roles
-from discord_bot.util import is_player_id_please_room, is_role_count_room, is_t50_room, is_testing_room, t50_channel_id, top1_id
+from discord_bot.util import is_player_id_please_room, is_role_count_room, is_t50_room, is_testing_room, top1_id
 from discord_bot.validate_id import validate_player_id
 from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.models import Injection
@@ -21,6 +21,8 @@ intents.presences = True
 intents.message_content = True
 intents.members = True
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 client = discord.Client(intents=intents)
 
