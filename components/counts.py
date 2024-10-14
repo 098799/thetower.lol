@@ -21,7 +21,7 @@ def compute_counts():
     champ_results = TourneyResult.objects.filter(league=champ, public=True).order_by("-date")
 
     per_page = 22
-    pages = len(champ_results) // per_page + 1
+    pages = len(champ_results) // per_page
     which_page = slid_col.slider("Select page", 1, pages, 1)
 
     champ_results = champ_results[(which_page - 1) * per_page : which_page * per_page]
