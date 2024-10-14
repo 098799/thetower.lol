@@ -1,13 +1,13 @@
 import logging
 
-import easyocr
+# import easyocr
 from asgiref.sync import sync_to_async
 
 from discord_bot.util import get_tower, get_verified_role, verified_role_id
 from dtower.sus.models import KnownPlayer, PlayerId
 
 hex_digits = set("0123456789abcdef")
-reader = easyocr.Reader(["en"])
+# reader = easyocr.Reader(["en"])
 
 
 def only_made_of_hex(message):
@@ -52,12 +52,12 @@ async def validate_player_id(client, message):
 
     try:
         if len(message.content) > 13 and len(message.content) < 17 and message.attachments and only_made_of_hex(message):
-            image_bytes = await message.attachments[0].read()
+            # image_bytes = await message.attachments[0].read()
 
-            if not (await check_image(message.content, image_bytes)):
-                await message.add_reaction("⁉️")
-                await message.add_reaction("🖼️")
-                return
+            # if not (await check_image(message.content, image_bytes)):
+            #     await message.add_reaction("⁉️")
+            #     await message.add_reaction("🖼️")
+            #     return
 
             discord_id = message.author.id
 
