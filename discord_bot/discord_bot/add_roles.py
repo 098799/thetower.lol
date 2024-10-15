@@ -127,9 +127,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
             if not player_df.empty:
                 if league == champ:
-                    role_assigned = await handle_position_league(df, position_roles, discord_player, changed, unchanged)
+                    role_assigned = await handle_position_league(player_df, position_roles, discord_player, changed, unchanged)
                 else:
-                    role_assigned = await handle_wave_league(df, wave_roles_by_league[league], discord_player, league, changed, unchanged)
+                    role_assigned = await handle_wave_league(player_df, wave_roles_by_league[league], discord_player, league, changed, unchanged)
 
                     if role_assigned:
                         break
