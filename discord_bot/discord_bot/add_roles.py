@@ -6,12 +6,12 @@ from math import ceil
 
 from asgiref.sync import sync_to_async
 
+from discord_bot import const
 from discord_bot.util import get_all_members, get_tower, role_id_to_position
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import champ, copper, gold, leagues, plat, silver
 from dtower.tourney_results.data import get_results_for_patch, get_tourneys
 from dtower.tourney_results.models import PatchNew as Patch
-from discord_bot import const
 
 event_starts = datetime.date(2023, 11, 28)
 
@@ -129,6 +129,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
             if not player_df.empty:
                 if league == champ:
                     role_assigned = await handle_position_league(player_df, position_roles, discord_player, changed, unchanged)
+
+                    if role_assigned:
+                        break
                 else:
                     role_assigned = await handle_wave_league(player_df, wave_roles_by_league[league], discord_player, league, changed, unchanged)
 
