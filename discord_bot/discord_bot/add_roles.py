@@ -6,9 +6,9 @@ from math import ceil
 
 from asgiref.sync import sync_to_async
 
-from discord_bot.util import get_all_members, get_safe_league_prefix, get_tower, role_id_to_position, role_prefix_and_only_tourney_roles_check
+from discord_bot.util import get_all_members, get_tower, role_id_to_position
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
-from dtower.tourney_results.constants import champ, leagues
+from dtower.tourney_results.constants import champ, copper, gold, leagues, plat, silver
 from dtower.tourney_results.data import get_results_for_patch, get_tourneys
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -17,6 +17,15 @@ event_starts = datetime.date(2023, 11, 28)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+lower_roles = {
+    copper: [500, 1078760480362999978],
+    silver: [500, 1078760773809090600],
+    gold: [500, 1078760915312320573],
+    plat: [500, 1078761063681630361],
+    # champ: [250, ...]
+}
 
 
 async def handle_adding(client, limit, discord_ids=None, channel=None, debug_channel=None, verbose=None):
@@ -34,12 +43,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     if verbose:
         await channel.send(f"Starting the processing of {players.count() if not limit else limit} users... :rocket:")
 
-    all_leagues = leagues
-
     patch = sorted(await sync_to_async(Patch.objects.all, thread_sensitive=True)())[-1]
 
     logging.info("loading dfs")
-    # only limit to at most 4 tourneys? or maybe not?
 
     dfs = {}
 
@@ -58,22 +64,16 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
         await asyncio.sleep(0)
 
-    # dfs = {
-    #     league: get_tourneys(get_results_for_patch(patch=patch, league=league), limit=5000) for league in leagues[1:]
-    # } | {  # potentially more to reach everyone who cleared 500 waves
-    #     league: get_tourneys(get_results_for_patch(patch=patch, league=league), limit=2000) for league in leagues[:1]  # champ goes up to 2k
-    # }
     sus_ids = {item.player_id for item in await sync_to_async(SusPerson.objects.filter, thread_sensitive=True)(sus=True)}
     dfs = {league: df[~df.id.isin(sus_ids)] for league, df in dfs.items()}
-    # dfs = {league: get_tourneys(league_to_folder[league], patch_id=patch.id) for league in all_leagues}
     logging.info("loaded dfs")
 
     tower = await get_tower(client)
 
     logging.info("fetching roles")
     roles = await tower.fetch_roles()
-    league_roles_all = {league: (await get_league_roles(roles, league)) for league in all_leagues}
-    position_roles = await get_position_roles(roles)
+    position_roles = await filter_roles(roles, role_id_to_position)
+    wave_roles_by_league = {league: await filter_roles(roles, {role_id: wave_bottom}) for league, (wave_bottom, role_id) in lower_roles.items()}
     logging.info("fetched roles")
 
     logging.info("getting all members")
@@ -117,24 +117,24 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
         discord_player = member_lookup.get(int(player_discord_id))
 
-        discord_player, skipped = await handle_leagues(
-            all_leagues,
-            changed,
-            dfs,
-            discord_player,
-            ids,
-            channel,
-            # patch,
-            player_discord_id,
-            # dates_this_event,
-            league_roles_all,
-            position_roles,
-            # roles,
-            skipped,
-            # member_lookup,
-            unchanged,
-            # debug_channel,
-        )
+        if discord_player is None:
+            skipped += 1
+            continue
+
+        for league in leagues:
+            df = dfs[league]
+            player_df = df[df["id"].isin(ids)]
+
+            if not player_df.empty:
+                if league == champ:
+                    role_assigned = await handle_position_league(df, position_roles, discord_player, changed, unchanged)
+                else:
+                    role_assigned = await handle_wave_league(df, wave_roles_by_league[league], discord_player, league, changed, unchanged)
+
+                    if role_assigned:
+                        break
+        else:
+            skipped += 1
 
         if discord_player is None:
             discord_player = member_lookup.get(int(player_discord_id))
@@ -182,35 +182,17 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     logging.info("**********Done**********")
 
 
-async def get_position_roles(roles):
-    return {role_id_to_position[role.id]: role for role in roles if role.id in role_id_to_position}
-    # filtered_roles = [role for role in roles if await role_only_champ_tourney_roles_check(role)]
-    # return dict(sorted([(int(role.name.split()[-1]), role) for role in filtered_roles]))
+async def filter_roles(roles, role_id_to_wave):
+    return {role_id_to_wave[role.id]: role for role in roles if role.id in role_id_to_wave}
 
 
-async def get_league_roles(roles, league):
-    if league == champ:
-        initial = [(int(role.name.split()[-1]), role) for role in roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
-        only_250 = [item for item in initial if item[0] == 250]  # remove me when others disappear
-        return dict(sorted(only_250, reverse=True))
-
-    return dict(
-        sorted(
-            [(500, role) for role in roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))],
-            reverse=True,
-        ),
-    )
-
-
-async def handle_champ_position_roles(
+async def handle_position_league(
     df,
     position_roles,
     discord_player,
     changed,
     unchanged,
-    # dates_this_event,
 ) -> bool:
-    # position_roles = await get_position_roles(roles)
     logging.debug(f"{discord_player=} {df.position=}")
 
     if df.sort_values("date", ascending=False).iloc[0].position == 1:  # special logic for the winner
@@ -254,86 +236,20 @@ async def handle_champ_position_roles(
     return False
 
 
-async def handle_leagues(
-    all_leagues,
-    changed,
-    dfs,
-    discord_player,
-    ids,
-    channel,
-    # patch,
-    player_discord_id,
-    # dates_this_event,
-    # roles,
-    league_roles_all,
-    position_roles,
-    skipped,
-    # member_lookup,
-    unchanged,
-    # debug_channel,
-):
-    for league in all_leagues:
-        # league_roles = await get_league_roles(roles, league)
-        league_roles = league_roles_all[league]
-        df = dfs[league]
+async def handle_wave_league(df, wave_roles, discord_player, league, changed, unchanged):
+    for wave_min, role in wave_roles.items():
+        qualifies = any(wave >= wave_min for wave in df.wave)
 
-        # player_df = df[df["real_name"] == player.name]
-        player_df = df[df["id"].isin(ids)]
+        if not qualifies:
+            return
 
-        if player_df.empty:
-            continue
+        await iterate_waves_and_add_roles(changed, discord_player, league, unchanged, wave_min, role)
+        return wave_min
 
-        if discord_player is None:
-            return None, skipped + 1
-
-        if league == champ:
-            await handle_champ_position_roles(
-                player_df,
-                position_roles,
-                discord_player,
-                changed,
-                unchanged,
-                # dates_this_event,
-            )
-            return discord_player, skipped  # don't give out wave role for champ
-
-        gets_500 = any(wave >= 500 for wave in player_df.wave)
-
-        if league_roles and gets_500:
-            rightful_role = league_roles[500]
-            wave_bottom = 500
-        else:
-            continue
-
-        current_champ_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, get_safe_league_prefix(league))]
-        current_champ_waves = [500 for role in current_champ_roles]
-
-        await iterate_waves_and_add_roles(
-            changed,
-            current_champ_roles,
-            current_champ_waves,
-            discord_player,
-            league,
-            rightful_role,
-            unchanged,
-            wave_bottom,
-        )
-
-        break
-
-    else:
-        skipped += 1
-    return discord_player, skipped
+    return False
 
 
-async def iterate_waves_and_add_roles(changed, current_champ_roles, current_champ_waves, discord_player, league, rightful_role, unchanged, wave_bottom):
-    if all(wave_bottom > wave for wave in current_champ_waves):
-        for champ_role in current_champ_roles:
-            await discord_player.remove_roles(champ_role)
-
-        await discord_player.add_roles(rightful_role)
-        changed[league].append((discord_player.name, rightful_role.name))
-        logging.info(f"Added {rightful_role=} to {discord_player=}")
-
-    else:
-        unchanged[league].append((discord_player, rightful_role))
+async def iterate_waves_and_add_roles(changed, discord_player, league, unchanged, wave_min, role):
+    await discord_player.add_roles(role)
+    changed[league].append((discord_player.name, wave_min))
+    logging.info(f"Added {league=}, {wave_min=} to {discord_player=}")
