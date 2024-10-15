@@ -17,6 +17,7 @@ role_count_channel_id = 1164883276243140638
 role_log_channel_id = 1128308502130081842
 t50_channel_id = 903354378403065949
 testing_channel_id = 930105733998080062
+verify_channel_id = 1117867265375879259
 
 #role ids
 verified_role_id = 1119950199209611274
@@ -66,7 +67,7 @@ is_t50_channel = partial(is_channel, id_=t50_channel_id)
 is_meme_channel = partial(is_channel, id_=meme_channel_id)
 is_testing_channel = partial(is_channel, id_=testing_channel_id)
 is_helpers_channel = partial(is_channel, id_=helpers_channel_id)
-is_player_id_please_channel = partial(is_channel, id_=1117867265375879259)
+is_player_id_please_channel = partial(is_channel, id_=verify_channel_id)
 is_role_count_channel = partial(is_channel, id_=role_count_channel_id)
 
 
