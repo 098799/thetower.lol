@@ -1,18 +1,18 @@
 import logging
-
-from discord_bot.util import get_tower, id_098799, testing_channel_id
+import const
+from discord_bot.util import get_tower
 
 
 async def remove_nicknames(client, channel=None):
     tower = await get_tower(client)
-    channel = channel if channel else client.fetch_channel(testing_channel_id)
+    channel = channel if channel else client.fetch_channel(const.testing_channel_id)
 
     success = 0
     failure = 0
 
     await channel.send("Starting to remove nicknames from people...")
 
-    # for member in [await tower.fetch_member(id_098799)]:  # uncomment me to test
+    # for member in [await tower.fetch_member(const.id_098799)]:  # uncomment me to test
     async for member in tower.fetch_members():
         try:
             await member.edit(nick=None)

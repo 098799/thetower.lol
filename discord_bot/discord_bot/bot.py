@@ -4,6 +4,7 @@ import os
 
 import discord
 import django
+import const
 from discord.ext import tasks
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
@@ -12,7 +13,7 @@ django.setup()
 
 from discord_bot.add_roles import handle_adding
 from discord_bot.remove_nicknames import remove_nicknames
-from discord_bot.util import get_tower, handle_outside, is_testing_channel, role_log_channel_id, testing_channel_id
+from discord_bot.util import get_tower, handle_outside, is_testing_channel
 
 semaphore = asyncio.Semaphore(1)
 
@@ -32,7 +33,7 @@ async def on_ready():
     if handle_outside:
         # for local testing, this channel is private discord so we don't pollute tower discord
         # it doesn't guarantee that you won't create side-effects, so careful
-        channel = client.get_channel(testing_channel_id)
+        channel = client.get_channel(const.testing_channel_id)
         await handle_adding(
             client,
             limit=100,
@@ -115,8 +116,8 @@ async def handle_roles_scheduled():
     async with semaphore:
         try:
             tower = await get_tower(client)
-            channel = await client.fetch_channel(role_log_channel_id)
-            test_channel = await tower.fetch_channel(testing_channel_id)
+            channel = await client.fetch_channel(const.role_log_channel_id)
+            test_channel = await tower.fetch_channel(const.testing_channel_id)
 
             try:
                 await handle_adding(client, limit=None, channel=channel, debug_channel=test_channel, verbose=False)

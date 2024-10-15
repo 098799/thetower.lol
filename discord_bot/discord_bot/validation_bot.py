@@ -3,6 +3,7 @@ import os
 
 import discord
 import django
+import const
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
@@ -11,7 +12,7 @@ django.setup()
 from asgiref.sync import sync_to_async
 
 from discord_bot.print_role_counts import print_roles
-from discord_bot.util import is_player_id_please_channel, is_role_count_channel, is_t50_channel, is_testing_channel, top1_id
+from discord_bot.util import is_player_id_please_channel, is_role_count_channel, is_t50_channel, is_testing_channel
 from discord_bot.validate_id import validate_player_id
 from dtower.sus.models import KnownPlayer, PlayerId
 from dtower.tourney_results.models import Injection
@@ -54,7 +55,7 @@ async def check_id(client, message):
 @client.event
 async def on_message(message):
     try:
-        if is_player_id_please_channel(message.channel) and message.author.id != 1117480944153145364:
+        if is_player_id_please_channel(message.channel) and message.author.id != const.id_rolebot:
             logging.info(message.channel)
             print(message.channel)
             await validate_player_id(client, message)
@@ -66,7 +67,7 @@ async def on_message(message):
         elif (is_testing_channel(message.channel) or is_role_count_channel(message.channel)) and message.content.startswith("!role_counts"):
             await print_roles(client, message)
         elif is_t50_channel(message.channel) and message.content.startswith("!inject"):
-            if top1_id in {role.id for role in message.author.roles}:
+            if const.top1_id in {role.id for role in message.author.roles}:
                 injection = message.content.split(" ", 1)[1]
                 Injection.objects.create(text=injection, user=message.author.id)
                 await message.channel.send(f"🔥 Stored the prompt injection for AI summary: {injection[:10]}... 🔥")

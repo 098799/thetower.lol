@@ -3,8 +3,9 @@ import logging
 import easyocr
 from asgiref.sync import sync_to_async
 
-from discord_bot.util import get_tower, get_verified_role, verified_role_id
+from discord_bot.util import get_tower, get_verified_role
 from dtower.sus.models import KnownPlayer, PlayerId
+import const
 
 hex_digits = set("0123456789abcdef")
 reader = easyocr.Reader(["en"])
@@ -47,7 +48,7 @@ async def check_image(content, image_bytes):
 
 
 async def validate_player_id(client, message):
-    if message.author.id in [96626874708430848, 778131594132062240, 778131594132062240]:
+    if message.author.id in [const.id_pog, const.id_susjite]:
         return
 
     try:
@@ -80,7 +81,7 @@ async def validate_player_id(client, message):
 async def handle_role_present(client, discord_player):
     verified_role = await get_verified_role(client)
 
-    has_player_id_present_role = [role for role in discord_player.roles if role.id == verified_role_id]
+    has_player_id_present_role = [role for role in discord_player.roles if role.id == const.verified_role_id]
 
     if not has_player_id_present_role:
         await discord_player.add_roles(verified_role)
