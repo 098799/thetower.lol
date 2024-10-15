@@ -1,5 +1,5 @@
 import os
-import const
+from discord_bot import const
 from functools import partial
 
 from asyncstdlib.functools import lru_cache

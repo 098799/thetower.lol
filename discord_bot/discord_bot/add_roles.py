@@ -11,7 +11,7 @@ from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import champ, copper, gold, leagues, plat, silver
 from dtower.tourney_results.data import get_results_for_patch, get_tourneys
 from dtower.tourney_results.models import PatchNew as Patch
-import const
+from discord_bot import const
 
 event_starts = datetime.date(2023, 11, 28)
 

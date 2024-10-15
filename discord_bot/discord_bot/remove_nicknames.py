@@ -1,5 +1,5 @@
 import logging
-import const
+from discord_bot import const
 from discord_bot.util import get_tower
 
 

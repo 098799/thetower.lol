@@ -4,7 +4,7 @@ import os
 
 import discord
 import django
-import const
+from discord_bot import const
 from discord.ext import tasks
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"

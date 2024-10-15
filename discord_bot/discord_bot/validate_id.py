@@ -5,7 +5,7 @@ from asgiref.sync import sync_to_async
 
 from discord_bot.util import get_tower, get_verified_role
 from dtower.sus.models import KnownPlayer, PlayerId
-import const
+from discord_bot import const
 
 hex_digits = set("0123456789abcdef")
 reader = easyocr.Reader(["en"])

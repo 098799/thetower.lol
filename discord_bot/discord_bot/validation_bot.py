@@ -3,7 +3,7 @@ import os
 
 import discord
 import django
-import const
+from discord_bot import const
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
