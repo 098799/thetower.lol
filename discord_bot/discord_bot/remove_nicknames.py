@@ -1,11 +1,11 @@
 import logging
 
-from discord_bot.util import get_tower, id_098799, testing_room_id
+from discord_bot.util import get_tower, id_098799, testing_channel_id
 
 
 async def remove_nicknames(client, channel=None):
     tower = await get_tower(client)
-    channel = channel if channel else client.fetch_channel(testing_room_id)
+    channel = channel if channel else client.fetch_channel(testing_channel_id)
 
     success = 0
     failure = 0

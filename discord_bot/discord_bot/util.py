@@ -10,13 +10,13 @@ id_098799 = 177504210177228801
 id_andreas = 181859318801498113
 id_fishy = 169201175231463424
 
-#room ids
-helpers_room_id = 1006900314588336139
-meme_room_id = 1159121488931209328
-role_count_room_id = 1164883276243140638
-role_log_room_id = 1128308502130081842
-t50_room_id = 903354378403065949
-testing_room_id = 930105733998080062
+#channel ids
+helpers_channel_id = 1006900314588336139
+meme_channel_id = 1159121488931209328
+role_count_channel_id = 1164883276243140638
+role_log_channel_id = 1128308502130081842
+t50_channel_id = 903354378403065949
+testing_channel_id = 930105733998080062
 
 #role ids
 verified_role_id = 1119950199209611274
@@ -62,12 +62,12 @@ def is_channel(channel, id_):
     return channel.id == id_
 
 
-is_t50_room = partial(is_channel, id_=t50_room_id)
-is_meme_room = partial(is_channel, id_=meme_room_id)
-is_testing_room = partial(is_channel, id_=testing_room_id)
-is_helpers_room = partial(is_channel, id_=helpers_room_id)
-is_player_id_please_room = partial(is_channel, id_=1117867265375879259)
-is_role_count_room = partial(is_channel, id_=role_count_room_id)
+is_t50_channel = partial(is_channel, id_=t50_channel_id)
+is_meme_channel = partial(is_channel, id_=meme_channel_id)
+is_testing_channel = partial(is_channel, id_=testing_channel_id)
+is_helpers_channel = partial(is_channel, id_=helpers_channel_id)
+is_player_id_please_channel = partial(is_channel, id_=1117867265375879259)
+is_role_count_channel = partial(is_channel, id_=role_count_channel_id)
 
 
 def is_098799(author):
