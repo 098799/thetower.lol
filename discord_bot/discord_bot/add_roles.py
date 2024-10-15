@@ -243,6 +243,10 @@ async def handle_wave_league(df, wave_roles, discord_player, league, changed, un
         if not qualifies:
             return
 
+        if role in discord_player.roles:
+            unchanged[league].append((discord_player, role))
+            return True
+
         await iterate_waves_and_add_roles(changed, discord_player, league, unchanged, wave_min, role)
         return wave_min
 
