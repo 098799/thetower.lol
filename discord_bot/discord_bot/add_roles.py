@@ -11,6 +11,7 @@ from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import champ, copper, gold, leagues, plat, silver
 from dtower.tourney_results.data import get_results_for_patch, get_tourneys
 from dtower.tourney_results.models import PatchNew as Patch
+from discord_bot import const
 
 event_starts = datetime.date(2023, 11, 28)
 
@@ -20,10 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 lower_roles = {
-    copper: [500, 1078760480362999978],
-    silver: [500, 1078760773809090600],
-    gold: [500, 1078760915312320573],
-    plat: [500, 1078761063681630361],
+    copper: [500, const.copper500_id],
+    silver: [500, const.silver500_id],
+    gold: [500, const.gold500_id],
+    plat: [500, const.plat500_id],
     # champ: [250, ...]
 }
 

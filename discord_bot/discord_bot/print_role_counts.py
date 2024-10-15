@@ -1,6 +1,7 @@
 from collections import defaultdict
 
-from discord_bot.util import get_all_members, get_tower, role_count_channel_id
+from discord_bot.util import get_all_members, get_tower
+from discord_bot import const
 
 
 async def print_roles(client, message):
@@ -116,7 +117,7 @@ async def print_roles(client, message):
             if role.startswith("Epic Pack") or role.startswith("Starter-Pack") or role.startswith("No Ads")
         ]
 
-    channel = await client.fetch_channel(role_count_channel_id)
+    channel = await client.fetch_channel(const.role_count_channel_id)
 
     chunk_size = 15
 
