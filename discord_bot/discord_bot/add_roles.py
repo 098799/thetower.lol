@@ -75,6 +75,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     roles = await tower.fetch_roles()
     position_roles = await filter_roles(roles, role_id_to_position)
     wave_roles_by_league = {league: await filter_roles(roles, {role_id: wave_bottom}) for league, (wave_bottom, role_id) in lower_roles.items()}
+    wave_roles = [role for role_data in wave_roles_by_league.values() for role in role_data.values()]
     logging.info("fetched roles")
 
     logging.info("getting all members")
@@ -131,6 +132,10 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
                     role_assigned = await handle_position_league(player_df, position_roles, discord_player, changed, unchanged)
 
                     if role_assigned:
+                        for other_role in wave_roles:
+                            if other_role in discord_player.roles:
+                                await discord_player.remove_roles(other_role)
+
                         break
                 else:
                     role_assigned = await handle_wave_league(player_df, wave_roles_by_league, discord_player, league, changed, unchanged)
@@ -251,9 +256,9 @@ async def handle_wave_league(df, wave_roles_by_league, discord_player, league, c
 
         other_roles = [other_role for role_data in wave_roles_by_league.values() for other_role in role_data.values() if other_role != role]
 
-        for role in other_roles:
-            if role in discord_player.roles:
-                await discord_player.remove_roles(role)
+        for other_role in other_roles:
+            if other_role in discord_player.roles:
+                await discord_player.remove_roles(other_role)
 
         if role in discord_player.roles:
             unchanged[league].append((discord_player, role))
