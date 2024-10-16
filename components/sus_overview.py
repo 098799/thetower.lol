@@ -132,7 +132,6 @@ def get_copper_to_champ(df):
 
 
 def get_sus_overview():
-    st.set_page_config(layout="centered")
     last_patch = Patch.objects.last()
 
     dfs = [load_tourney_results(league, limit_no_results=7) for league in league_to_folder.values()]

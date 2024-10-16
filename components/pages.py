@@ -14,6 +14,8 @@ from components.breakdown import compute_breakdown
 from components.comparison import get_comparison
 from components.counts import compute_counts
 from components.fallen_defenders import get_fallen_defenders
+from components.live_bracket import live_bracket
+from components.live_score import live_score
 from components.namechangers import get_namechangers
 from components.overview import compute_overview
 from components.player import compute_player_lookup
@@ -66,6 +68,8 @@ hidden_features = os.environ.get("HIDDEN_FEATURES")
 if hidden_features:
     pages += [
         st.Page(get_sus_overview, title="SUS overview", icon="🔨", url_path="sus"),
+        st.Page(live_score, title="live score", icon="⏱️", url_path="live"),
+        st.Page(live_bracket, title="bracket", icon="🔠", url_path="bracket"),
     ]
 
 pg = st.navigation(pages)

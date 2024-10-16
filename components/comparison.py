@@ -28,7 +28,7 @@ sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=T
 hidden_features = os.environ.get("HIDDEN_FEATURES")
 
 
-def compute_comparison():
+def compute_comparison(player_id=None):
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
 
@@ -70,9 +70,10 @@ def compute_comparison():
     else:
         users = st.session_state.options.compare_players or st.session_state.comparison
 
-    search_for_new = st.button("Search for another player?", on_click=search_for_new)
+    if not player_id:
+        search_for_new = st.button("Search for another player?", on_click=search_for_new)
 
-    st.code(f"http://{BASE_URL}/comparison?" + urlencode({"compare": users}, doseq=True))
+        st.code(f"http://{BASE_URL}/comparison?" + urlencode({"compare": users}, doseq=True))
 
     player_ids = PlayerId.objects.filter(id__in=users)
     known_players = KnownPlayer.objects.filter(ids__in=player_ids)
@@ -104,18 +105,24 @@ def compute_comparison():
         [
             [
                 data.real_name.mode().iloc[0],
-                user,
-                len(data),
                 max(data.wave),
                 int(round(median(data.wave), 0)),
+                len(data),
                 int(round(stdev(data.wave), 0)),
                 min(data.wave),
+                user,
             ]
             for data, user in datas
         ],
-        columns=["Name", "Search term", "No. tourneys", "total PB", "Median", "Stdev", "Lowest score"],
+        columns=["Name", "total PB", "Median", "No. tourneys", "Stdev", "Lowest score", "Search term"],
     )
     summary.set_index(keys="Name")
+
+    if player_id:
+        my_index = summary.loc[summary["Search term"] == player_id].index[0]
+        how_many_slider = st.slider("Narrow results to only your direct competitors?", 0, len(users), value=[my_index - 2, my_index + 2])
+        summary = summary.iloc[how_many_slider[0] : how_many_slider[1] + 1]
+        narrowed_ids = summary["Search term"]
 
     if st.session_state.options.links_toggle:
         to_be_displayed = summary.style.format(make_player_url, subset=["Search term"]).to_html(escape=False)
@@ -129,8 +136,15 @@ def compute_comparison():
     pd_datas = pd.concat([data for data, _ in datas])
     pd_datas["bcs"] = pd_datas.bcs.map(lambda bc_qs: " / ".join([bc.shortcut for bc in bc_qs]))
 
+    if player_id:
+        pd_datas = pd_datas[pd_datas.id.isin(narrowed_ids)]
+
     last_5_tourneys = sorted(pd_datas.date.unique())[-5:][::-1]
     last_5_bcs = [pd_datas[pd_datas.date == date].bcs.iloc[0] for date in last_5_tourneys]
+
+    if player_id:
+        last_5_bcs = ["" for _ in last_5_bcs]
+
     last_results = pd.DataFrame(
         [
             [
@@ -143,7 +157,11 @@ def compute_comparison():
         columns=["Name", "id", *[f"{date.month}/{date.day}: {bc}" for date, bc in zip(last_5_tourneys, last_5_bcs)]],
     )
 
-    last_results = last_results.style.apply(lambda row: [None, None, *[color_top_18(wave=row[i + 2]) for i in range(len(last_5_tourneys))]], axis=1)
+    if player_id:
+        last_results = last_results[last_results.id.isin(narrowed_ids)]
+
+    last_results = last_results[["Name", *[f"{date.month}/{date.day}: {bc}" for date, bc in zip(last_5_tourneys, last_5_bcs)], "id"]]
+    last_results = last_results.style
 
     if st.session_state.options.links_toggle:
         to_be_displayed = last_results.format(make_player_url, subset=["id"]).to_html(escape=False)
@@ -174,10 +192,11 @@ def compute_comparison():
     fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
     st.plotly_chart(fig)
 
-    with st.expander("Debug data..."):
-        data = {real_name: list(df.id.unique()) for real_name, df in pd_datas.groupby("real_name")}
-        st.write("Player ids used:")
-        st.json(data)
+    if not player_id:
+        with st.expander("Debug data..."):
+            data = {real_name: list(df.id.unique()) for real_name, df in pd_datas.groupby("real_name")}
+            st.write("Player ids used:")
+            st.json(data)
 
 
 def filter_plot_datas(datas, patch, filter_bcs):
