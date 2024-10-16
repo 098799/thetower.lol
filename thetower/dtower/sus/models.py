@@ -51,6 +51,9 @@ class SusPerson(models.Model):
     created = models.DateTimeField(auto_now_add=datetime.datetime.now, null=False, editable=False, db_index=True)
     modified = models.DateTimeField(auto_now=datetime.datetime.now, null=False, editable=False)
 
+    class Meta:
+        ordering = ("-modified",)
+
     history = HistoricalRecords()
 
 
