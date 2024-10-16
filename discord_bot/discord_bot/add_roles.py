@@ -133,7 +133,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
                     if role_assigned:
                         break
                 else:
-                    role_assigned = await handle_wave_league(player_df, wave_roles_by_league[league], discord_player, league, changed, unchanged)
+                    role_assigned = await handle_wave_league(player_df, wave_roles_by_league, discord_player, league, changed, unchanged)
 
                     if role_assigned:
                         break
@@ -240,14 +240,16 @@ async def handle_position_league(
     return False
 
 
-async def handle_wave_league(df, wave_roles, discord_player, league, changed, unchanged):
+async def handle_wave_league(df, wave_roles_by_league, discord_player, league, changed, unchanged):
+    wave_roles = wave_roles_by_league[league]
+
     for wave_min, role in wave_roles.items():
         qualifies = any(wave >= wave_min for wave in df.wave)
 
         if not qualifies:
             return
 
-        other_roles = [other_role for other_role in wave_roles.values() if other_role != role]
+        other_roles = [other_role for role_data in wave_roles_by_league.values() for other_role in role_data.values() if other_role != role]
 
         for role in other_roles:
             if role in discord_player.roles:
