@@ -247,11 +247,16 @@ async def handle_wave_league(df, wave_roles, discord_player, league, changed, un
         if not qualifies:
             return
 
+        other_roles = [other_role for other_role in wave_roles.values() if other_role != role]
+
+        for role in other_roles:
+            if role in discord_player.roles:
+                await discord_player.remove_roles(role)
+
         if role in discord_player.roles:
             unchanged[league].append((discord_player, role))
             return True
 
-        other_roles = [other_role for other_role in wave_roles.values() if other_role != role]
         await add_wave_roles(changed, discord_player, league, unchanged, wave_min, role, other_roles)
         return wave_min
 
@@ -260,10 +265,5 @@ async def handle_wave_league(df, wave_roles, discord_player, league, changed, un
 
 async def add_wave_roles(changed, discord_player, league, unchanged, wave_min, role, other_roles):
     await discord_player.add_roles(role)
-
-    for role in other_roles:
-        if role in discord_player.roles:
-            await discord_player.remove_roles(role)
-
     changed[league].append((discord_player.name, wave_min))
     logging.info(f"Added {league=}, {wave_min=} to {discord_player=}")
