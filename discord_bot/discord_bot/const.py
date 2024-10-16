@@ -1,17 +1,17 @@
-#TheTower Discord
+# TheTower Discord
 guild_id = 850137217828388904
 
-#user ids
+# user ids
 id_098799 = 177504210177228801
 id_andreas = 181859318801498113
 id_fishy = 169201175231463424
 id_pog = 96626874708430848
 id_susjite = 778131594132062240
 
-#bot ids
+# bot ids
 id_rolebot = 1117480944153145364
 
-#channel ids
+# channel ids
 helpers_channel_id = 1006900314588336139
 meme_channel_id = 1159121488931209328
 role_count_channel_id = 1164883276243140638
@@ -20,10 +20,10 @@ t50_channel_id = 903354378403065949
 testing_channel_id = 930105733998080062
 verify_channel_id = 1117867265375879259
 
-#role ids
+# role ids
 verified_role_id = 1119950199209611274
 
-##champ ids
+# #champ ids
 top1_id = 993947001232298126
 top10_id = 1111025773856440410
 top25_id = 1126993498294468709
@@ -41,7 +41,7 @@ top1000_id = 993946810240483347
 top1500_id = 993946632120975512
 top2000_id = 993946090061713571
 
-##other league ids
+## other league ids
 plat500_id = 1078761063681630361
 gold500_id = 1078760915312320573
 silver500_id = 1078760773809090600

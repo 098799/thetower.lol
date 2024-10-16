@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from discord_bot.util import get_all_members, get_tower
+from discord_bot.util import get_all_members
 from discord_bot import const
 
 

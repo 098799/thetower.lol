@@ -38,8 +38,9 @@ def is_098799(author):
 def is_andreas(author):
     return author.id == const.id_andreas
 
+
 def is_fishy(author):
-    return author.id == const.id_fishy #super tiner author 😂
+    return author.id == const.id_fishy  # super tiny author 😂
 
 
 def get_safe_league_prefix(league):
