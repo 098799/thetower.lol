@@ -267,5 +267,5 @@ async def handle_wave_league(df, wave_roles_by_league, discord_player, league, c
 
 async def add_wave_roles(changed, discord_player, league, unchanged, wave_min, role, other_roles):
     await discord_player.add_roles(role)
-    changed[league].append((discord_player.name, wave_min))
+    changed[league].append((discord_player.name, f"{league}: {wave_min}"))
     logging.info(f"Added {league=}, {wave_min=} to {discord_player=}")
