@@ -1,13 +1,11 @@
 import os
-import subprocess
 
 import discord
-from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from discord_bot.util import role_log_room_id, testing_room_id
-from dtower.tourney_results.constants import champ, copper
+from discord_bot.util import is_testing_channel
+from dtower.tourney_results.constants import champ
 from dtower.tourney_results.models import TourneyResult
 
 intents = discord.Intents.default()
@@ -21,7 +19,7 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    channel = await client.fetch_channel(role_log_room_id)
+    channel = await client.fetch_channel(is_testing_channel)
     await channel.send("🚀 https://thetower.lol/ has been updated with tourney results.")
     await client.close()
 
