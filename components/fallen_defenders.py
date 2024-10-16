@@ -1,11 +1,10 @@
 import datetime
 
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 
 from components.util import gantt
-from dtower.tourney_results.constants import champ, league_to_folder
+from dtower.tourney_results.constants import legend, league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
 
@@ -55,7 +54,7 @@ def compute_fallen_defenders(df):
 
     fallen_df = pd.DataFrame(fallen).sort_values(["Best #", "days", "Best wave"]).reset_index(drop=True)
 
-    fallen_champ = fallen_df[fallen_df["Best #"] == 1]
+    fallen_legend = fallen_df[fallen_df["Best #"] == 1]
     fallen_other = fallen_df[fallen_df["Best #"] != 1]
 
     styling = lambda row: [
@@ -65,23 +64,23 @@ def compute_fallen_defenders(df):
         f"color: {fallen_df[fallen_df['Player']==row['Player']].position_color.iloc[0]}",
     ]
 
-    tbdf_champ = style_df(fallen_champ)
+    tbdf_legend = style_df(fallen_legend)
     tbdf_other = style_df(fallen_other)
 
-    champ_col, other_col = st.columns([1, 1])
-    champ_col.write("All hail fallen champions 🫡")
+    legend_col, other_col = st.columns([1, 1])
+    legend_col.write("All hail fallen legends 🫡")
     other_col.write("May your labs still chug along")
 
-    champ_col.dataframe(tbdf_champ, hide_index=True, height=600)
+    legend_col.dataframe(tbdf_legend, hide_index=True, height=600)
     other_col.dataframe(tbdf_other, hide_index=True, height=600)
 
-    st.plotly_chart(gantt(fallen_champ))
+    st.plotly_chart(gantt(fallen_legend))
 
     show_others = st.slider("Other fallen defenders", 0, len(fallen_other), (0, 40))
     st.plotly_chart(gantt(fallen_other[show_others[0] : show_others[1]]))
 
 
 def get_fallen_defenders():
-    df = load_tourney_results(league_to_folder[champ])
+    df = load_tourney_results(league_to_folder[legend])
     df = df[~df.id.isin(get_sus_ids())]
     compute_fallen_defenders(df)

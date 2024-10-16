@@ -150,12 +150,12 @@ def execute(league):
 
 
 def check():
-    print(make_request("Champion")[:4000])
+    print(make_request("Legend")[:4000])
 
 
 if __name__ == "__main__":
     while True:
-        for league in ["Champion", "Platinum", "Gold", "Silver", "Copper"]:
+        for league in ["Legend", "Champion", "Platinum", "Gold", "Silver", "Copper"]:
             out = execute(league)
 
             if out:

@@ -4,8 +4,8 @@ import discord
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from discord_bot.util import is_testing_channel
-from dtower.tourney_results.constants import champ
+from discord_bot.discord_bot.util import is_testing_channel
+from dtower.tourney_results.constants import legend
 from dtower.tourney_results.models import TourneyResult
 
 intents = discord.Intents.default()
@@ -31,12 +31,12 @@ def recalculate_results(sender, instance, signal, created, update_fields, raw, u
         ...
     else:
         return
-        if instance.league == champ:
+        if instance.league == legend:
             if instance.public == True:  # result release to the public
                 client.run(os.getenv("DISCORD_TOKEN"))
 
             # if bcs := instance.conditions.all():
-            #     other_results = TourneyResult.objects.filter(~Q(league__in=[champ, copper]), date=instance.date)
+            #     other_results = TourneyResult.objects.filter(~Q(league__in=[legend, copper]), date=instance.date)
 
             #     for result in other_results:
             #         result.conditions.clear()

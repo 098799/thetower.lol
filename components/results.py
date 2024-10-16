@@ -4,7 +4,7 @@ from typing import Optional
 
 import streamlit as st
 
-from dtower.tourney_results.constants import Graph, Options, all_relics, champ, how_many_results_hidden_site, how_many_results_public_site, sus_person
+from dtower.tourney_results.constants import Graph, Options, all_relics, legend, how_many_results_hidden_site, how_many_results_public_site, sus_person
 from dtower.tourney_results.data import get_results_for_patch, get_sus_ids, get_tourneys
 from dtower.tourney_results.formatting import am_i_sus, color_position__top, make_player_url, strike
 from dtower.tourney_results.models import PatchNew as Patch
@@ -225,7 +225,7 @@ def compute_results(options: Options, league: Optional[str] = None):
 if __name__ == "__main__":
     st.set_page_config(layout="centered")
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
-    compute_results(options, league=champ)
+    compute_results(options, league=legend)
 
 
 # import cProfile

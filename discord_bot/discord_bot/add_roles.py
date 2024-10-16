@@ -9,7 +9,7 @@ from asgiref.sync import sync_to_async
 from discord_bot import const
 from discord_bot.util import get_all_members, get_tower, role_id_to_position
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
-from dtower.tourney_results.constants import champ, copper, gold, leagues, plat, silver
+from dtower.tourney_results.constants import legend, champ, copper, gold, leagues, plat, silver
 from dtower.tourney_results.data import get_results_for_patch, get_tourneys
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -25,7 +25,7 @@ lower_roles = {
     silver: [50, const.silver500_id],
     gold: [100, const.gold500_id],
     plat: [250, const.plat500_id],
-    # champ: [250, ...]
+    champ: [500, const.champ500_id]
 }
 
 
@@ -53,7 +53,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     dfs[leagues[0]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[0]), limit=2000)  # champ goes up to 2k
 
     if verbose:
-        await debug_channel.send(f"Loaded champ tourney data of {len(dfs[leagues[0]])} rows")
+        await debug_channel.send(f"Loaded legend tourney data of {len(dfs[leagues[0]])} rows")
 
     await asyncio.sleep(0)
 
@@ -128,7 +128,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
             player_df = df[df["id"].isin(ids)]
 
             if not player_df.empty:
-                if league == champ:
+                if league == legend:
                     role_assigned = await handle_position_league(player_df, position_roles, discord_player, changed, unchanged)
 
                     if role_assigned:
@@ -208,15 +208,15 @@ async def handle_position_league(
         rightful_role = position_roles[1]
 
         if rightful_role in discord_player.roles:
-            unchanged[champ].append((discord_player, rightful_role))
+            unchanged[legend].append((discord_player, rightful_role))
             return True  # Don't actually do anything if the player already has the role
 
         for position_role in position_roles.values():
             await discord_player.remove_roles(position_role)
 
         await discord_player.add_roles(rightful_role)
-        logging.info(f"Added champ top1 role to {discord_player=}")
-        changed[champ].append((discord_player.name, rightful_role.name))
+        logging.info(f"Added legend top1 role to {discord_player=}")
+        changed[legend].append((discord_player.name, rightful_role.name))
         return True
 
     # current_df = df[df["date"].isin(dates_this_event)]
@@ -228,7 +228,7 @@ async def handle_position_league(
             rightful_role = role
 
             if rightful_role in discord_player.roles:
-                unchanged[champ].append((discord_player, rightful_role))
+                unchanged[legend].append((discord_player, rightful_role))
                 return True  # Don't actually do anything if the player already has the role
 
             for role in [role for role in discord_player.roles if role.id in role_id_to_position]:
@@ -236,7 +236,7 @@ async def handle_position_league(
 
             await discord_player.add_roles(rightful_role)
             logging.info(f"Added {role=} to {discord_player=}")
-            changed[champ].append((discord_player.name, rightful_role.name))
+            changed[legend].append((discord_player.name, rightful_role.name))
             return True
     else:
         for role in [role for role in discord_player.roles if role.id in role_id_to_position]:

@@ -4,7 +4,7 @@ import re
 
 import pandas as pd
 
-from dtower.tourney_results.constants import champ
+from dtower.tourney_results.constants import legend
 from dtower.tourney_results.data import get_sus_ids
 from dtower.tourney_results.models import Injection, PromptTemplate, TourneyResult, TourneyRow
 
@@ -114,7 +114,7 @@ def get_summary(last_date):
 
     logging.info("Collecting ai summary data...")
 
-    qs = TourneyResult.objects.filter(league=champ, date__lte=last_date).order_by("-date")[:10]
+    qs = TourneyResult.objects.filter(league=legend, date__lte=last_date).order_by("-date")[:10]
     # previous_summaries = "\n\n".join([format_previous_summary(summary, date) for summary, date in qs.values_list("overview", "date")])  # not gonna include it now
 
     df = get_tourneys(qs, offset=0, limit=50)

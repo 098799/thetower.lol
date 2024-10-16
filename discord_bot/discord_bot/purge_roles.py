@@ -2,7 +2,7 @@ import logging
 
 from tqdm import tqdm
 
-from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check, role_only_champ_tourney_roles_check
+from discord_bot.util import get_safe_league_prefix, get_tower, role_prefix_and_only_tourney_roles_check, role_only_legend_tourney_roles_check
 from dtower.tourney_results.constants import leagues
 
 
@@ -28,8 +28,8 @@ async def purge_all_tourney_roles(client, channel, players):
             safe_league_prefix = get_safe_league_prefix(league)
             for discord_player in tqdm(discord_players):
                 current_league_roles = [role for role in discord_player.roles if await role_prefix_and_only_tourney_roles_check(role, safe_league_prefix)]
-                if league.startswith("Champ"):
-                    current_league_roles.append([role for role in discord_player.roles if await role_only_champ_tourney_roles_check(role)])
+                if league.startswith("Legend"):
+                    current_league_roles.append([role for role in discord_player.roles if await role_only_legend_tourney_roles_check(role)])
 
                 purged = await purge_current_league_roles(current_league_roles, discord_player, purged)
 

@@ -74,7 +74,7 @@ position_role_ids = {
 role_id_to_position = {value: key for key, value in position_role_ids.items()}
 
 
-async def role_only_champ_tourney_roles_check(role):
+async def role_only_legend_tourney_roles_check(role):
     return role in position_role_ids.values()
 
 

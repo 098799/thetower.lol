@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dtower.tourney_results.constants import Graph, Options, champ, how_many_results_hidden_site, how_many_results_public_site, league_to_folder
+from dtower.tourney_results.constants import Options, legend, how_many_results_hidden_site, how_many_results_public_site, league_to_folder
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.models import TourneyResult
 
@@ -55,12 +55,12 @@ def compute_breakdown(options: Optional[Options] = None) -> None:
         value=200,
         step=100,
     )
-    df = load_tourney_results(league_to_folder[champ], result_cutoff=overfill)
+    df = load_tourney_results(league_to_folder[legend], result_cutoff=overfill)
 
     df = df[df.patch.isin(selected_patches)]
 
     dates, counts_data = get_data(df, overfill=df.groupby("date").id.count().max())
-    bcs = {date: " / ".join(TourneyResult.objects.get(date=date, league=champ).conditions.all().values_list("shortcut", flat=True)) for date in dates}
+    bcs = {date: " / ".join(TourneyResult.objects.get(date=date, league=legend).conditions.all().values_list("shortcut", flat=True)) for date in dates}
 
     plot_data = {
         role: go.Bar(
@@ -82,7 +82,7 @@ def compute_breakdown(options: Optional[Options] = None) -> None:
 
     st.plotly_chart(fig)
 
-    df = load_tourney_results(league_to_folder[champ])
+    df = load_tourney_results(league_to_folder[legend])
 
     st.subheader("Scores in each patch")
 

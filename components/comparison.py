@@ -11,7 +11,7 @@ from components.search import compute_search
 from dtower.sus.models import KnownPlayer, PlayerId, SusPerson
 from dtower.tourney_results.constants import (
     Graph,
-    champ,
+    legend,
     colors_017,
     colors_018,
     how_many_results_public_site,
@@ -20,7 +20,7 @@ from dtower.tourney_results.constants import (
     stratas_boundaries_018,
 )
 from dtower.tourney_results.data import get_details, get_patches
-from dtower.tourney_results.formatting import BASE_URL, color_top_18, make_player_url
+from dtower.tourney_results.formatting import BASE_URL, make_player_url
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult, TourneyRow
 
@@ -271,7 +271,7 @@ def get_patch_df(df, player_df, patch):
         patch_df = player_df[player_df.patch == patch]
     elif patch == Graph.last_16.value:
         hidden_query = {} if hidden_features else dict(public=True)
-        qs = set(TourneyResult.objects.filter(league=champ, **hidden_query).order_by("-date").values_list("date", flat=True)[:16])
+        qs = set(TourneyResult.objects.filter(league=legend, **hidden_query).order_by("-date").values_list("date", flat=True)[:16])
         patch_df = player_df[player_df.date.isin(qs)]
     else:
         patch_df = player_df
