@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dtower.tourney_results.constants import Graph, Options, champ, how_many_results_hidden_site, how_many_results_public_site, league_to_folder
+from dtower.tourney_results.constants import Options, champ, how_many_results_hidden_site, how_many_results_public_site, league_to_folder
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.models import TourneyResult
 
