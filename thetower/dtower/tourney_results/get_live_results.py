@@ -94,5 +94,5 @@ def execute(league):
 
 if __name__ == "__main__":
     while True:
-        out = execute("Champion")
+        out = execute("Legend")
         time.sleep(1800)

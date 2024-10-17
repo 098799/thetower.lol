@@ -3,7 +3,7 @@ from collections import Counter
 import pandas as pd
 import streamlit as st
 
-from dtower.tourney_results.constants import Graph, Options, all_relics, champ, league_to_folder
+from dtower.tourney_results.constants import Graph, Options, all_relics, legend, league_to_folder
 from dtower.tourney_results.data import load_tourney_results
 from dtower.tourney_results.models import PatchNew as Patch
 
@@ -86,5 +86,5 @@ def compute_various(df, options):
 
 def get_various():
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
-    df = load_tourney_results(league_to_folder[champ])
+    df = load_tourney_results(league_to_folder[legend])
     compute_various(df, options)

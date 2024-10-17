@@ -89,7 +89,7 @@ Your summary starts now."""
 
 def live_score():
     home = Path.home()
-    live_path = home / "tourney" / "results_cache" / "Champion_live"
+    live_path = home / "tourney" / "results_cache" / "Legend_live"
 
     all_files = live_path.glob("*.csv")
     data = {get_time(file): pd.read_csv(file) for file in all_files}
