@@ -1,42 +1,8 @@
-import datetime
-from functools import partial
+from django.http import JsonResponse
 
-from cachetools import TTLCache, cached
-from django.core.exceptions import BadRequest
-from django.http import HttpResponse, JsonResponse
-from pretty_html_table import build_table
-
-from dtower.sus.models import PlayerId, SusPerson
-from dtower.tourney_results.constants import champ, league_to_folder
-from dtower.tourney_results.data import get_details, get_sus_ids, get_tourneys, how_many_results_public_site, load_tourney_results
+from dtower.sus.models import PlayerId
+from dtower.tourney_results.data import get_details, get_tourneys, how_many_results_public_site
 from dtower.tourney_results.models import TourneyResult, TourneyRow
-
-cache = TTLCache(maxsize=10, ttl=600)
-
-
-@cached(cache=cache)
-def get_data(league, tourney_date=None):
-    df = load_tourney_results(league)
-    df = df[~df.id.isin(get_sus_ids())]
-
-    if not tourney_date:
-        last_date = df.date.unique()[-1]
-    else:
-        try:
-            last_date = datetime.date.fromisoformat(tourney_date)
-        except ValueError:
-            raise (BadRequest("Invalid date format"))
-
-    last_df = df[df.date == last_date].reset_index(drop=True)
-    return last_df
-
-
-def plaintext_results(request, league, tourney_date=None):
-    df = get_data(league=league_to_folder[league.title()], tourney_date=tourney_date)[["position", "tourney_name", "real_name", "wave"]]
-    return HttpResponse(build_table(df, "blue_light"))
-
-
-plaintext_results__champ = partial(plaintext_results, league=champ)
 
 
 def results_per_tourney(request, league, tourney_date):
