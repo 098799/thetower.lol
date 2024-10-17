@@ -1,5 +1,4 @@
 import datetime
-from typing import List, Optional
 
 import pandas as pd
 import plotly.express as px
