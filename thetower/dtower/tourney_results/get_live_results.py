@@ -47,28 +47,11 @@ def get_last_date():
     last_tourney_month = (utcnow - datetime.timedelta(days=offset)).month
     last_tourney_year = (utcnow - datetime.timedelta(days=offset)).year
 
-    return f"{last_tourney_year}-{str(last_tourney_month).zfill(2)}-{str(last_tourney_day).zfill(2)}"
-
-
-def get_last_date__hourly_on_tourney_days():
-    """Deprecated since we try not to make too many requests. Don't use."""
-    utcnow = get_current_time__game_server()
-    offset = get_date_offset()
-
-    current_date = get_last_date()
-
-    if offset == 0:
-        current_date += f"T{str(utcnow.hour).zfill(2)}:{str(utcnow.minute).zfill(2)}:00"
-
-    return current_date
-
-
-def get_time():
-    return datetime.datetime.now().strftime("%H_%M")
+    return f"{last_tourney_year}-{str(last_tourney_month).zfill(2)}-{str(last_tourney_day).zfill(2)}__{utcnow.hour}_{utcnow.minute}"
 
 
 def get_file_name():
-    return f"{get_last_date()}__{get_time()}.csv"
+    return f"{get_last_date()}.csv"
 
 
 def get_file_path(file_name, league):
@@ -92,8 +75,12 @@ def make_request(league):
 
 
 def execute(league):
-    if get_date_offset():
-        logging.info("Skipping cause _not_ tourney day!!")
+    date_offset = get_date_offset()
+    current_time = get_current_time__game_server()
+    current_hour = current_time.hour
+
+    if date_offset > 1 or date_offset == 1 and current_hour > 5:
+        logging.info("Skipping cause _not_ tourney day anymore!!")
         return
 
     file_path = get_file_path(get_file_name(), league)
