@@ -7,7 +7,7 @@ def compute_about(*args, **kwargs):
     st.markdown("Thanks to `andreasjn` for the help with the discord bot.")
     st.markdown("Thanks to `Milamber33` for a lot of help with css and other things.")
     st.markdown("Thanks to `Jim808`, `ObsUK` and `Bartek` for a graph ideas and encouragement.")
-    st.markdown("Thanks to `Fnord`, `Neothin87`, `imsaguy` and others for the encouragement, ideas, security audits.")
+    st.markdown("Thanks to `Fnord`, `Neothin87`, `thedisasterfish` and others for the encouragement, ideas, security audits.")
     st.markdown("Thanks to `Pog` and the discord mods for all the work on sus reports.")
 
     st.header("Sus people")
