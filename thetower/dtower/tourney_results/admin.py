@@ -8,8 +8,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
-from dtower.sus.models import KnownPlayer, PlayerId
-from dtower.tourney_results.constants import champ
+from dtower.sus.models import PlayerId
 from dtower.tourney_results.models import (
     BattleCondition,
     Injection,
@@ -274,13 +273,6 @@ class NameDayWinnerAdmin(SimpleHistoryAdmin):
         "winner__discord_id",
         "nameday_theme",
     )
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "winner":
-            kwargs["queryset"] = KnownPlayer.objects.filter(approved=True).order_by("name")
-        elif db_field.name == "tourney":
-            kwargs["queryset"] = TourneyResult.objects.filter(public=True, league=champ).order_by("-date")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Injection)

@@ -5,7 +5,6 @@ from dtower.sus.models import Reviewed
 from dtower.tourney_results.constants import league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position
-from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import Role
 
 league_to_color = {league: Role.objects.filter(league=league).last().color for league in league_to_folder.keys()}
@@ -132,8 +131,6 @@ def get_copper_to_champ(df):
 
 
 def get_sus_overview():
-    last_patch = Patch.objects.last()
-
     dfs = [load_tourney_results(league, limit_no_results=7) for league in league_to_folder.values()]
 
     for df, league in zip(dfs, league_to_folder.keys()):
