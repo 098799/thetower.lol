@@ -75,7 +75,8 @@ position_colors = [
 ][::-1]
 
 top = "Top"
-champ = "Champions"
+legend = "Legend"
+champ = "Champion"
 plat = "Platinum"
 gold = "Gold"
 silver = "Silver"
@@ -136,11 +137,12 @@ class Options(BaseModel):
 medals = ["🥇", "🥈", "🥉"]
 
 
-leagues = [champ, plat, gold, silver, copper]
+leagues = [legend, champ, plat, gold, silver, copper]
 
 
 data_folder_name_mapping = {
-    "data": champ,
+    "legend": legend,
+    "champ": champ,
     "plat": plat,
     "gold": gold,
     "silver": silver,
@@ -153,7 +155,8 @@ leagues_choices = [(league, league) for league in data_folder_name_mapping.value
 
 
 us_to_jim = {
-    champ: "Champion",
+    legend: legend,
+    champ: champ,
     plat: plat,
     gold: gold,
     silver: silver,

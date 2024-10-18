@@ -9,7 +9,6 @@ import csv
 import datetime
 import re
 from collections import Counter, defaultdict
-from functools import cache
 from glob import glob
 from pathlib import Path
 from typing import Optional
@@ -22,7 +21,7 @@ from django.db.models import Q, QuerySet
 
 from dtower.sus.models import PlayerId, SusPerson
 from dtower.tourney_results.constants import (
-    champ,
+    legend,
     data_folder_name_mapping,
     how_many_results_debug,
     how_many_results_hidden_site,
@@ -167,7 +166,7 @@ def get_row_to_role(df: pd.DataFrame, league):
 
 def _load_tourney_results(
     result_files: list[tuple[str, str, list[BattleCondition]]],
-    league=champ,
+    league=legend,
     result_cutoff: Optional[int] = None,
 ) -> pd.DataFrame:
     hidden_features = os.environ.get("HIDDEN_FEATURES")
@@ -261,7 +260,7 @@ def handle_result_cutoff(hidden_features, league, result_cutoff, debug):
     elif not hidden_features:
         cutoff = how_many_results_public_site
 
-        if league != champ:
+        if league != legend:
             cutoff = how_many_results_public_site_other
 
     else:
@@ -346,13 +345,13 @@ def get_soft_banned_ids():
     return set(SusPerson.objects.filter(soft_banned=True).values_list("player_id", flat=True))
 
 
-def get_last_tourney(league=champ):
+def get_last_tourney(league=legend):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     public = {"public": True} if not hidden_features else {}
     return TourneyResult.objects.filter(league=league, **public).latest("date")
 
 
-def get_results_for_patch(patch: Patch, league=champ):
+def get_results_for_patch(patch: Patch, league=legend):
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     public = {"public": True} if not hidden_features else {}
     return TourneyResult.objects.filter(date__gte=patch.start_date, date__lte=patch.end_date, league=league, **public).order_by("-date")
@@ -424,7 +423,7 @@ def get_details(rows: QuerySet[TourneyRow]) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    df = get_tourneys(TourneyResult.objects.filter(league=champ).order_by("-date")[:20], offset=0, limit=5000)
+    df = get_tourneys(TourneyResult.objects.filter(league=legend).order_by("-date")[:20], offset=0, limit=5000)
     breakpoint()
 
     import anthropic

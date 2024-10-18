@@ -15,7 +15,7 @@ def get_time(file_path: Path) -> datetime.datetime:
 
 def live_bracket():
     home = Path.home()
-    live_path = home / "tourney" / "results_cache" / "Champion_live"
+    live_path = home / "tourney" / "results_cache" / "Legend_live"
 
     all_files = live_path.glob("*.csv")
     data = {get_time(file): pd.read_csv(file) for file in all_files}

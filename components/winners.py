@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from dtower.tourney_results.constants import champ
+from dtower.tourney_results.constants import legend
 from dtower.tourney_results.data import get_patches, get_tourneys
 from dtower.tourney_results.models import TourneyResult
 
@@ -21,7 +21,7 @@ def compute_winners():
 
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     public = {"public": True} if not hidden_features else {}
-    df = get_tourneys(TourneyResult.objects.filter(league=champ, **public), offset=0, limit=10)
+    df = get_tourneys(TourneyResult.objects.filter(league=legend, **public), offset=0, limit=10)
 
     selected_patches = [patch for patch in patches if patch.version_minor >= selected_patches_slider.version_minor]
 
@@ -73,7 +73,7 @@ def compute_winners():
     total_score = {name: score for name, score in total_score.items() if score > 0}
     graph_df = pd.DataFrame(total_score.items(), columns=["name", "count"])
 
-    fig = px.pie(graph_df, values="count", names="name", title="Winners of champ, courtesy of Jim", **additional_options)
+    fig = px.pie(graph_df, values="count", names="name", title="Winners of legend, courtesy of Jim", **additional_options)
     fig.update_traces(textinfo="value")
     st.plotly_chart(fig)
 
