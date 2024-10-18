@@ -6,7 +6,7 @@ import plotly.express as px
 import streamlit as st
 
 from components.comparison import compute_comparison
-from thetower.dtower.tourney_results.data import get_player_id_lookup
+from dtower.tourney_results.data import get_player_id_lookup
 
 
 def get_time(file_path: Path) -> datetime.datetime:

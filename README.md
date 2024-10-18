@@ -1,5 +1,5 @@
 # The Tower tourney results
-- python3.8+
+- python3.12
 - install dependencies: `pip install -r requirements.txt`
 
 - `pip install -e .` to install the app,

@@ -20,6 +20,7 @@ pretty-html-table==0.9.16
 
 # discord bot
 discord.py==2.4.0
+easyocr==1.7.2
 
 # testing
 pytest==7.4.3
