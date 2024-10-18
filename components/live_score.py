@@ -97,6 +97,9 @@ def live_score():
     for dt, df in data.items():
         df["datetime"] = dt
 
+    if not data:
+        return st.info("No current data, wait until the tourney day")
+
     df = pd.concat(data.values())
     df = df.sort_values(["datetime", "wave"], ascending=False)
 
