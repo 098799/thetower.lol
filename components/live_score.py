@@ -87,7 +87,7 @@ Your summary starts now."""
     return response
 
 
-def live_score():
+def get_live_df():
     home = Path.home()
     live_path = home / "tourney" / "results_cache" / "Champion_live"
 
@@ -102,10 +102,21 @@ def live_score():
 
     df = pd.concat(data.values())
     df = df.sort_values(["datetime", "wave"], ascending=False)
+    df["bracket"] = df.bracket.map(lambda x: x.strip())
 
-    top_10 = df.head(100).player_id.tolist()
+    bracket_counts = dict(df.groupby("bracket").player_id.unique().map(lambda player_ids: len(player_ids)))
+    fullish_brackets = [bracket for bracket, count in bracket_counts.items() if count >= 28]
+
+    df = df[df.bracket.isin(fullish_brackets)]  # no sniping
     lookup = get_player_id_lookup()
     df["real_name"] = [lookup.get(id, name) for id, name in zip(df.player_id, df.name)]
+    return df
+
+
+def live_score():
+    df = get_live_df()
+
+    top_10 = df.head(100).player_id.tolist()[:10]
     tdf = df[df.player_id.isin(top_10)]
 
     last_moment = tdf.datetime.iloc[0]
