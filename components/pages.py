@@ -64,10 +64,15 @@ pages = [
 
 
 hidden_features = os.environ.get("HIDDEN_FEATURES")
+testing_flag = os.environ.get("TESTING_FLAG")
 
 if hidden_features:
     pages += [
         st.Page(get_sus_overview, title="SUS overview", icon="🔨", url_path="sus"),
+    ]
+
+if testing_flag or hidden_features:
+    pages += [
         st.Page(live_score, title="live score", icon="⏱️", url_path="live"),
         st.Page(live_bracket, title="bracket", icon="🔠", url_path="bracket"),
     ]
