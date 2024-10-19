@@ -89,9 +89,14 @@ def compute_comparison(player_id=None):
     graph_options = [st.session_state.options.default_graph.value] + [
         value for value in list(Graph.__members__.keys()) + patches_options if value != st.session_state.options.default_graph.value
     ]
-    patch_col, bc_col = st.columns([1, 1])
-    patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
-    filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in player_df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
+
+    if player_id:
+        patch = graph_options[0]
+        filter_bcs = None
+    else:
+        patch_col, bc_col = st.columns([1, 1])
+        patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
+        filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in player_df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
 
     datas = [(sdf, player_id) for player_id, sdf in player_df.groupby("id") if len(sdf) >= 2]
     datas = filter_plot_datas(datas, patch, filter_bcs)
@@ -119,16 +124,16 @@ def compute_comparison(player_id=None):
     summary.set_index(keys="Name")
 
     if player_id:
-        my_index = summary.loc[summary["Search term"] == player_id].index[0]
-        how_many_slider = st.slider("Narrow results to only your direct competitors?", 0, len(users), value=[my_index - 2, my_index + 2])
+        how_many_slider = st.slider(
+            "Narrow results to only your direct competitors?",
+            0,
+            len(users),
+            value=[0, len(users)],
+        )
         summary = summary.iloc[how_many_slider[0] : how_many_slider[1] + 1]
-        narrowed_ids = summary["Search term"]
 
-    if st.session_state.options.links_toggle:
-        to_be_displayed = summary.style.format(make_player_url, subset=["Search term"]).to_html(escape=False)
-        st.write(to_be_displayed, unsafe_allow_html=True)
-    else:
-        st.dataframe(summary, use_container_width=True, hide_index=True)
+        narrowed_ids = summary["Search term"]
+        summary.index = summary.index + 1
 
     for data, _ in datas:
         data["real_name"] = data["real_name"].mode().iloc[0]
@@ -161,13 +166,8 @@ def compute_comparison(player_id=None):
         last_results = last_results[last_results.id.isin(narrowed_ids)]
 
     last_results = last_results[["Name", *[f"{date.month}/{date.day}: {bc}" for date, bc in zip(last_5_tourneys, last_5_bcs)], "id"]]
+    last_results.index = last_results.index + 1
     last_results = last_results.style
-
-    if st.session_state.options.links_toggle:
-        to_be_displayed = last_results.format(make_player_url, subset=["id"]).to_html(escape=False)
-        st.write(to_be_displayed, unsafe_allow_html=True)
-    else:
-        st.dataframe(last_results, use_container_width=True, hide_index=True)
 
     pd_datas = pd_datas.drop_duplicates()
 
@@ -175,7 +175,7 @@ def compute_comparison(player_id=None):
     fig.update_layout(showlegend=False)
     fig.update_yaxes(title_text=None)
     fig.update_layout(margin=dict(l=20))
-    fig.update_traces(hovertemplate="%{y}<br>Postion: %{customdata[1]}<br>BC: %{customdata[0]}")
+    fig.update_traces(hovertemplate="%{y}<br>Postion: %{customdata[1]}")
     fig.update_layout(hovermode="x unified")
 
     min_ = min(pd_datas.wave)
@@ -183,14 +183,26 @@ def compute_comparison(player_id=None):
 
     enrich_plot(fig, max_, min_, pd_datas)
 
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
     fig = px.line(pd_datas, x="date", y="position", color="real_name", markers=True)
     fig.update_layout(showlegend=False)
     fig.update_yaxes(title_text=None)
     fig.update_layout(margin=dict(l=20))
     fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    if st.session_state.options.links_toggle:
+        to_be_displayed = summary.style.format(make_player_url, subset=["Search term"]).to_html(escape=False)
+        st.write(to_be_displayed, unsafe_allow_html=True)
+    else:
+        st.dataframe(summary, use_container_width=True, hide_index=True)
+
+    if st.session_state.options.links_toggle:
+        to_be_displayed = last_results.format(make_player_url, subset=["id"]).to_html(escape=False)
+        st.write(to_be_displayed, unsafe_allow_html=True)
+    else:
+        st.dataframe(last_results, use_container_width=True, hide_index=True)
 
     if not player_id:
         with st.expander("Debug data..."):

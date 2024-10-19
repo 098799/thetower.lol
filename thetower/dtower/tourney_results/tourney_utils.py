@@ -35,11 +35,15 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
         logging.error(f"Empty csv file: {csv_path}")
         return
 
-    df = df.rename(columns={0: "id", 1: "tourney_name", 2: "wave"})
-    df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
-    df["avatar"] = df.tourney_name.map(lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1)
-    df["relic"] = df.tourney_name.map(lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1)
-    df["tourney_name"] = df.tourney_name.map(lambda name: name.split("#")[0])
+    if 0 in df.columns:
+        df = df.rename(columns={0: "id", 1: "tourney_name", 2: "wave"})
+        df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
+        df["avatar"] = df.tourney_name.map(lambda name: int(avatar[0]) if (avatar := re.findall(r"\#avatar=([-\d]+)\${5}", name)) else -1)
+        df["relic"] = df.tourney_name.map(lambda name: int(relic[0]) if (relic := re.findall(r"\#avatar=\d+\${5}relic=([-\d]+)", name)) else -1)
+        df["tourney_name"] = df.tourney_name.map(lambda name: name.split("#")[0])
+    if "player_id" in df.columns:
+        df = df.rename(columns={"player_id": "id", "name": "tourney_name", "wave": "wave"})
+        df["tourney_name"] = df["tourney_name"].map(lambda x: x.strip())
 
     positions = calculate_positions(df.id, df.index, df.wave, get_sus_ids())
 

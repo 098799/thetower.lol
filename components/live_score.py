@@ -7,7 +7,7 @@ import plotly.express as px
 import streamlit as st
 from cachetools.func import ttl_cache
 
-from dtower.tourney_results.data import get_player_id_lookup
+from dtower.tourney_results.data import get_player_id_lookup, get_sus_ids
 
 
 def get_time(file_path: Path) -> datetime.datetime:
@@ -110,20 +110,24 @@ def get_live_df():
     df = df[df.bracket.isin(fullish_brackets)]  # no sniping
     lookup = get_player_id_lookup()
     df["real_name"] = [lookup.get(id, name) for id, name in zip(df.player_id, df.name)]
+
+    df = df[~df.player_id.isin(get_sus_ids())]
+
     return df
 
 
 def live_score():
     df = get_live_df()
 
-    top_10 = df.head(100).player_id.tolist()[:10]
-    tdf = df[df.player_id.isin(top_10)]
+    top_25 = df.groupby("player_id").wave.max().sort_values(ascending=False).index[:25]
+    tdf = df[df.player_id.isin(top_25)]
 
     last_moment = tdf.datetime.iloc[0]
     ldf = df[df.datetime == last_moment]
+    ldf.index = ldf.index + 1
 
     tdf["datetime"] = pd.to_datetime(tdf["datetime"])
-    fig = px.line(tdf, x="datetime", y="wave", color="real_name", title="Top 10 Players: live score", markers=True, line_shape="linear")
+    fig = px.line(tdf, x="datetime", y="wave", color="real_name", title="Top 25 Players: live score", markers=True, line_shape="linear")
 
     fig.update_traces(mode="lines+markers")
     fig.update_layout(xaxis_title="Time", yaxis_title="Wave", legend_title="real_name", hovermode="closest")
