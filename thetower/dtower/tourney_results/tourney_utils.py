@@ -136,11 +136,14 @@ def get_summary(last_date):
 
         top1_message = Injection.objects.last().text
 
+    rival_nicknames = "\n".join(TourneyRow.objects.filter(player_id="9C2FCA80BB3E1B3F").order_by("result__date").values_list("nickname", flat=True))
+
     prompt_template = PromptTemplate.objects.get(id=1).text
     text = prompt_template.format(
         ranking=ranking,
         last_date=last_date,
         top1_message=top1_message,
+        rival_nicknames=rival_nicknames,
     )
 
     logging.info("Starting to generate ai summary...")
