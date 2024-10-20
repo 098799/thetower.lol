@@ -41,13 +41,7 @@ def get_date_offset() -> int:
 
 def get_last_date():
     utcnow = get_current_time__game_server()
-    offset = get_date_offset()
-
-    last_tourney_day = (utcnow - datetime.timedelta(days=offset)).day
-    last_tourney_month = (utcnow - datetime.timedelta(days=offset)).month
-    last_tourney_year = (utcnow - datetime.timedelta(days=offset)).year
-
-    return f"{last_tourney_year}-{str(last_tourney_month).zfill(2)}-{str(last_tourney_day).zfill(2)}__{utcnow.hour}_{utcnow.minute}"
+    return f"{utcnow.year}-{str(utcnow.month).zfill(2)}-{str(utcnow.day).zfill(2)}__{utcnow.hour}_{utcnow.minute}"
 
 
 def get_file_name():
