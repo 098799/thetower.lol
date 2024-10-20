@@ -4,12 +4,35 @@ import streamlit as st
 
 from components.comparison import compute_comparison
 from components.live_score import get_live_df
+from components.util import get_options
 
 
 def live_bracket():
+    options = get_options(links=False)
+
     df = get_live_df()
 
-    selected_real_name = st.selectbox("Bracket of...", [""] + sorted(df.real_name.unique()))
+    name_col, id_col = st.columns(2)
+
+    selected_real_name = None
+    selected_player_id = None
+
+    if options.current_player:
+        selected_real_name = options.current_player
+    else:
+        if options.current_player_id:
+            selected_player_id = options.current_player_id
+        else:
+            selected_real_name = name_col.selectbox("Bracket of...", [""] + sorted(df.real_name.unique()))
+
+    if not selected_real_name and not selected_player_id:
+        selected_player_id = id_col.selectbox("...or by player id", [""] + sorted(df.player_id.unique()))
+
+        if not selected_player_id:
+            return
+
+    if selected_player_id:
+        selected_real_name = df[df.player_id == selected_player_id].real_name.iloc[0]
 
     if selected_real_name:
         sdf = df[df.real_name == selected_real_name]

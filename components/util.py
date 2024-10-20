@@ -28,10 +28,12 @@ def get_options(links=None):
         print(datetime.datetime.now(), query)
 
     player = query.get("player")
+    player_id = query.get("player_id")
     compare_players = query.get_all("compare")
     print(f"{player=}, {compare_players=}")
 
     options.current_player = player
+    options.current_player_id = player_id
     options.compare_players = compare_players
 
     return options

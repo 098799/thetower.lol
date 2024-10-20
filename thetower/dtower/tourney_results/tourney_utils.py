@@ -24,12 +24,12 @@ def create_tourney_rows(tourney_result: TourneyResult) -> None:
     csv_path = tourney_result.result_file.path
 
     try:
-        df = pd.read_csv(csv_path, header=None)
+        df = pd.read_csv(csv_path)
     except FileNotFoundError:
         # try other path
         csv_path = csv_path.replace("uploads", "thetower/dtower/uploads")
 
-        df = pd.read_csv(csv_path, header=None)
+        df = pd.read_csv(csv_path)
 
     if df.empty:
         logging.error(f"Empty csv file: {csv_path}")

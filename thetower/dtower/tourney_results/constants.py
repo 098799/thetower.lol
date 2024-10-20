@@ -128,6 +128,7 @@ class Graph(Enum):
 class Options(BaseModel):
     links_toggle: bool
     current_player: Optional[str] = None
+    current_player_id: Optional[str] = None
     compare_players: Optional[list[str]] = None
     default_graph: Graph
     average_foreground: bool

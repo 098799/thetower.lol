@@ -288,8 +288,9 @@ def filter_lower_leagues(df):
 
 
 def draw_info_tab(info_tab, user, player_id, player_df, hidden_features):
-    url_tab, comp_tab = info_tab.columns([3, 1])
+    url_tab, comp_tab = info_tab.columns([1, 1])
     url_tab.code(f"http://{BASE_URL}/player?" + urlencode({"player": player_id}, doseq=True))
+    comp_tab.code(f"http://{BASE_URL}/bracket?" + urlencode({"player_id": player_id}, doseq=True))
     # url = f"http://{BASE_URL}/Player?" + urlencode({"compare": user}, doseq=True)
     # comp_tab.write(f"<a href='{url}'>🔗 Compare with...</a>", unsafe_allow_html=True)
     handle_sus_or_banned_ids(info_tab, player_df.iloc[0].id, sus_ids)
