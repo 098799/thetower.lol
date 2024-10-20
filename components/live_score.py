@@ -187,6 +187,8 @@ def live_score():
     group_by_bracket = ldf.groupby("bracket").wave
     bracket_from_hell = group_by_bracket.sum().sort_values(ascending=False).index[0]
     bracket_from_hell_by_median = group_by_bracket.median().sort_values(ascending=False).index[0]
+    bracket_from_heaven = group_by_bracket.sum().sort_values(ascending=True).index[0]
+    bracket_from_heaven_by_median = group_by_bracket.median().sort_values(ascending=True).index[0]
 
     total_col, median_col = st.columns(2)
     total_col.write("This week's bracket from hell (highest total waves)")
@@ -194,3 +196,10 @@ def live_score():
 
     median_col.write("(highest median waves)")
     median_col.dataframe(ldf[ldf.bracket == bracket_from_hell_by_median][["real_name", "wave", "datetime"]])
+
+    total_col, median_col = st.columns(2)
+    total_col.write("This week's softest bracket (lowest total waves)")
+    total_col.dataframe(ldf[ldf.bracket == bracket_from_heaven][["real_name", "wave", "datetime"]])
+
+    median_col.write("(lowest median waves)")
+    median_col.dataframe(ldf[ldf.bracket == bracket_from_heaven_by_median][["real_name", "wave", "datetime"]])
