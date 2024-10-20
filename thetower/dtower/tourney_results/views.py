@@ -6,8 +6,8 @@ from django.core.exceptions import BadRequest
 from django.http import HttpResponse, JsonResponse
 from pretty_html_table import build_table
 
-from dtower.sus.models import PlayerId, SusPerson
-from dtower.tourney_results.constants import champ, league_to_folder
+from dtower.sus.models import PlayerId
+from dtower.tourney_results.constants import legend, league_to_folder
 from dtower.tourney_results.data import get_details, get_sus_ids, get_tourneys, how_many_results_public_site, load_tourney_results
 from dtower.tourney_results.models import TourneyResult, TourneyRow
 
@@ -36,7 +36,7 @@ def plaintext_results(request, league, tourney_date=None):
     return HttpResponse(build_table(df, "blue_light"))
 
 
-plaintext_results__champ = partial(plaintext_results, league=champ)
+plaintext_results__legend = partial(plaintext_results, league=legend)
 
 
 def results_per_tourney(request, league, tourney_date):

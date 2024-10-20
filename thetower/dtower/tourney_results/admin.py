@@ -9,7 +9,7 @@ from django.utils.safestring import mark_safe
 from simple_history.admin import SimpleHistoryAdmin
 
 from dtower.sus.models import KnownPlayer, PlayerId
-from dtower.tourney_results.constants import champ
+from dtower.tourney_results.constants import legend
 from dtower.tourney_results.models import (
     BattleCondition,
     Injection,
@@ -279,7 +279,7 @@ class NameDayWinnerAdmin(SimpleHistoryAdmin):
         if db_field.name == "winner":
             kwargs["queryset"] = KnownPlayer.objects.filter(approved=True).order_by("name")
         elif db_field.name == "tourney":
-            kwargs["queryset"] = TourneyResult.objects.filter(public=True, league=champ).order_by("-date")
+            kwargs["queryset"] = TourneyResult.objects.filter(public=True, league=legend).order_by("-date")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
