@@ -20,7 +20,7 @@ from dtower.tourney_results.constants import (
     stratas_boundaries_018,
 )
 from dtower.tourney_results.data import get_details, get_patches
-from dtower.tourney_results.formatting import BASE_URL, color_top_18, make_player_url
+from dtower.tourney_results.formatting import BASE_URL, make_player_url
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyResult, TourneyRow
 

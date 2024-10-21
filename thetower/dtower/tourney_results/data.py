@@ -9,7 +9,6 @@ import csv
 import datetime
 import re
 from collections import Counter, defaultdict
-from functools import cache
 from glob import glob
 from pathlib import Path
 from typing import Optional
