@@ -6,8 +6,8 @@
 - `pip install -e thetower` to install the django stuff,
 - `pip install -e discord_bot` to install the discord bot,
 
-- run with: `streamlit run components/tourney.py`
-- django admin run with: `cd thetower/dtower && DEBUG=true python manage.py runserver`
+- streamlit run with: `streamlit run components/pages.py`
+- django admin run with: `DEBUG=true python thetower\dtower\manage.py runserver`
 
 - `db.sqlite3` goes to `thetower/dtower` folder
 - `uploads` csvs folder go to `thetower/dtower`:
