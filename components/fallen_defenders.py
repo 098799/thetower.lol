@@ -16,7 +16,7 @@ def compute_fallen_defenders(df):
     st.write("We're honoring the fallen defenders of yesteryear.")
 
     # today = datetime.date.today()
-    today = datetime.date(2022, 10, 18)
+    today = datetime.date(2024, 10, 18)
     fallen = []
     reviewed = set()
 
