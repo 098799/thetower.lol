@@ -1,11 +1,12 @@
+import asyncio
 import logging
 
 import easyocr
 from asgiref.sync import sync_to_async
 
+from discord_bot import const
 from discord_bot.util import get_tower, get_verified_role
 from dtower.sus.models import KnownPlayer, PlayerId
-from discord_bot import const
 
 hex_digits = set("0123456789abcdef")
 reader = easyocr.Reader(["en"])
@@ -57,6 +58,7 @@ async def validate_player_id(client, message):
 
             if not (await check_image(message.content, image_bytes)):
                 await message.add_reaction("⁉️")
+                await asyncio.sleep(1)
                 await message.add_reaction("🖼️")
                 return
 
@@ -70,6 +72,7 @@ async def validate_player_id(client, message):
             )
             discord_player = await (await get_tower(client)).fetch_member(player.discord_id)
             await handle_role_present(client, discord_player)
+            await asyncio.sleep(1)
             await message.add_reaction("✅")
         else:
             await message.add_reaction("⁉️")
