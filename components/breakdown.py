@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from components.util import deprecated
 from dtower.tourney_results.constants import Options, champ, how_many_results_hidden_site, how_many_results_public_site, league_to_folder
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.models import TourneyResult
@@ -13,6 +14,8 @@ patches = sorted([patch for patch in get_patches() if patch.version_minor], key=
 
 
 def compute_breakdown(options: Optional[Options] = None) -> None:
+    deprecated()
+
     sus_ids = get_sus_ids()
     hidden_features = os.environ.get("HIDDEN_FEATURES")
 
@@ -113,15 +116,3 @@ def compute_breakdown(options: Optional[Options] = None) -> None:
         dates, counts_data = get_data(df[df.patch == patch])
         counts_df = pd.DataFrame({role.wave_bottom: count_data for role, count_data in counts_data.items()})
         patch_tab.dataframe(counts_df.sort_index(axis=1, ascending=False))
-
-
-# import cProfile
-# import pstats
-
-# pr = cProfile.Profile()
-# df = load_tourney_results("data")
-# pr.run("compute_breakdown(df)")
-
-# stats = pstats.Stats(pr)
-# stats.sort_stats("cumtime")
-# stats.print_stats(50)

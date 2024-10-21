@@ -3,7 +3,7 @@ import datetime
 import pandas as pd
 import streamlit as st
 
-from components.util import gantt
+from components.util import deprecated, gantt
 from dtower.tourney_results.constants import champ, league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 
@@ -81,6 +81,7 @@ def compute_fallen_defenders(df):
 
 
 def get_fallen_defenders():
+    deprecated()
     df = load_tourney_results(league_to_folder[champ])
     df = df[~df.id.isin(get_sus_ids())]
     compute_fallen_defenders(df)

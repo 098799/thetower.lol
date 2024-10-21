@@ -93,3 +93,7 @@ def add_to_comparison(player_id, nicknames):
 
     print(f"{st.session_state.comparison=} {st.session_state.addee_map=}")
     st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
+
+
+def deprecated():
+    st.info("This page is now deprecated and won't be updated past the end of Champ era. If you use or like this page, please let fishy or me know on discord.")

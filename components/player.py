@@ -20,20 +20,11 @@ from dtower.tourney_results.constants import (
     colors_017,
     colors_018,
     how_many_results_public_site,
-    league_to_folder,
     leagues,
     stratas_boundaries,
     stratas_boundaries_018,
 )
-from dtower.tourney_results.data import (
-    get_banned_ids,
-    get_details,
-    get_id_lookup,
-    get_patches,
-    get_player_list,
-    get_soft_banned_ids,
-    load_tourney_results,
-)
+from dtower.tourney_results.data import get_banned_ids, get_details, get_id_lookup, get_patches, get_soft_banned_ids
 from dtower.tourney_results.formatting import BASE_URL, color_position
 from dtower.tourney_results.models import PatchNew as Patch
 from dtower.tourney_results.models import TourneyRow
@@ -571,17 +562,6 @@ def _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choice
         player_df = None
 
     return player_df
-
-
-def find_player_across_leagues(user):
-    for league in leagues:
-        df = load_tourney_results(folder=league_to_folder[league])
-
-        first_choices, all_real_names, all_tourney_names, all_user_ids, _ = get_player_list(df)
-
-        if (player_df := _find_user(df, all_real_names, all_tourney_names, all_user_ids, first_choices, user)) is not None:
-            df["league"] = league
-            return df, player_df, league
 
 
 if __name__ == "__main__":

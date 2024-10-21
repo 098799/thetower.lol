@@ -7,6 +7,7 @@ django.setup()
 
 import csv
 import datetime
+import logging
 import re
 from collections import Counter, defaultdict
 from glob import glob
@@ -165,7 +166,7 @@ def get_row_to_role(df: pd.DataFrame, league):
 
 
 def _load_tourney_results(
-    result_files: list[tuple[str, str, list[BattleCondition]]],
+    result_files: list[tuple[Path, str, list[BattleCondition]]],
     league=champ,
     result_cutoff: Optional[int] = None,
 ) -> pd.DataFrame:
@@ -179,6 +180,19 @@ def _load_tourney_results(
     load_data_bar = st.progress(0)
 
     for index, (result_file, date, bcs) in enumerate(result_files, 1):
+        ### This is deprecated for new tourney server responses introduced in 0.25
+        ### It's not that it's hard to adapt, but we wont, cause it makes sense to keep all the functions that use this code
+        ### locked at around end of champ era, or if we extend it to legends, move away from using load_tourney_results.
+
+        try:
+            result_date = datetime.datetime.fromisoformat(result_file.stem[:10])
+        except ValueError:
+            logging.info("Malformed csv file in legacy load function, skipping")
+            continue
+
+        if result_date > datetime.datetime(2024, 10, 18):
+            continue
+
         df = pd.read_csv(result_file, header=None)
 
         cutoff = handle_result_cutoff(hidden_features, league, result_cutoff, debug)
@@ -276,6 +290,9 @@ def handle_result_cutoff(hidden_features, league, result_cutoff, debug):
 def load_tourney_results(
     folder: str, patch_id: Optional[int] = None, limit_no_results: Optional[int] = None, result_cutoff: Optional[int] = None
 ) -> pd.DataFrame:
+    ### This is deprecated for new tourney server responses introduced in 0.25
+    ### It's not that it's hard to adapt, but we wont, cause it makes sense to keep all the functions that use this code
+    ### locked at around end of champ era, or if we extend it to legends, move away from using load_tourney_results.
     return load_tourney_results__uncached(folder, patch_id=patch_id, limit_no_results=limit_no_results, result_cutoff=result_cutoff)
 
 

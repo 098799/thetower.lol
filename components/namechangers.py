@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 
+from components.util import deprecated
 from dtower.tourney_results.constants import Graph, Options, champ, league_to_folder
 from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import make_player_url
@@ -44,6 +45,7 @@ def compute_namechangers(df, options=None):
 
 
 def get_namechangers():
+    deprecated()
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     df = load_tourney_results(league_to_folder[champ])
     compute_namechangers(df, options)

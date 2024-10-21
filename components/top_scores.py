@@ -1,6 +1,7 @@
 import plotly.express as px
 import streamlit as st
 
+from components.util import deprecated
 from dtower.tourney_results.constants import Graph, Options, how_many_results_public_site, how_many_results_public_site_other
 from dtower.tourney_results.data import get_patches, get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position__top, make_player_url
@@ -60,6 +61,7 @@ def compute_top(df, options: Options):
 
 
 def get_top_scores():
+    deprecated()
     df = load_tourney_results("data")
     options = Options(links_toggle=False, default_graph=Graph.last_16.value, average_foreground=True)
     compute_top(df, options)

@@ -226,15 +226,3 @@ if __name__ == "__main__":
     st.set_page_config(layout="centered")
     options = Options(links_toggle=True, default_graph=Graph.last_16.value, average_foreground=True)
     compute_results(options, league=champ)
-
-
-# import cProfile
-# import pstats
-
-# df = load_tourney_results("data")
-# pr = cProfile.Profile()
-# pr.run("compute_tourney_results(df, Options(links_toggle=False))")
-
-# stats = pstats.Stats(pr)
-# stats.sort_stats("cumtime")
-# stats.print_stats(50)
