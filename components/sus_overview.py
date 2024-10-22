@@ -7,7 +7,7 @@ from dtower.tourney_results.data import get_sus_ids, load_tourney_results
 from dtower.tourney_results.formatting import color_position
 from dtower.tourney_results.models import Role
 
-league_to_color = {league: Role.objects.filter(league=league).last().color for league in league_to_folder.keys()}
+league_to_color = {league: roles.last().color for league in league_to_folder.keys() if (roles := Role.objects.filter(league=league))}
 
 
 def compute_sus_overview(df, *args, **kwargs):

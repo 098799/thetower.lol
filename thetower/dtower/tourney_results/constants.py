@@ -74,7 +74,7 @@ position_colors = [
     "#CCCCCC",
 ][::-1]
 
-top = "Top"
+legend = "Legend"
 champ = "Champions"
 plat = "Platinum"
 gold = "Gold"
@@ -141,6 +141,7 @@ leagues = [champ, plat, gold, silver, copper]
 
 
 data_folder_name_mapping = {
+    legend: legend,
     "data": champ,
     "plat": plat,
     "gold": gold,
@@ -154,6 +155,7 @@ leagues_choices = [(league, league) for league in data_folder_name_mapping.value
 
 
 us_to_jim = {
+    legend: legend,
     champ: "Champion",
     plat: plat,
     gold: gold,

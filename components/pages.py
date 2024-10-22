@@ -45,6 +45,8 @@ if st.session_state.get("options") is None:
 
 pages = [
     st.Page(partial(compute_overview, options=options), title="Overview", icon="🏠", url_path="overview"),
+    st.Page(live_score, title="Live Score", icon="⏱️", url_path="live"),
+    st.Page(live_bracket, title="Bracket view", icon="🔠", url_path="bracket"),
     st.Page(partial(compute_results, league=champ, options=options), title="Results Champions", icon="🏆", url_path="results"),
     st.Page(partial(compute_results, league=plat, options=options), title="Results Platinum", icon="📉", url_path="platinum"),
     st.Page(partial(compute_results, league=gold, options=options), title="Results Gold", icon="🥇", url_path="gold"),
@@ -70,11 +72,6 @@ if hidden_features:
     pages += [
         st.Page(get_sus_overview, title="SUS overview", icon="🔨", url_path="sus"),
     ]
-
-pages += [
-    st.Page(live_score, title="Live Score (beta, don't get too excited)", icon="⏱️", url_path="live"),
-    st.Page(live_bracket, title="Bracket view (beta, don't get too excited)", icon="🔠", url_path="bracket"),
-]
 
 pg = st.navigation(pages)
 pg.run()
