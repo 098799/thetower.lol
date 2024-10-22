@@ -28,11 +28,11 @@ sus_ids = set(SusPerson.objects.filter(sus=True).values_list("player_id", flat=T
 hidden_features = os.environ.get("HIDDEN_FEATURES")
 
 
-def compute_comparison(player_id=None):
+def compute_comparison(player_id=None, canvas=st):
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
 
-    st.write(table_styling, unsafe_allow_html=True)
+    canvas.write(table_styling, unsafe_allow_html=True)
 
     def diplay_comparison():
         st.session_state.display_comparison = True
@@ -48,15 +48,15 @@ def compute_comparison(player_id=None):
         st.session_state.counter = st.session_state.counter + 1 if st.session_state.get("counter") else 1
 
     if (currently := st.session_state.get("comparison", [])) and st.session_state.get("display_comparison") is not True:
-        st.write("Currently added:")
+        canvas.write("Currently added:")
 
         for player in currently:
-            addee_col, pop_col = st.columns([1, 1])
+            addee_col, pop_col = canvas.columns([1, 1])
 
             addee_col.write(f"{st.session_state.addee_map[player]} ({player})")
             pop_col.button("Remove", on_click=remove_from_comparison, args=(player,), key=f"{player}remove")
 
-        st.button("Show comparison", on_click=diplay_comparison, key="show_comparison_top")
+        canvas.button("Show comparison", on_click=diplay_comparison, key="show_comparison_top")
 
     if not st.session_state.options.compare_players:
         st.session_state.options.compare_players = st.query_params.get_all("compare")
@@ -71,9 +71,9 @@ def compute_comparison(player_id=None):
         users = st.session_state.options.compare_players or st.session_state.comparison
 
     if not player_id:
-        search_for_new = st.button("Search for another player?", on_click=search_for_new)
+        search_for_new = canvas.button("Search for another player?", on_click=search_for_new)
 
-        st.code(f"http://{BASE_URL}/comparison?" + urlencode({"compare": users}, doseq=True))
+        canvas.code(f"http://{BASE_URL}/comparison?" + urlencode({"compare": users}, doseq=True))
 
     player_ids = PlayerId.objects.filter(id__in=users)
     known_players = KnownPlayer.objects.filter(ids__in=player_ids)
@@ -94,7 +94,7 @@ def compute_comparison(player_id=None):
         patch = graph_options[0]
         filter_bcs = None
     else:
-        patch_col, bc_col = st.columns([1, 1])
+        patch_col, bc_col = canvas.columns([1, 1])
         patch = patch_col.selectbox("Limit results to a patch? (see side bar to change default)", graph_options)
         filter_bcs = bc_col.multiselect("Filter by battle conditions?", sorted({bc for bcs in player_df.bcs for bc in bcs}, key=lambda bc: bc.shortcut))
 
@@ -124,7 +124,7 @@ def compute_comparison(player_id=None):
     summary.set_index(keys="Name")
 
     if player_id:
-        how_many_slider = st.slider(
+        how_many_slider = canvas.slider(
             "Narrow results to only your direct competitors?",
             0,
             len(users),
@@ -183,32 +183,32 @@ def compute_comparison(player_id=None):
 
     enrich_plot(fig, max_, min_, pd_datas)
 
-    st.plotly_chart(fig, use_container_width=True)
+    canvas.plotly_chart(fig, use_container_width=True)
 
     fig = px.line(pd_datas, x="date", y="position", color="real_name", markers=True)
     fig.update_layout(showlegend=False)
     fig.update_yaxes(title_text=None)
     fig.update_layout(margin=dict(l=20))
     fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
-    st.plotly_chart(fig, use_container_width=True)
+    canvas.plotly_chart(fig, use_container_width=True)
 
     if st.session_state.options.links_toggle:
         to_be_displayed = summary.style.format(make_player_url, subset=["Search term"]).to_html(escape=False)
-        st.write(to_be_displayed, unsafe_allow_html=True)
+        canvas.write(to_be_displayed, unsafe_allow_html=True)
     else:
-        st.dataframe(summary, use_container_width=True, hide_index=True)
+        canvas.dataframe(summary, use_container_width=True, hide_index=True)
 
     if st.session_state.options.links_toggle:
         to_be_displayed = last_results.format(make_player_url, subset=["id"]).to_html(escape=False)
-        st.write(to_be_displayed, unsafe_allow_html=True)
+        canvas.write(to_be_displayed, unsafe_allow_html=True)
     else:
-        st.dataframe(last_results, use_container_width=True, hide_index=True)
+        canvas.dataframe(last_results, use_container_width=True, hide_index=True)
 
     if not player_id:
-        with st.expander("Debug data..."):
+        with canvas.expander("Debug data..."):
             data = {real_name: list(df.id.unique()) for real_name, df in pd_datas.groupby("real_name")}
-            st.write("Player ids used:")
-            st.json(data)
+            canvas.write("Player ids used:")
+            canvas.json(data)
 
 
 def filter_plot_datas(datas, patch, filter_bcs):

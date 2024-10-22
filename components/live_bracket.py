@@ -14,9 +14,13 @@ def live_bracket():
     for tab, league in zip(tabs, [champ, legend]):
         options = get_options(links=False)
 
-        df = get_live_df(league)
+        try:
+            df = get_live_df(league)
+        except (IndexError, ValueError):
+            tab.info("No current data, wait until the tourney day")
+            continue
 
-        name_col, id_col = st.columns(2)
+        name_col, id_col = tab.columns(2)
 
         selected_real_name = None
         selected_player_id = None
@@ -49,8 +53,8 @@ def live_bracket():
             fig = px.line(tdf, x="datetime", y="wave", color="real_name", title="Live bracket score", markers=True, line_shape="linear")
             fig.update_traces(mode="lines+markers")
             fig.update_layout(xaxis_title="Time", yaxis_title="Wave", legend_title="real_name", hovermode="closest")
-            st.plotly_chart(fig, use_container_width=True)
+            tab.plotly_chart(fig, use_container_width=True)
 
             st.session_state.display_comparison = True
             st.session_state.options.compare_players = player_ids
-            compute_comparison(sdf.player_id.iloc[0])
+            compute_comparison(sdf.player_id.iloc[0], canvas=tab)
