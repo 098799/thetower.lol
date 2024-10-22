@@ -22,7 +22,7 @@ from dtower.tourney_results.tourney_utils import create_tourney_rows
 logging.basicConfig(level=logging.INFO)
 
 while True:
-    for league in leagues:
+    for league in ["Legend"] + leagues:
         last_date = get_last_date()
 
         logging.info(f"Trying to upload results for {league=} and {last_date=}")

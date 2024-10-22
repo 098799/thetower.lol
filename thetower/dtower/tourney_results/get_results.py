@@ -155,7 +155,7 @@ def check():
 
 if __name__ == "__main__":
     while True:
-        for league in ["Champion", "Platinum", "Gold", "Silver", "Copper"]:
+        for league in ["Legend", "Champion", "Platinum", "Gold", "Silver", "Copper"]:
             out = execute(league)
 
             if out:
