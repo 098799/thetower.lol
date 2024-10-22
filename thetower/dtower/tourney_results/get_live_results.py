@@ -89,4 +89,12 @@ def execute(league):
 if __name__ == "__main__":
     while True:
         out = execute("Champion")
+        time.sleep(2)
+
+        try:
+            out = execute("Legend")
+            time.sleep(2)
+        except Exception as e:
+            logging.exception(e)
+
         time.sleep(1800)
