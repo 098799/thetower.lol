@@ -25,7 +25,7 @@ lower_roles = {
     silver: [50, const.silver500_id],
     gold: [100, const.gold500_id],
     plat: [250, const.plat500_id],
-    # champ: [250, ...]
+    champ: [250, const.champ500_id],
 }
 
 
@@ -50,14 +50,15 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
 
     dfs = {}
 
-    dfs[leagues[0]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[0]), limit=2000)  # champ goes up to 2k
+    dfs[leagues[0]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[0]), limit=2000)  # legend goes up to 2k
+    dfs[leagues[1]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[1]), limit=2000)  # champ goes up to 2k
 
     if verbose:
         await debug_channel.send(f"Loaded champ tourney data of {len(dfs[leagues[0]])} rows")
 
     await asyncio.sleep(0)
 
-    for league in leagues[1:]:
+    for league in leagues[2:]:
         dfs[league] = get_tourneys(get_results_for_patch(patch=patch, league=league), limit=20000)
 
         if verbose:
@@ -128,7 +129,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
             player_df = df[df["id"].isin(ids)]
 
             if not player_df.empty:
-                if league == champ:
+                if league == legend:
                     role_assigned = await handle_position_league(player_df, position_roles, discord_player, changed, unchanged)
 
                     if role_assigned:

@@ -124,9 +124,9 @@ def get_live_df(league):
 
 
 def live_score():
-    tabs = st.tabs([champ, legend])
+    tabs = st.tabs([legend, champ])
 
-    for tab, league in zip(tabs, [champ, legend]):
+    for tab, league in zip(tabs, [legend, champ]):
         try:
             df = get_live_df(league)
         except (IndexError, ValueError):
@@ -149,10 +149,10 @@ def live_score():
         fig.update_layout(xaxis_title="Time", yaxis_title="Wave", legend_title="real_name", hovermode="closest")
         tab.plotly_chart(fig)
 
-        today_col, last_col = tab.columns(2)
+        today_col, last_col = tab.columns([1, 1])
 
         today_col.write("Current result (ordered)")
-        today_col.dataframe(ldf[["real_name", "wave", "datetime"]][:how_many_results_public_site])
+        today_col.dataframe(ldf[["real_name", "wave"]][:how_many_results_public_site], width=1000, height=485)
 
         qs = TourneyResult.objects.filter(league=league, public=True).order_by("-date")
 
@@ -164,11 +164,13 @@ def live_score():
 
         joined_ids = set(ldf.player_id.unique())
         pdf["joined"] = [player_id in joined_ids for player_id in pdf.id]
-        pdf = pdf.rename(columns={"wave": "wave_last_tourney"})
+        pdf = pdf.rename(columns={"wave": "wave_last"})
         pdf.index = pdf.index + 1
 
-        joined_sum = sum(pdf["joined"])
-        joined_tot = len(pdf["joined"])
+        topx = last_col.selectbox("top x", [1000, 500, 200, 100, 50, 25], key=f"topx_{league}")
+
+        joined_sum = sum(pdf["joined"][:topx])
+        joined_tot = len(pdf["joined"][:topx])
 
         if joined_sum / joined_tot >= 0.7:
             color = "green"
@@ -177,8 +179,8 @@ def live_score():
         else:
             color = "red"
 
-        last_col.write(f"Has top 1k joined already? <font color='{color}'>{joined_sum}</font>/{joined_tot}", unsafe_allow_html=True)
-        last_col.dataframe(pdf[["real_name", "wave_last_tourney", "joined"]])
+        last_col.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
+        last_col.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
 
         fill_ups = []
 

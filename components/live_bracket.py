@@ -9,9 +9,9 @@ from dtower.tourney_results.constants import champ, legend
 
 
 def live_bracket():
-    tabs = st.tabs([champ, legend])
+    tabs = st.tabs([legend, champ])
 
-    for tab, league in zip(tabs, [champ, legend]):
+    for tab, league in zip(tabs, [legend, champ]):
         options = get_options(links=False)
 
         try:
@@ -37,13 +37,22 @@ def live_bracket():
             selected_player_id = id_col.selectbox("...or by player id", [""] + sorted(df.player_id.unique()))
 
             if not selected_player_id:
-                return
+                continue
 
         if selected_player_id:
-            selected_real_name = df[df.player_id == selected_player_id].real_name.iloc[0]
+            try:
+                selected_real_name = df[df.player_id == selected_player_id].real_name.iloc[0]
+            except Exception:
+                st.error("Player id not found")
+                exit()
 
         if selected_real_name:
-            sdf = df[df.real_name == selected_real_name]
+            try:
+                sdf = df[df.real_name == selected_real_name]
+            except Exception:
+                st.error("Player name not found")
+                exit()
+
             bracket_id = sdf.bracket.iloc[0]
 
             tdf = df[df.bracket == bracket_id]
@@ -54,6 +63,11 @@ def live_bracket():
             fig.update_traces(mode="lines+markers")
             fig.update_layout(xaxis_title="Time", yaxis_title="Wave", legend_title="real_name", hovermode="closest")
             tab.plotly_chart(fig, use_container_width=True)
+
+            last_moment = tdf.datetime.max()
+            ldf = tdf[tdf.datetime == last_moment].reset_index(drop=True)
+            ldf.index = ldf.index + 1
+            tab.dataframe(ldf[["player_id", "name", "real_name", "wave", "datetime"]])
 
             st.session_state.display_comparison = True
             st.session_state.options.compare_players = player_ids

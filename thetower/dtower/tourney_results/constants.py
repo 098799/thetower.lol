@@ -137,7 +137,7 @@ class Options(BaseModel):
 medals = ["🥇", "🥈", "🥉"]
 
 
-leagues = [champ, plat, gold, silver, copper]
+leagues = [legend, champ, plat, gold, silver, copper]
 
 
 data_folder_name_mapping = {
