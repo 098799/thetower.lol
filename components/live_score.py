@@ -90,9 +90,8 @@ Your summary starts now."""
 
 
 def get_live_df(league):
-    home = Path.home()
     league_folder = us_to_jim[league]
-    live_path = home / "tourney" / "results_cache" / f"{league_folder}_live"
+    live_path = Path(f"{os.getenv('HOME')}/tourney/results_cache/{league_folder}_live")
 
     all_files = sorted(live_path.glob("*.csv"))
     last_file = all_files[-1]
