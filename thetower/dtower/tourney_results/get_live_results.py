@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 
 def get_current_time__game_server():
     """Game server runs on utc time and we want live results right away, minus other built-in delays."""
-    return datetime.timezone.utc
+    return datetime.datetime.now(datetime.UTC)
 
 
 def get_date_offset() -> int:

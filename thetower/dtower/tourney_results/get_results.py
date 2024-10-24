@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 
 def get_current_time__game_server():
     """Game server runs on utc time, but we don't want to try accessing results until 1 hour after the tourney is done."""
-    return datetime.timezone.utc - datetime.timedelta(hours=1)
+    return datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1)
 
 
 def get_date_offset() -> int:
