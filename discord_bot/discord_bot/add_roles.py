@@ -55,14 +55,7 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
     if verbose:
         await debug_channel.send(f"Loaded legends tourney data of {len(dfs[leagues[0]])} rows")
 
-    dfs[leagues[1]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[1]), limit=2000)  # champ goes up to 2k
-
-    if verbose:
-        await debug_channel.send(f"Loaded champ tourney data of {len(dfs[leagues[1]])} rows")
-
-    await asyncio.sleep(0)
-
-    for league in leagues[2:]:
+    for league in leagues[1:]:
         dfs[league] = get_tourneys(get_results_for_patch(patch=patch, league=league), limit=20000)
 
         if verbose:
