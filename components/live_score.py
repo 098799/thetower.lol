@@ -90,7 +90,7 @@ Your summary starts now."""
 
 
 def get_live_df(league):
-    home = Path.home()
+    home = Path(os.getenv('HOME'))
     league_folder = us_to_jim[league]
     live_path = home / "tourney" / "results_cache" / f"{league_folder}_live"
 
