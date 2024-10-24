@@ -3,7 +3,7 @@ import os
 import streamlit as st
 
 from components.results import Results
-from dtower.tourney_results.constants import Graph, Options, champ, leagues
+from dtower.tourney_results.constants import Graph, Options, champ, leagues, legend
 from dtower.tourney_results.formatting import get_url
 from dtower.tourney_results.models import TourneyResult
 
@@ -20,7 +20,7 @@ def compute_overview(options: Options):
         st.write(f"<style>{infile.read()}</style>", unsafe_allow_html=True)
 
     # st.markdown(get_summary())
-    if overview := TourneyResult.objects.filter(league=champ, **public).latest("date").overview:
+    if overview := TourneyResult.objects.filter(league=legend, **public).latest("date").overview:
         st.markdown(overview)
 
     for league in leagues:

@@ -3,6 +3,7 @@ import os
 import re
 
 import pandas as pd
+from django.db.models import Q
 
 from dtower.tourney_results.constants import champ, legend
 from dtower.tourney_results.data import get_sus_ids
@@ -115,9 +116,15 @@ def get_summary(last_date):
     logging.info("Collecting ai summary data...")
 
     qs = TourneyResult.objects.filter(league=legend, date__lte=last_date).order_by("-date")[:10]
-    # previous_summaries = "\n\n".join([format_previous_summary(summary, date) for summary, date in qs.values_list("overview", "date")])  # not gonna include it now
 
-    df = get_tourneys(qs, offset=0, limit=50)
+    qs_dates = qs.values_list("date", flat=True)
+
+    champ_qs = TourneyResult.objects.filter(~Q(date__in=qs_dates), league=champ, date__lte=last_date).order_by("-date")[:10]
+
+    df1 = get_tourneys(qs, offset=0, limit=50)
+    df2 = get_tourneys(champ_qs, offset=0, limit=50)
+
+    df = pd.concat([df1, df2])
 
     import anthropic
 
@@ -136,20 +143,17 @@ def get_summary(last_date):
 
         top1_message = Injection.objects.last().text
 
-    rival_nicknames = "\n".join(TourneyRow.objects.filter(player_id="9C2FCA80BB3E1B3F").order_by("result__date").values_list("nickname", flat=True))
-
     prompt_template = PromptTemplate.objects.get(id=1).text
     text = prompt_template.format(
         ranking=ranking,
         last_date=last_date,
         top1_message=top1_message,
-        rival_nicknames=rival_nicknames,
     )
 
     logging.info("Starting to generate ai summary...")
     client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
     message = client.messages.create(
-        model="claude-3-5-sonnet-20240620",
+        model="claude-3-5-sonnet-20241022",
         max_tokens=4096,
         temperature=1.0,
         messages=[
