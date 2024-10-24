@@ -25,7 +25,7 @@ lower_roles = {
     silver: [50, const.silver500_id],
     gold: [100, const.gold500_id],
     plat: [250, const.plat500_id],
-    champ: [250, const.champ500_id],
+    champ: [500, const.champ500_id],
 }
 
 
@@ -148,6 +148,9 @@ async def handle_adding(client, limit, discord_ids=None, channel=None, debug_cha
                     if role_assigned:
                         break
         else:
+            for role in wave_roles + list(position_roles.values()):
+                if role in discord_player.roles:
+                    await discord_player.remove_roles(role)
             skipped += 1
 
         if discord_player is None:

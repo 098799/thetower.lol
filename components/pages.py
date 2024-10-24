@@ -47,7 +47,7 @@ pages = [
     st.Page(partial(compute_overview, options=options), title="Overview", icon="🏠", url_path="overview"),
     st.Page(live_score, title="Live Score", icon="⏱️", url_path="live"),
     st.Page(live_bracket, title="Bracket view", icon="🔠", url_path="bracket"),
-    st.Page(partial(compute_results, league=legend, options=options), title="Results Legends", icon="🐐", url_path="results"),
+    st.Page(partial(compute_results, league=legend, options=options), title="Results Legends", icon="🐳", url_path="results"),
     st.Page(partial(compute_results, league=champ, options=options), title="Results Champions", icon="🏆", url_path="champ"),
     st.Page(partial(compute_results, league=plat, options=options), title="Results Platinum", icon="📉", url_path="platinum"),
     st.Page(partial(compute_results, league=gold, options=options), title="Results Gold", icon="🥇", url_path="gold"),
