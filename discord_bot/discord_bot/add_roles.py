@@ -142,6 +142,8 @@ async def handle_adding(
                         other_roles = [other_role for other_role in wave_roles if other_role != role]
                         await add_wave_roles(changed, discord_player, champ, unchanged, 500, role, other_roles)
                         role_assigned = True
+                    else:
+                        other_roles = wave_roles
 
                     if role_assigned:
                         for other_role in other_roles:
@@ -267,7 +269,7 @@ async def handle_wave_league(df, wave_roles_by_league, position_roles, discord_p
         qualifies = any(wave >= wave_min for wave in df.wave)
 
         if not qualifies:  # this only happens if a player has a result in this league, but doesn't qualify. Then we give the role one lower
-            league = leagues.index[league] + 1
+            league = leagues[leagues.index(league) + 1]
             wave_roles = wave_roles_by_league[league]
             wave_min, role = list(wave_roles.items())[0]
 
