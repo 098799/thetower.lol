@@ -116,7 +116,7 @@ def get_live_df(league):
 
     df = df[df.bracket.isin(fullish_brackets)]  # no sniping
     lookup = get_player_id_lookup()
-    df["real_name"] = [lookup.get(id, name) for id, name in zip(df.player_id, df.name)]
+    df["real_name"] = [lookup.get(id, name).strip() for id, name in zip(df.player_id, df.name)]
 
     df = df[~df.player_id.isin(get_sus_ids())]
 
@@ -124,15 +124,23 @@ def get_live_df(league):
 
 
 def live_score():
-    tabs = st.tabs([legend, champ])
+    # Check if mobile view
+    is_mobile = st.session_state.get("mobile_view", False)
+    st.checkbox("Mobile view", value=is_mobile, key="mobile_view")
 
-    for tab, league in zip(tabs, [legend, champ]):
+    league_tabs = st.tabs([legend, champ])
+
+    for tab, league in zip(league_tabs, [legend, champ]):
         try:
             df = get_live_df(league)
         except (IndexError, ValueError):
             tab.info("No current data, wait until the tourney day")
             continue
 
+        # Create view tabs
+        view_tabs = tab.tabs(["Live Progress", "Current Results", "Bracket Analysis"])
+
+        # Get data
         group_by_id = df.groupby("player_id")
         top_25 = group_by_id.wave.max().sort_values(ascending=False).index[:25]
         tdf = df[df.player_id.isin(top_25)]
@@ -142,79 +150,108 @@ def live_score():
         ldf = df[df.datetime == last_moment]
         ldf.index = ldf.index + 1
 
-        tdf["datetime"] = pd.to_datetime(tdf["datetime"])
-        fig = px.line(tdf, x="datetime", y="wave", color="real_name", title="Top 25 Players: live score", markers=True, line_shape="linear")
+        # Live Progress Tab
+        with view_tabs[0]:
+            tdf["datetime"] = pd.to_datetime(tdf["datetime"])
+            fig = px.line(tdf, x="datetime", y="wave", color="real_name", title="Top 25 Players: live score", markers=True, line_shape="linear")
 
-        fig.update_traces(mode="lines+markers")
-        fig.update_layout(xaxis_title="Time", yaxis_title="Wave", legend_title="real_name", hovermode="closest")
-        tab.plotly_chart(fig)
+            fig.update_traces(mode="lines+markers")
+            fig.update_layout(
+                xaxis_title="Time",
+                yaxis_title="Wave",
+                legend_title="real_name",
+                hovermode="closest",
+                height=500 if not is_mobile else 300,
+                margin=dict(l=20, r=20, t=40, b=20),
+                legend=dict(orientation="h" if is_mobile else "v"),
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-        today_col, last_col = tab.columns([1, 1])
+            # Get reference data for fill-up calculation
+            qs = TourneyResult.objects.filter(league=league, public=True).order_by("-date")
+            if not qs:
+                qs = TourneyResult.objects.filter(league=champ, public=True).order_by("-date")
+            tourney = qs[0]
+            pdf = get_tourneys([tourney])
 
-        today_col.write("Current result (ordered)")
-        today_col.dataframe(ldf[["real_name", "wave"]][:how_many_results_public_site], width=1000, height=485)
+            # Fill up progress
+            fill_ups = []
+            for dt, sdf in df.groupby("datetime"):
+                joined_ids = set(sdf.player_id.unique())
+                time_delta = dt - first_moment
+                time = time_delta.total_seconds() / 3600
+                fillup = sum([player_id in joined_ids for player_id in pdf.id])
+                fill_ups.append((time, fillup))
 
-        qs = TourneyResult.objects.filter(league=league, public=True).order_by("-date")
+            fill_ups = pd.DataFrame(sorted(fill_ups), columns=["time", "fillup"])
+            fig = px.line(fill_ups, x="time", y="fillup", title="Fill up progress", markers=True, line_shape="linear")
+            fig.update_traces(mode="lines+markers", fill="tozeroy")
+            fig.update_layout(
+                xaxis_title="Time [h]",
+                yaxis_title="Fill up [players]",
+                hovermode="closest",
+                height=400 if not is_mobile else 250,
+                margin=dict(l=20, r=20, t=40, b=20),
+            )
+            fig.add_hline(y=1001, line_dash="dot", line_color="green")
+            st.plotly_chart(fig, use_container_width=True)
 
-        if not qs:
-            qs = TourneyResult.objects.filter(league=champ, public=True).order_by("-date")
+        # Current Results Tab
+        with view_tabs[1]:
+            cols = st.columns([3, 2] if not is_mobile else [1])
 
-        tourney = qs[0]
-        pdf = get_tourneys([tourney])
+            with cols[0]:
+                st.write("Current result (ordered)")
+                st.dataframe(ldf[["name", "real_name", "wave"]][:how_many_results_public_site], height=485 if not is_mobile else 300)
 
-        joined_ids = set(ldf.player_id.unique())
-        pdf["joined"] = [player_id in joined_ids for player_id in pdf.id]
-        pdf = pdf.rename(columns={"wave": "wave_last"})
-        pdf.index = pdf.index + 1
+            if not is_mobile:
+                with cols[1]:
 
-        topx = last_col.selectbox("top x", [1000, 500, 200, 100, 50, 25], key=f"topx_{league}")
+                    joined_ids = set(ldf.player_id.unique())
+                    pdf["joined"] = [player_id in joined_ids for player_id in pdf.id]
+                    pdf = pdf.rename(columns={"wave": "wave_last"})
+                    pdf.index = pdf.index + 1
 
-        joined_sum = sum(pdf["joined"][:topx])
-        joined_tot = len(pdf["joined"][:topx])
+                    topx = st.selectbox("top x", [1000, 500, 200, 100, 50, 25], key=f"topx_{league}")
+                    joined_sum = sum(pdf["joined"][:topx])
+                    joined_tot = len(pdf["joined"][:topx])
 
-        if joined_sum / joined_tot >= 0.7:
-            color = "green"
-        elif joined_sum / joined_tot >= 0.5:
-            color = "orange"
-        else:
-            color = "red"
+                    color = "green" if joined_sum / joined_tot >= 0.7 else "orange" if joined_sum / joined_tot >= 0.5 else "red"
+                    st.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
+                    st.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
 
-        last_col.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
-        last_col.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
+        # Bracket Analysis Tab
+        with view_tabs[2]:
+            group_by_bracket = ldf.groupby("bracket").wave
+            bracket_from_hell = group_by_bracket.sum().sort_values(ascending=False).index[0]
+            bracket_from_hell_by_median = group_by_bracket.median().sort_values(ascending=False).index[0]
+            bracket_from_heaven = group_by_bracket.sum().sort_values(ascending=True).index[0]
+            bracket_from_heaven_by_median = group_by_bracket.median().sort_values(ascending=True).index[0]
 
-        fill_ups = []
+            cols = st.columns(2 if not is_mobile else 1)
 
-        for dt, sdf in df.groupby("datetime"):
-            joined_ids = set(sdf.player_id.unique())
-            time_delta = dt - first_moment
-            time = time_delta.total_seconds() / 3600
-            fillup = sum([player_id in joined_ids for player_id in pdf.id])
+            with cols[0]:
+                st.write("This week's bracket from hell (highest total waves)")
+                st.dataframe(ldf[ldf.bracket == bracket_from_hell][["real_name", "wave", "datetime"]])
 
-            fill_ups.append((time, fillup))
+                if not is_mobile:
+                    st.write("This week's softest bracket (lowest total waves)")
+                    st.dataframe(ldf[ldf.bracket == bracket_from_heaven][["real_name", "wave", "datetime"]])
 
-        fill_ups = pd.DataFrame(sorted(fill_ups), columns=["time", "fillup"])
-        fig = px.line(fill_ups, x="time", y="fillup", title="Fill up progress", markers=True, line_shape="linear")
-        fig.update_traces(mode="lines+markers", fill="tozeroy")
-        fig.update_layout(xaxis_title="Time [h]", yaxis_title="Fill up [players]", hovermode="closest")
-        fig.add_hline(y=1001, line_dash="dot", line_color="green")
-        tab.plotly_chart(fig)
+            if not is_mobile:
+                with cols[1]:
+                    st.write("(highest median waves)")
+                    st.dataframe(ldf[ldf.bracket == bracket_from_hell_by_median][["real_name", "wave", "datetime"]])
 
-        group_by_bracket = ldf.groupby("bracket").wave
-        bracket_from_hell = group_by_bracket.sum().sort_values(ascending=False).index[0]
-        bracket_from_hell_by_median = group_by_bracket.median().sort_values(ascending=False).index[0]
-        bracket_from_heaven = group_by_bracket.sum().sort_values(ascending=True).index[0]
-        bracket_from_heaven_by_median = group_by_bracket.median().sort_values(ascending=True).index[0]
+                    st.write("(lowest median waves)")
+                    st.dataframe(ldf[ldf.bracket == bracket_from_heaven_by_median][["real_name", "wave", "datetime"]])
 
-        total_col, median_col = tab.columns(2)
-        total_col.write("This week's bracket from hell (highest total waves)")
-        total_col.dataframe(ldf[ldf.bracket == bracket_from_hell][["real_name", "wave", "datetime"]])
+            if is_mobile:
+                st.write("(highest median waves)")
+                st.dataframe(ldf[ldf.bracket == bracket_from_hell_by_median][["real_name", "wave", "datetime"]])
 
-        median_col.write("(highest median waves)")
-        median_col.dataframe(ldf[ldf.bracket == bracket_from_hell_by_median][["real_name", "wave", "datetime"]])
+                st.write("This week's softest bracket (lowest total waves)")
+                st.dataframe(ldf[ldf.bracket == bracket_from_heaven][["real_name", "wave", "datetime"]])
 
-        total_col, median_col = tab.columns(2)
-        total_col.write("This week's softest bracket (lowest total waves)")
-        total_col.dataframe(ldf[ldf.bracket == bracket_from_heaven][["real_name", "wave", "datetime"]])
-
-        median_col.write("(lowest median waves)")
-        median_col.dataframe(ldf[ldf.bracket == bracket_from_heaven_by_median][["real_name", "wave", "datetime"]])
+                st.write("(lowest median waves)")
+                st.dataframe(ldf[ldf.bracket == bracket_from_heaven_by_median][["real_name", "wave", "datetime"]])
