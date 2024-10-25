@@ -137,8 +137,14 @@ async def handle_adding(
                 if league == legend:
                     role_assigned = await handle_position_league(player_df, position_roles, discord_player, changed, unchanged)
 
+                    if not role_assigned:  # doesn't qualify for legend role but has some results in legends
+                        role = wave_roles_by_league[champ][500]
+                        other_roles = [other_role for other_role in wave_roles if other_role != role]
+                        await add_wave_roles(changed, discord_player, champ, unchanged, 500, role, other_roles)
+                        role_assigned = True
+
                     if role_assigned:
-                        for other_role in wave_roles:
+                        for other_role in other_roles:
                             if other_role in discord_player.roles:
                                 await discord_player.remove_roles(other_role)
 
@@ -217,7 +223,7 @@ async def handle_position_league(
         rightful_role = position_roles[1]
 
         if rightful_role in discord_player.roles:
-            unchanged[champ].append((discord_player, rightful_role))
+            unchanged[legend].append((discord_player, rightful_role))
             return True  # Don't actually do anything if the player already has the role
 
         for position_role in position_roles.values():
@@ -225,7 +231,7 @@ async def handle_position_league(
 
         await discord_player.add_roles(rightful_role)
         logging.info(f"Added champ top1 role to {discord_player=}")
-        changed[champ].append((discord_player.name, rightful_role.name))
+        changed[legend].append((discord_player.name, rightful_role.name))
         return True
 
     # current_df = df[df["date"].isin(dates_this_event)]
@@ -237,7 +243,7 @@ async def handle_position_league(
             rightful_role = role
 
             if rightful_role in discord_player.roles:
-                unchanged[champ].append((discord_player, rightful_role))
+                unchanged[legend].append((discord_player, rightful_role))
                 return True  # Don't actually do anything if the player already has the role
 
             for role in [role for role in discord_player.roles if role.id in role_id_to_position]:
@@ -245,7 +251,7 @@ async def handle_position_league(
 
             await discord_player.add_roles(rightful_role)
             logging.info(f"Added {role=} to {discord_player=}")
-            changed[champ].append((discord_player.name, rightful_role.name))
+            changed[legend].append((discord_player.name, rightful_role.name))
             return True
     else:
         for role in [role for role in discord_player.roles if role.id in role_id_to_position]:
@@ -260,8 +266,10 @@ async def handle_wave_league(df, wave_roles_by_league, position_roles, discord_p
     for wave_min, role in wave_roles.items():
         qualifies = any(wave >= wave_min for wave in df.wave)
 
-        if not qualifies:
-            return
+        if not qualifies:  # this only happens if a player has a result in this league, but doesn't qualify. Then we give the role one lower
+            league = leagues.index[league] + 1
+            wave_roles = wave_roles_by_league[league]
+            wave_min, role = list(wave_roles.items())[0]
 
         other_roles = [other_role for role_data in wave_roles_by_league.values() for other_role in role_data.values() if other_role != role]
 
