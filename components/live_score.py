@@ -211,13 +211,13 @@ def live_score():
             pdf = pdf.rename(columns={"wave": "wave_last"})
             pdf.index = pdf.index + 1
 
-            topx = st.selectbox("top x", [1000, 500, 200, 100, 50, 25], key=f"topx_{league}")
+            topx = canvas.selectbox("top x", [1000, 500, 200, 100, 50, 25], key=f"topx_{league}")
             joined_sum = sum(pdf["joined"][:topx])
             joined_tot = len(pdf["joined"][:topx])
 
             color = "green" if joined_sum / joined_tot >= 0.7 else "orange" if joined_sum / joined_tot >= 0.5 else "red"
-            st.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
-            st.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
+            canvas.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
+            canvas.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
 
         # Bracket Analysis Tab
         with view_tabs[2]:
