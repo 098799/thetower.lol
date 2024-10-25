@@ -17,6 +17,8 @@ import logging
 
 import pandas as pd
 
+from dtower.tourney_results.constants import leagues, us_to_jim
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -88,13 +90,12 @@ def execute(league):
 
 if __name__ == "__main__":
     while True:
-        out = execute("Champion")
-        time.sleep(2)
+        for league in leagues:
+            try:
+                out = execute(us_to_jim[league])
+            except Exception as e:
+                logging.exception(e)
 
-        try:
-            out = execute("Legend")
             time.sleep(2)
-        except Exception as e:
-            logging.exception(e)
 
         time.sleep(1800)

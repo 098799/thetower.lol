@@ -1,31 +1,31 @@
 import asyncio
 import logging
 
-# import easyocr
+import discord
 from asgiref.sync import sync_to_async
+from discord.types.member import Member
 
 from discord_bot import const
 from discord_bot.util import get_tower, get_verified_role
 from dtower.sus.models import KnownPlayer, PlayerId
 
 hex_digits = set("0123456789abcdef")
-# reader = easyocr.Reader(["en"])
 
 
-def only_made_of_hex(message):
+def only_made_of_hex(message: discord.Message) -> bool:
     player_id_candidate = message.content.strip().lower()
     contents = set(player_id_candidate)
     return contents | hex_digits == hex_digits
 
 
-def hamming_distance(s1, s2):
+def hamming_distance(s1: str, s2: str) -> float:
     """0 if identical, 1 if completely different"""
     if len(s1) != len(s2):
         raise ValueError("Strings must be of equal length")
     return sum(c1 != c2 for c1, c2 in zip(s1, s2)) / len(s1)
 
 
-async def check_image(content, image_bytes):
+async def check_image(content: str, image_bytes: bytes) -> bool:
     content = content.replace("O", "0")
 
     ocr_results = reader.readtext(image_bytes)
@@ -48,7 +48,7 @@ async def check_image(content, image_bytes):
     return passes_score
 
 
-async def validate_player_id(client, message):
+async def validate_player_id(client: discord.Client, message: discord.Message) -> None:
     if message.author.id in [const.id_pog, const.id_susjite]:
         return
 
@@ -81,7 +81,7 @@ async def validate_player_id(client, message):
         raise exc
 
 
-async def handle_role_present(client, discord_player):
+async def handle_role_present(client: discord.Client, discord_player: discord.Member) -> None:
     verified_role = await get_verified_role(client)
 
     has_player_id_present_role = [role for role in discord_player.roles if role.id == const.verified_role_id]

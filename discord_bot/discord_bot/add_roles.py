@@ -4,6 +4,7 @@ import logging
 from collections import defaultdict
 from math import ceil
 
+import discord
 from asgiref.sync import sync_to_async
 
 from discord_bot import const
@@ -29,7 +30,14 @@ lower_roles = {
 }
 
 
-async def handle_adding(client, limit, discord_ids=None, channel=None, debug_channel=None, verbose=None):
+async def handle_adding(
+    client: discord.Client,
+    limit: int | None,
+    discord_ids: list[int] | None = None,
+    channel: discord.TextChannel | None = None,
+    debug_channel: discord.TextChannel | None = None,
+    verbose: bool | None = None,
+) -> None:
     discord_id_kwargs = {} if discord_ids is None else {"discord_id__in": discord_ids}
 
     skipped = 0

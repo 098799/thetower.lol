@@ -16,3 +16,5 @@ try_tesseract
 htmx_components/
 secrets
 /.vscode
+.aider*
+.env

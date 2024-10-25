@@ -4,8 +4,9 @@ import os
 
 import discord
 import django
-from discord_bot import const
 from discord.ext import tasks
+
+from discord_bot import const
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtower.thetower.settings")
@@ -58,7 +59,7 @@ async def on_ready():
 
 
 @client.event
-async def on_message(message):
+async def on_message(message: discord.Message) -> None:
     try:
         if is_testing_channel(message.channel) and message.content.startswith("!remove_all_nicknames"):
             await remove_nicknames(client, message.channel)
@@ -106,8 +107,12 @@ async def on_message(message):
         #     await purge_all_tourney_roles(client, message.channel, players)
         #     logging.info("Purged all tournaments roles")
 
+    except discord.DiscordException as exc:
+        await message.channel.send(f"😱😱😱 Discord API error occurred: {exc}")
+        raise exc
     except Exception as exc:
-        await message.channel.send(f"😱😱😱 Something went terribly wrong, please debug me. \n\n {exc}")
+        await message.channel.send(f"😱😱😱 Unexpected error occurred: {exc}")
+        logger.exception("Unexpected error in message handler")
         raise exc
 
 
