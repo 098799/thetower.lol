@@ -90,7 +90,7 @@ Your summary starts now."""
 
 
 def get_live_df(league):
-    home = Path(os.getenv('HOME'))
+    home = Path(os.getenv("HOME"))
     league_folder = us_to_jim[league]
     live_path = home / "tourney" / "results_cache" / f"{league_folder}_live"
 
@@ -161,7 +161,7 @@ def live_score():
                 yaxis_title="Wave",
                 legend_title="real_name",
                 hovermode="closest",
-                height=500 if not is_mobile else 300,
+                height=500,
                 margin=dict(l=20, r=20, t=40, b=20),
                 legend=dict(orientation="h" if is_mobile else "v"),
             )
@@ -190,7 +190,7 @@ def live_score():
                 xaxis_title="Time [h]",
                 yaxis_title="Fill up [players]",
                 hovermode="closest",
-                height=400 if not is_mobile else 250,
+                height=400,
                 margin=dict(l=20, r=20, t=40, b=20),
             )
             fig.add_hline(y=1001, line_dash="dot", line_color="green")
@@ -202,23 +202,22 @@ def live_score():
 
             with cols[0]:
                 st.write("Current result (ordered)")
-                st.dataframe(ldf[["name", "real_name", "wave"]][:how_many_results_public_site], height=485 if not is_mobile else 300)
+                st.dataframe(ldf[["name", "real_name", "wave"]][:how_many_results_public_site], height=485)
 
-            if not is_mobile:
-                with cols[1]:
+            canvas = cols[0] if is_mobile else cols[1]
 
-                    joined_ids = set(ldf.player_id.unique())
-                    pdf["joined"] = [player_id in joined_ids for player_id in pdf.id]
-                    pdf = pdf.rename(columns={"wave": "wave_last"})
-                    pdf.index = pdf.index + 1
+            joined_ids = set(ldf.player_id.unique())
+            pdf["joined"] = [player_id in joined_ids for player_id in pdf.id]
+            pdf = pdf.rename(columns={"wave": "wave_last"})
+            pdf.index = pdf.index + 1
 
-                    topx = st.selectbox("top x", [1000, 500, 200, 100, 50, 25], key=f"topx_{league}")
-                    joined_sum = sum(pdf["joined"][:topx])
-                    joined_tot = len(pdf["joined"][:topx])
+            topx = st.selectbox("top x", [1000, 500, 200, 100, 50, 25], key=f"topx_{league}")
+            joined_sum = sum(pdf["joined"][:topx])
+            joined_tot = len(pdf["joined"][:topx])
 
-                    color = "green" if joined_sum / joined_tot >= 0.7 else "orange" if joined_sum / joined_tot >= 0.5 else "red"
-                    st.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
-                    st.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
+            color = "green" if joined_sum / joined_tot >= 0.7 else "orange" if joined_sum / joined_tot >= 0.5 else "red"
+            st.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
+            st.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
 
         # Bracket Analysis Tab
         with view_tabs[2]:
