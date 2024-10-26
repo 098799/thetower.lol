@@ -7,7 +7,7 @@ import plotly.express as px
 import streamlit as st
 from cachetools.func import ttl_cache
 
-from dtower.tourney_results.constants import champ, how_many_results_public_site, leagues, legend, us_to_jim
+from dtower.tourney_results.constants import champ, how_many_results_public_site, leagues, us_to_jim
 from dtower.tourney_results.data import get_player_id_lookup, get_sus_ids, get_tourneys
 from dtower.tourney_results.models import TourneyResult
 
@@ -139,7 +139,7 @@ def live_score():
         return
 
     # Create view tabs
-    view_tabs = tab.tabs(["Live Progress", "Current Results", "Bracket Analysis"])
+    view_tabs = tab.tabs(["Live Progress", "Current Results", "Bracket Analysis", "Time Analysis"])
 
     # Get data
     group_by_id = df.groupby("player_id")
@@ -255,3 +255,76 @@ def live_score():
 
             st.write("(lowest median waves)")
             st.dataframe(ldf[ldf.bracket == bracket_from_heaven_by_median][["real_name", "wave", "datetime"]])
+
+    with view_tabs[3]:
+        # Get all unique real names for the selector
+        all_players = sorted(df["real_name"].unique())
+        selected_player = st.selectbox("Select player", all_players)
+
+        # Get the player's highest wave
+        wave_to_analyze = df[df.real_name == selected_player].wave.max()
+
+        # Get latest time point
+        latest_time = df["datetime"].max()
+
+        st.write(f"Analyzing placement for {selected_player}'s highest wave: {wave_to_analyze}")
+
+        # Analyze each bracket
+        results = []
+        for bracket in sorted(df["bracket"].unique()):
+            # Get data for this bracket at the latest time
+            bracket_df = df[(df["bracket"] == bracket) & (df["datetime"] == latest_time)].sort_values("wave", ascending=False)
+
+            # Calculate where this wave would rank
+            better_or_equal = bracket_df[bracket_df["wave"] >= wave_to_analyze].shape[0]
+            total = bracket_df.shape[0]
+            rank = better_or_equal + 1  # +1 because the input wave would come after equal scores
+
+            results.append(
+                {
+                    "Bracket": bracket,
+                    "Would Place": f"{rank}/{total}",
+                    "Top Wave": bracket_df["wave"].max(),
+                    "Median Wave": int(bracket_df["wave"].median()),
+                    "Players Above": better_or_equal,
+                }
+            )
+
+        # Get bracket creation times
+        bracket_creation_times = {}
+        for bracket in df["bracket"].unique():
+            bracket_creation_times[bracket] = df[df["bracket"] == bracket]["datetime"].min()
+
+        # Convert results to DataFrame and display
+        results_df = pd.DataFrame(results)
+        # Add creation time and sort by it
+        results_df["Creation Time"] = results_df["Bracket"].map(bracket_creation_times)
+        results_df = results_df.sort_values("Creation Time")
+        # Drop the Creation Time column before display
+        results_df = results_df.drop("Creation Time", axis=1)
+
+        st.write(f"Analysis for wave {wave_to_analyze} (ordered by bracket creation time):")
+        st.dataframe(results_df, hide_index=True)
+
+        # Create placement vs time plot
+        plot_df = pd.DataFrame(
+            {
+                "Creation Time": [bracket_creation_times[b] for b in results_df["Bracket"]],
+                "Placement": [int(p.split("/")[0]) for p in results_df["Would Place"]],
+            }
+        )
+
+        fig = px.scatter(
+            plot_df,
+            x="Creation Time",
+            y="Placement",
+            title=f"Placement Timeline for {wave_to_analyze} waves",
+            labels={"Creation Time": "Bracket Creation Time", "Placement": "Would Place Position"},
+            trendline="lowess",
+        )
+
+        fig.update_layout(yaxis_title="Position", height=400, margin=dict(l=20, r=20, t=40, b=20))
+        # Reverse y-axis so better placements (lower numbers) are at the top
+        fig.update_yaxes(autorange="reversed")
+
+        st.plotly_chart(fig, use_container_width=True)

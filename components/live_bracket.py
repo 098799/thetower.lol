@@ -109,7 +109,7 @@ def live_bracket():
     # st.session_state.display_comparison = True
     # st.session_state.options.compare_players = player_ids
     # compute_comparison(tdf[tdf.real_name == selected_real_name].player_id.iloc[0], canvas=tab)
-    url = f"http://{BASE_URL}/comparison?" + urlencode({"compare": ldf.player_id.to_list()}, doseq=True)
+    url = f"http://{BASE_URL}/comparison?" + urlencode({"compare": player_ids}, doseq=True)
 
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
