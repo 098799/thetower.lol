@@ -6,15 +6,17 @@ import streamlit as st
 
 from components.live_score import get_live_df
 from components.util import get_options
-from dtower.tourney_results.constants import legend
+from dtower.tourney_results.constants import leagues
 from dtower.tourney_results.formatting import BASE_URL
 
 
 def live_bracket():
+    with st.sidebar:
+        league = st.radio("League", leagues)
+
     # tabs = st.tabs([legend, champ])
 
     # for tab, league in zip(tabs, [legend, champ]):
-    league = legend
     tab = st
     options = get_options(links=False)
 
@@ -107,4 +109,12 @@ def live_bracket():
     # st.session_state.display_comparison = True
     # st.session_state.options.compare_players = player_ids
     # compute_comparison(tdf[tdf.real_name == selected_real_name].player_id.iloc[0], canvas=tab)
-    st.code(f"http://{BASE_URL}/comparison?" + urlencode({"compare": ldf.player_id.to_list()}, doseq=True))
+    url = f"http://{BASE_URL}/comparison?" + urlencode({"compare": ldf.player_id.to_list()}, doseq=True)
+
+    with open("style.css", "r") as infile:
+        table_styling = f"<style>{infile.read()}</style>"
+
+    st.write(table_styling, unsafe_allow_html=True)
+
+    st.write(f'<a href="{url}">See comparison</a>', unsafe_allow_html=True)
+    st.code(url)

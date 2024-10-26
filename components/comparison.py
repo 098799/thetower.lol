@@ -81,7 +81,7 @@ def compute_comparison(player_id=None, canvas=st):
 
     hidden_query = {} if hidden_features else {"result__public": True, "position__lt": how_many_results_public_site, "position__gt": 0}
     rows = TourneyRow.objects.filter(player_id__in=all_player_ids, **hidden_query)
-    rows = filter_lower_leagues(rows)
+    # rows = filter_lower_leagues(rows)
 
     player_df = get_details(rows)
 

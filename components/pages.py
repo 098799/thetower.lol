@@ -24,7 +24,7 @@ from components.sus_overview import get_sus_overview
 from components.top_scores import get_top_scores
 from components.various import get_various
 from components.winners import compute_winners
-from dtower.tourney_results.constants import Graph, Options, champ, copper, gold, legend, plat, silver
+from dtower.tourney_results.constants import Graph, Options
 
 st.set_page_config(
     page_title="The Tower top200 tourney results",
@@ -47,12 +47,12 @@ pages = [
     st.Page(partial(compute_overview, options=options), title="Overview", icon="🏠", url_path="overview"),
     st.Page(live_score, title="Live Score", icon="⏱️", url_path="live"),
     st.Page(live_bracket, title="Bracket view", icon="🔠", url_path="bracket"),
-    st.Page(partial(compute_results, league=legend, options=options), title="Results Legends", icon="🐳", url_path="results"),
-    st.Page(partial(compute_results, league=champ, options=options), title="Results Champions", icon="🏆", url_path="champ"),
-    st.Page(partial(compute_results, league=plat, options=options), title="Results Platinum", icon="📉", url_path="platinum"),
-    st.Page(partial(compute_results, league=gold, options=options), title="Results Gold", icon="🥇", url_path="gold"),
-    st.Page(partial(compute_results, league=silver, options=options), title="Results Silver", icon="🥈", url_path="silver"),
-    st.Page(partial(compute_results, league=copper, options=options), title="Results Copper", icon="🥉", url_path="copper"),
+    st.Page(partial(compute_results, options=options), title="Results", icon="🐳", url_path="results"),
+    # st.Page(partial(compute_results, league=champ, options=options), title="Results Champions", icon="🏆", url_path="champ"),
+    # st.Page(partial(compute_results, league=plat, options=options), title="Results Platinum", icon="📉", url_path="platinum"),
+    # st.Page(partial(compute_results, league=gold, options=options), title="Results Gold", icon="🥇", url_path="gold"),
+    # st.Page(partial(compute_results, league=silver, options=options), title="Results Silver", icon="🥈", url_path="silver"),
+    # st.Page(partial(compute_results, league=copper, options=options), title="Results Copper", icon="🥉", url_path="copper"),
     st.Page(compute_player_lookup, title="Player", icon="⛹️", url_path="player"),
     st.Page(get_comparison, title="Player Comparison", icon="🔃", url_path="comparison"),
     st.Page(compute_winners, title="Winners", icon="🔥", url_path="winners"),
