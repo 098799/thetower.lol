@@ -127,9 +127,10 @@ def live_score():
     with st.sidebar:
         league = st.radio("League", leagues)
 
-    # Check if mobile view
-    is_mobile = st.session_state.get("mobile_view", False)
-    st.checkbox("Mobile view", value=is_mobile, key="mobile_view")
+    with st.sidebar:
+        # Check if mobile view
+        is_mobile = st.session_state.get("mobile_view", False)
+        st.checkbox("Mobile view", value=is_mobile, key="mobile_view")
 
     tab = st
     try:
@@ -260,6 +261,9 @@ def live_score():
         # Get all unique real names for the selector
         all_players = sorted(df["real_name"].unique())
         selected_player = st.selectbox("Select player", all_players)
+
+        if not selected_player:
+            return
 
         # Get the player's highest wave
         wave_to_analyze = df[df.real_name == selected_player].wave.max()

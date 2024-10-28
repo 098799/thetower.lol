@@ -29,6 +29,9 @@ hidden_features = os.environ.get("HIDDEN_FEATURES")
 
 
 def compute_comparison(player_id=None, canvas=st):
+    with st.sidebar:
+        show_legend = st.checkbox("Show legend", key="show_legend", value=True)
+
     with open("style.css", "r") as infile:
         table_styling = f"<style>{infile.read()}</style>"
 
@@ -172,7 +175,7 @@ def compute_comparison(player_id=None, canvas=st):
     pd_datas = pd_datas.drop_duplicates()
 
     fig = px.line(pd_datas, x="date", y="wave", color="real_name", markers=True, custom_data=["bcs", "position"])
-    fig.update_layout(showlegend=False)
+    fig.update_layout(showlegend=show_legend)
     fig.update_yaxes(title_text=None)
     fig.update_layout(margin=dict(l=20))
     fig.update_traces(hovertemplate="%{y}<br>Postion: %{customdata[1]}")
@@ -186,7 +189,7 @@ def compute_comparison(player_id=None, canvas=st):
     canvas.plotly_chart(fig, use_container_width=True)
 
     fig = px.line(pd_datas, x="date", y="position", color="real_name", markers=True)
-    fig.update_layout(showlegend=False)
+    fig.update_layout(showlegend=show_legend)
     fig.update_yaxes(title_text=None)
     fig.update_layout(margin=dict(l=20))
     fig.update_yaxes(range=[max(pd_datas.position), min(pd_datas.position)])
