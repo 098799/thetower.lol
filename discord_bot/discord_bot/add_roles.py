@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 
 
 lower_roles = {
-    copper: [1, const.copper500_id],
-    silver: [50, const.silver500_id],
-    gold: [100, const.gold500_id],
-    plat: [250, const.plat500_id],
+    copper: [1, const.copper1_id],
+    silver: [50, const.silver50_id],
+    gold: [100, const.gold100_id],
+    plat: [250, const.plat250_id],
     champ: [500, const.champ500_id],
 }
 

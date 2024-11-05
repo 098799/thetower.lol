@@ -23,7 +23,7 @@ def is_channel(channel, id_):
     return channel.id == id_
 
 
-is_t50_channel = partial(is_channel, id_=const.t50_channel_id)
+is_t50_channel = partial(is_channel, id_=const.top50_channel_id)
 is_meme_channel = partial(is_channel, id_=const.meme_channel_id)
 is_testing_channel = partial(is_channel, id_=const.testing_channel_id)
 is_helpers_channel = partial(is_channel, id_=const.helpers_channel_id)
