@@ -204,7 +204,7 @@ def live_score():
 
         with cols[0]:
             st.write("Current result (ordered)")
-            st.dataframe(ldf[["name", "real_name", "wave"]][:how_many_results_public_site], height=485)
+            st.dataframe(ldf[["name", "real_name", "wave"]][:how_many_results_public_site], height=700)
 
         canvas = cols[0] if is_mobile else cols[1]
 
@@ -219,7 +219,7 @@ def live_score():
 
         color = "green" if joined_sum / joined_tot >= 0.7 else "orange" if joined_sum / joined_tot >= 0.5 else "red"
         canvas.write(f"Has top {topx} joined already? <font color='{color}'>{joined_sum}</font>/{topx}", unsafe_allow_html=True)
-        canvas.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx])
+        canvas.dataframe(pdf[["real_name", "wave_last", "joined"]][:topx], height=600)
 
     # Bracket Analysis Tab
     with view_tabs[2]:
