@@ -280,7 +280,7 @@ def live_score():
             bracket_df = df[(df["bracket"] == bracket) & (df["datetime"] == latest_time)].sort_values("wave", ascending=False)
 
             # Calculate where this wave would rank
-            better_or_equal = bracket_df[bracket_df["wave"] >= wave_to_analyze].shape[0]
+            better_or_equal = bracket_df[bracket_df["wave"] > wave_to_analyze].shape[0]
             total = bracket_df.shape[0]
             rank = better_or_equal + 1  # +1 because the input wave would come after equal scores
 
