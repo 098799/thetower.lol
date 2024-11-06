@@ -84,7 +84,6 @@ def compute_comparison(player_id=None, canvas=st):
 
     hidden_query = {} if hidden_features else {"result__public": True, "position__lt": how_many_results_public_site, "position__gt": 0}
     rows = TourneyRow.objects.filter(player_id__in=all_player_ids, **hidden_query)
-    # rows = filter_lower_leagues(rows)
 
     player_df = get_details(rows)
 
@@ -103,11 +102,12 @@ def compute_comparison(player_id=None, canvas=st):
 
     datas = [(sdf, player_id) for player_id, sdf in player_df.groupby("id") if len(sdf) >= 2]
     datas = filter_plot_datas(datas, patch, filter_bcs)
+    datas = filter_league(datas)
 
     if not datas:
         return
 
-    datas = sorted([(data, user) for data, user in datas], key=lambda datum: max(datum[0].wave), reverse=True)
+    datas = sorted([(data, user) for data, user in datas if not data.empty], key=lambda datum: max(datum[0].wave), reverse=True)
 
     summary = pd.DataFrame(
         [
@@ -121,6 +121,7 @@ def compute_comparison(player_id=None, canvas=st):
                 user,
             ]
             for data, user in datas
+            if len(data) >= 2
         ],
         columns=["Name", "total PB", "Median", "No. tourneys", "Stdev", "Lowest score", "Search term"],
     )
@@ -279,6 +280,19 @@ def get_patch_df(df, player_df, patch):
     else:
         patch_df = player_df
     return patch_df
+
+
+def filter_league(datas):
+    all_leagues = {league for datum, _ in datas for league in datum.league.unique()}
+    ordered_all_leagues = [league for league in leagues if league in all_leagues]
+
+    if len(ordered_all_leagues) > 1:
+        with st.sidebar:
+            league = st.radio("League", ordered_all_leagues)
+    else:
+        league = ordered_all_leagues.pop()
+
+    return [(sdf[sdf.league == league], name) for sdf, name in datas]
 
 
 def filter_lower_leagues(rows):
