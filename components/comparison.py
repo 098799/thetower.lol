@@ -84,7 +84,7 @@ def compute_comparison(player_id=None, canvas=st):
 
     hidden_query = {} if hidden_features else {"result__public": True, "position__lt": how_many_results_public_site, "position__gt": 0}
     rows = TourneyRow.objects.filter(player_id__in=all_player_ids, **hidden_query)
-    rows = filter_lower_leagues(rows)
+    # rows = filter_lower_leagues(rows)
 
     player_df = get_details(rows)
 
@@ -284,15 +284,10 @@ def get_patch_df(df, player_df, patch):
 def filter_lower_leagues(rows):
     # only leave top league results -- otherwise results are not comparable?
     leagues_in = rows.values_list("result__league", flat=True).distinct()
-    ordered_leagues_in = []
 
     for league in leagues:
         if league in leagues_in:
-            ordered_leagues_in.append(league)
-
-    if len(ordered_leagues_in) > 1:
-        with st.sidebar:
-            league = st.radio("League", ordered_leagues_in, key="league_switcher", index=0)
+            break
 
     rows = rows.filter(result__league=league)
     return rows
