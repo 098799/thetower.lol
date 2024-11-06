@@ -57,10 +57,10 @@ pages = [
     st.Page(get_comparison, title="Player Comparison", icon="🔃", url_path="comparison"),
     st.Page(compute_winners, title="Winners", icon="🔥", url_path="winners"),
     st.Page(compute_counts, title="Wave cutoff (counts)", icon="🐈", url_path="counts"),
+    st.Page(get_namechangers, title="Namechangers", icon="💩", url_path="namechangers"),
     st.Page(compute_about, title="About", icon="👴", url_path="about"),
     st.Page(get_top_scores, title="(deprecated) Top Scores", icon="🤑", url_path="top"),
     st.Page(partial(compute_breakdown, options=options), title="(deprecated) Breakdown", icon="🪁", url_path="breakdown"),
-    st.Page(get_namechangers, title="(deprecated) Namechangers", icon="💩", url_path="namechangers"),
     st.Page(get_various, title="(deprecated) Relics and Avatars", icon="👽", url_path="relics"),
     st.Page(get_fallen_defenders, title="(deprecated) Fallen defenders", icon="🪦", url_path="fallen"),
 ]
