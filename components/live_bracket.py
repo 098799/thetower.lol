@@ -96,7 +96,20 @@ def live_bracket():
     bracket_start_time = tdf["datetime"].min()
     tab.info(f"Bracket started at approx.: {bracket_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    fig = px.line(tdf, x="datetime", y="wave", color="real_name", title="Live bracket score", markers=True, line_shape="linear")
+    # Add player_id only to duplicated names within this bracket
+    tdf = tdf.copy()
+    # Get unique real_name/player_id combinations
+    name_counts = tdf.groupby("real_name")["player_id"].nunique()
+    duplicate_names = name_counts[name_counts > 1].index
+
+    tdf["display_name"] = tdf["real_name"]
+    # Only modify display names for players that share the same name in this bracket
+    if len(duplicate_names) > 0:
+        tdf.loc[tdf["real_name"].isin(duplicate_names), "display_name"] = tdf[tdf["real_name"].isin(duplicate_names)].apply(
+            lambda x: f"{x['real_name']} ({x['player_id']})", axis=1
+        )
+
+    fig = px.line(tdf, x="datetime", y="wave", color="display_name", title="Live bracket score", markers=True, line_shape="linear")
     fig.update_traces(mode="lines+markers")
     fig.update_layout(xaxis_title="Time", yaxis_title="Wave", legend_title="real_name", hovermode="closest")
     tab.plotly_chart(fig, use_container_width=True)
@@ -104,6 +117,18 @@ def live_bracket():
     last_moment = tdf.datetime.max()
     ldf = tdf[tdf.datetime == last_moment].reset_index(drop=True)
     ldf.index = ldf.index + 1
+    # Add player_id only to duplicated names within this bracket
+    ldf = ldf.copy()
+
+    # Get unique real_name/player_id combinations
+    name_counts = ldf.groupby("real_name")["player_id"].nunique()
+    duplicate_names = name_counts[name_counts > 1].index
+
+    # Only modify names for players that share the same name in this bracket
+    if len(duplicate_names) > 0:
+        ldf.loc[ldf["real_name"].isin(duplicate_names), "real_name"] = ldf[ldf["real_name"].isin(duplicate_names)].apply(
+            lambda x: f"{x['real_name']} ({x['player_id']})", axis=1
+        )
     tab.dataframe(ldf[["player_id", "name", "real_name", "wave", "datetime"]])
 
     # st.session_state.display_comparison = True
