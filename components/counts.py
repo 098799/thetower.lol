@@ -9,7 +9,7 @@ def compute_counts():
     with st.sidebar:
         league = st.radio("League", leagues)
 
-    st.header("Wave cutoff required for top X in champ")
+    st.header(f"Wave cutoff required for top X in {league}")
     counts_for = [1, 10, 25, 50, 100, 200]
     limit = 300
 
