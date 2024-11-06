@@ -1,11 +1,14 @@
 import pandas as pd
 import streamlit as st
 
-from dtower.tourney_results.constants import champ
+from dtower.tourney_results.constants import leagues
 from dtower.tourney_results.models import TourneyResult, TourneyRow
 
 
 def compute_counts():
+    with st.sidebar:
+        league = st.radio("League", leagues)
+
     st.header("Wave cutoff required for top X in champ")
     counts_for = [1, 10, 25, 50, 100, 200]
     limit = 300
@@ -18,7 +21,7 @@ def compute_counts():
         counts_for += [300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000]
         limit = 2100
 
-    champ_results = TourneyResult.objects.filter(league=champ, public=True).order_by("-date")
+    champ_results = TourneyResult.objects.filter(league=league, public=True).order_by("-date")
 
     per_page = 22
     pages = len(champ_results) // per_page
