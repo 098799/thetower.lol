@@ -35,7 +35,12 @@ def compute_top(df, options: Options):
     )
 
     fig = px.bar(condensed_df[:40], x="real_name", y="wave")
-    fig.update_yaxes(range=[min([condensed_df.iloc[40].wave - 20, 2000]), condensed_df.iloc[0].wave + 20])
+
+    try:
+        fig.update_yaxes(range=[min([condensed_df.iloc[40].wave - 20, 2000]), condensed_df.iloc[0].wave + 20])
+    except IndexError:
+        st.warning("No data for this patch")
+
     st.plotly_chart(fig)
 
     if options.links_toggle:
