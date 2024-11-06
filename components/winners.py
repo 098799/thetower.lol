@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from dtower.tourney_results.constants import champ
+from dtower.tourney_results.constants import champ, legend
 from dtower.tourney_results.data import get_patches, get_tourneys
 from dtower.tourney_results.models import TourneyResult
 
@@ -21,11 +21,18 @@ def compute_winners():
 
     hidden_features = os.environ.get("HIDDEN_FEATURES")
     public = {"public": True} if not hidden_features else {}
-    df = get_tourneys(TourneyResult.objects.filter(league=champ, **public), offset=0, limit=10)
+    cdf = get_tourneys(TourneyResult.objects.filter(league=champ, **public), offset=0, limit=10)
+    ldf = get_tourneys(TourneyResult.objects.filter(league=legend, **public), offset=0, limit=10)
 
     selected_patches = [patch for patch in patches if patch.version_minor >= selected_patches_slider.version_minor]
 
-    df = df[df.patch.isin(selected_patches)]
+    patches_champ = [patch for patch in selected_patches if patch.version_minor <= 24]
+    patches_legend = [patch for patch in selected_patches if patch.version_minor >= 25]
+
+    cdf = cdf[cdf.patch.isin(patches_champ)]
+    ldf = ldf[ldf.patch.isin(patches_legend)]
+
+    df = pd.concat([cdf, ldf])
 
     how_col, hole_col = st.columns([1, 1])
 
