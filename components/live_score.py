@@ -314,6 +314,16 @@ def live_score():
         st.dataframe(results_df, hide_index=True)
 
         # Create placement vs time plot
+        # Get player's actual bracket
+        player_bracket = df[df["real_name"] == selected_player]["bracket"].iloc[0]
+        player_creation_time = bracket_creation_times[player_bracket]
+        player_position = (
+            df[(df["bracket"] == player_bracket) & (df["datetime"] == latest_time)]
+            .sort_values("wave", ascending=False)
+            .index.get_loc(df[(df["bracket"] == player_bracket) & (df["datetime"] == latest_time) & (df["real_name"] == selected_player)].index[0])
+            + 1
+        )
+
         plot_df = pd.DataFrame(
             {
                 "Creation Time": [bracket_creation_times[b] for b in results_df["Bracket"]],
@@ -328,6 +338,16 @@ def live_score():
             title=f"Placement Timeline for {wave_to_analyze} waves",
             labels={"Creation Time": "Bracket Creation Time", "Placement": "Would Place Position"},
             trendline="lowess",
+        )
+
+        # Add player's actual position as a red X
+        fig.add_scatter(
+            x=[player_creation_time],
+            y=[player_position],
+            mode="markers",
+            marker=dict(symbol="x", size=15, color="red"),
+            name="Actual Position",
+            showlegend=False,
         )
 
         fig.update_layout(yaxis_title="Position", height=400, margin=dict(l=20, r=20, t=40, b=20))
