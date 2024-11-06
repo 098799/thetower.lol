@@ -104,7 +104,7 @@ class Results:
             else:
                 extension = "png"
 
-            return f"<img src='./app/static/Tower_Skins/{avatar_id}.{extension}' width='32'>"
+            return f"<img src='./app/static/Tower_Skins/{avatar_id}.{extension}' style='width:32px; height:32px; object-fit:contain'>"
 
         def make_relic(relic_id):
             if relic_id == -1 or relic_id not in all_relics:
