@@ -61,13 +61,13 @@ position_role_ids = {
     300: const.top300_id,
     400: const.top400_id,
     500: const.top500_id,
-    600: const.top600_id,
-    700: const.top700_id,
-    800: const.top800_id,
-    900: const.top900_id,
+    # 600: const.top600_id,
+    750: const.top750_id,
+    # 800: const.top800_id,
+    # 900: const.top900_id,
     1000: const.top1000_id,
     1500: const.top1500_id,
-    2000: const.top2000_id,
+    # 2000: const.top2000_id,
 }
 
 
