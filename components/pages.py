@@ -29,7 +29,8 @@ from dtower.tourney_results.constants import Graph, Options
 st.set_page_config(
     page_title="The Tower top200 tourney results",
     layout="centered",
-    initial_sidebar_state="expanded",
+    # initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
     menu_items={
         "Get Help": "mailto:admin@thetower.lol",
     },
