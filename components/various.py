@@ -29,8 +29,7 @@ def compute_various(df, options):
         podium = [avatar for avatar, count in counter.most_common(3)]
         counts = [int(count / len(subdf) * 100) for _, count in counter.most_common(3)]
 
-        # get_extension = lambda x: "webp" if x in [35, 36, 39, 42, 44, 45, 46] else "png"
-        get_extension = "png"
+        get_extension = lambda x: "webp" if x in [999] else "png"  # keep the function, but use an id that won't exist (for a while anyway)
 
         pod = {"date": date}
         pod |= {
@@ -61,8 +60,7 @@ def compute_various(df, options):
 
         pod = {"date": date}
 
-        # get_extension = lambda x: "webp" if x in [48, 49, 50, 51, 52, 53, 60, 61] else "png"
-        get_extension = "png"
+        get_extension = lambda x: "webp" if x in [999] else "png"  # keep the function, but use an id that won't exist (for a while anyway)
 
         pod |= {
             numeral: f"<img src='./app/static/Tower_Relics/{spot}.{get_extension(spot)}' width='{width}' title='{title}, {relic_1} {relic_2}'> -- {count}%"
