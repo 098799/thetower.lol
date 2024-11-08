@@ -23,7 +23,8 @@ def is_channel(channel, id_):
     return channel.id == id_
 
 
-is_t50_channel = partial(is_channel, id_=const.t50_channel_id)
+is_top1_channel = partial(is_channel, id_=const.top1_channel_id)
+is_top50_channel = partial(is_channel, id_=const.top50_channel_id)
 is_meme_channel = partial(is_channel, id_=const.meme_channel_id)
 is_testing_channel = partial(is_channel, id_=const.testing_channel_id)
 is_helpers_channel = partial(is_channel, id_=const.helpers_channel_id)
@@ -61,13 +62,13 @@ position_role_ids = {
     300: const.top300_id,
     400: const.top400_id,
     500: const.top500_id,
-    600: const.top600_id,
-    700: const.top700_id,
-    800: const.top800_id,
-    900: const.top900_id,
+    # 600: const.top600_id,
+    750: const.top750_id,
+    # 800: const.top800_id,
+    # 900: const.top900_id,
     1000: const.top1000_id,
     1500: const.top1500_id,
-    2000: const.top2000_id,
+    # 2000: const.top2000_id,
 }
 
 
