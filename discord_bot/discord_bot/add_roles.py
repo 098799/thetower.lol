@@ -58,7 +58,7 @@ async def handle_adding(
 
     dfs = {}
 
-    dfs[leagues[0]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[0]), limit=2000)  # legend goes up to 2k
+    dfs[leagues[0]] = get_tourneys(get_results_for_patch(patch=patch, league=leagues[0]), limit=1500)  # legend roles go up to 1.5k
 
     if verbose:
         await debug_channel.send(f"Loaded legends tourney data of {len(dfs[leagues[0]])} rows")
@@ -140,7 +140,7 @@ async def handle_adding(
                     if not role_assigned:  # doesn't qualify for legend role but has some results in legends
                         role = wave_roles_by_league[champ][500]
                         other_roles = [other_role for other_role in wave_roles if other_role != role]
-                        await add_wave_roles(changed, discord_player, champ, unchanged, 500, role, other_roles)
+                        await add_wave_roles(changed, discord_player, champ, 500, role)
                         role_assigned = True
                     else:
                         other_roles = wave_roles
@@ -283,13 +283,13 @@ async def handle_wave_league(df, wave_roles_by_league, position_roles, discord_p
             unchanged[league].append((discord_player, role))
             return True
 
-        await add_wave_roles(changed, discord_player, league, unchanged, wave_min, role, other_roles)
+        await add_wave_roles(changed, discord_player, league, wave_min, role)
         return wave_min
 
     return False
 
 
-async def add_wave_roles(changed, discord_player, league, unchanged, wave_min, role, other_roles):
+async def add_wave_roles(changed, discord_player, league, wave_min, role):
     await discord_player.add_roles(role)
     changed[league].append((discord_player.name, f"{league}: {wave_min}"))
     logging.info(f"Added {league=}, {wave_min=} to {discord_player=}")
