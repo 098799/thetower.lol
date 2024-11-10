@@ -70,14 +70,14 @@ async def on_message(message):
             if const.top1_id in {role.id for role in message.author.roles}:
                 injection = message.content.split(" ", 1)[1]
                 Injection.objects.create(text=injection, user=message.author.id)
-                await message.channel.send(f"🔥 Stored the prompt injection for AI summary: {injection[:10]}... 🔥")
+                await message.channel.send(f"🔥 Stored the prompt injection for AI summary: {injection[:7]}... 🔥")
         elif is_top1_channel(message.channel) and message.content.startswith("!inject"):
             if const.top1_id in {role.id for role in message.author.roles}:
                 injection = message.content.split(" ", 1)[1]
                 author = message.author.name
                 channel = message.channel
                 Injection.objects.create(text=injection, user=message.author.id)
-                await channel.send(f"🔥 Stored the prompt injection for AI summary from {author}: {injection}")
+                await channel.send(f"🔥 Stored the prompt injection for AI summary from {author}: {injection[:7]}... 🔥")
                 await message.delete()
     except Exception as exc:
         await message.channel.send(f"😱😱😱 Something went terribly wrong, please debug me. \n\n {exc}")
