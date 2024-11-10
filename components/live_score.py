@@ -119,6 +119,7 @@ def get_live_df(league):
     df["real_name"] = [lookup.get(id, name).strip() for id, name in zip(df.player_id, df.name)]
 
     df = df[~df.player_id.isin(get_sus_ids())]
+    df = df.reset_index(drop=True)
 
     return df
 
