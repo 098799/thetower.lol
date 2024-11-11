@@ -230,32 +230,40 @@ def live_score():
         bracket_from_heaven = group_by_bracket.sum().sort_values(ascending=True).index[0]
         bracket_from_heaven_by_median = group_by_bracket.median().sort_values(ascending=True).index[0]
 
+        st.write(f"Total closed brackets until now: {ldf.groupby('bracket').ngroups}")
+
         cols = st.columns(2 if not is_mobile else 1)
 
+        # Create histograms for bracket statistics
+        median_waves = group_by_bracket.median()
+        mean_waves = group_by_bracket.mean()
+
+        # Median waves histogram
+        fig1 = px.histogram(
+            median_waves, title="Distribution of Median Waves per Bracket", labels={"value": "Median Waves", "count": "Number of Brackets"}, height=300
+        )
+        fig1.update_layout(showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
+        st.plotly_chart(fig1, use_container_width=True)
+
+        # Mean waves histogram
+        fig2 = px.histogram(
+            mean_waves, title="Distribution of Mean Waves per Bracket", labels={"value": "Mean Waves", "count": "Number of Brackets"}, height=300
+        )
+        fig2.update_layout(showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
+        st.plotly_chart(fig2, use_container_width=True)
+
         with cols[0]:
-            st.write("This week's bracket from hell (highest total waves)")
+            st.write(f"Highest total waves: {bracket_from_hell}")
             st.dataframe(ldf[ldf.bracket == bracket_from_hell][["real_name", "wave", "datetime"]])
 
-            if not is_mobile:
-                st.write("This week's softest bracket (lowest total waves)")
-                st.dataframe(ldf[ldf.bracket == bracket_from_heaven][["real_name", "wave", "datetime"]])
-
-        if not is_mobile:
-            with cols[1]:
-                st.write("(highest median waves)")
-                st.dataframe(ldf[ldf.bracket == bracket_from_hell_by_median][["real_name", "wave", "datetime"]])
-
-                st.write("(lowest median waves)")
-                st.dataframe(ldf[ldf.bracket == bracket_from_heaven_by_median][["real_name", "wave", "datetime"]])
-
-        if is_mobile:
-            st.write("(highest median waves)")
-            st.dataframe(ldf[ldf.bracket == bracket_from_hell_by_median][["real_name", "wave", "datetime"]])
-
-            st.write("This week's softest bracket (lowest total waves)")
+            st.write(f"Lowest total waves: {bracket_from_heaven}")
             st.dataframe(ldf[ldf.bracket == bracket_from_heaven][["real_name", "wave", "datetime"]])
 
-            st.write("(lowest median waves)")
+        with cols[1]:
+            st.write(f"Highest median waves: {bracket_from_hell_by_median}")
+            st.dataframe(ldf[ldf.bracket == bracket_from_hell_by_median][["real_name", "wave", "datetime"]])
+
+            st.write(f"Lowest median waves: {bracket_from_heaven_by_median}")
             st.dataframe(ldf[ldf.bracket == bracket_from_heaven_by_median][["real_name", "wave", "datetime"]])
 
     with view_tabs[3]:
