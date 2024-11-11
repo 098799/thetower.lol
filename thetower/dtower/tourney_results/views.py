@@ -95,7 +95,7 @@ def last_full_results(request, league):
 
     ldf = df[df.datetime == df.datetime.max()]
     response = [
-        {"bracket_id": bracket, position: int(sdf.sort_values("wave", ascending=False).iloc[position + 1].wave)} for bracket, sdf in ldf.groupby("bracket")
+        {"bracket_id": bracket, "position": int(sdf.sort_values("wave", ascending=False).iloc[position + 1].wave)} for bracket, sdf in ldf.groupby("bracket")
     ]
 
     return JsonResponse(response, status=200, safe=False)
