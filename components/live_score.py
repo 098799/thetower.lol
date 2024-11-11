@@ -233,25 +233,63 @@ def live_score():
         st.write(f"Total closed brackets until now: {ldf.groupby('bracket').ngroups}")
 
         # Create combined histogram for median and mean waves
-        stats_df = pd.DataFrame({"Median": group_by_bracket.median(), "Mean": group_by_bracket.mean()}).melt()
+        stats_df = pd.DataFrame(
+            {
+                "25th Percentile": group_by_bracket.quantile(0.25),
+                "50th Percentile": group_by_bracket.median(),
+                "75th Percentile": group_by_bracket.quantile(0.75),
+            }
+        ).melt()
 
+        import numpy as np
+        from scipy.stats import gaussian_kde
+
+        # Create base histogram
         fig1 = px.histogram(
             stats_df,
             x="value",
             color="variable",
             barmode="overlay",
             opacity=0.7,
-            title="Distribution of Median and Mean Waves per Bracket",
+            title="Distribution of Wave Percentiles per Bracket",
             labels={"value": "Waves", "count": "Number of Brackets", "variable": "Statistic"},
             height=300,
         )
-        fig1.update_layout(margin=dict(l=20, r=20, t=40, b=20))
+
+        # Add smooth trend lines for each variable
+        colors = {"25th Percentile": "#636EFA", "50th Percentile": "#EF553B", "75th Percentile": "#00CC96"}
+
+        for variable in stats_df["variable"].unique():
+            var_data = stats_df[stats_df["variable"] == variable]
+
+            # Get the histogram data
+            hist, bins = np.histogram(var_data["value"], bins=30)
+            bin_centers = (bins[:-1] + bins[1:]) / 2
+
+            # Calculate KDE
+            kde = gaussian_kde(var_data["value"])
+            x_range = np.linspace(var_data["value"].min(), var_data["value"].max(), 200)
+            kde_values = kde(x_range)
+
+            # Scale KDE to match histogram height
+            scaling_factor = max(hist) / max(kde_values)
+            kde_values = kde_values * scaling_factor
+
+            # Add the smooth line
+            fig1.add_scatter(
+                x=x_range, y=kde_values, mode="lines", name=f"{variable} trend", line=dict(color=colors[variable], width=3, dash="dash"), showlegend=False
+            )
+
+        fig1.update_layout(margin=dict(l=20, r=20, t=40, b=20), legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99))
         st.plotly_chart(fig1, use_container_width=True)
 
         # Highest waves histogram
         max_waves = group_by_bracket.max()
         fig3 = px.histogram(
-            max_waves, title="Distribution of Highest Waves per Bracket", labels={"value": "Highest Wave", "count": "Number of Brackets"}, height=300
+            max_waves,
+            title="Distribution of Highest Waves per Bracket",
+            labels={"value": "Highest Wave", "count": "Number of Brackets"},
+            height=300,
         )
         fig3.update_layout(showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
         st.plotly_chart(fig3, use_container_width=True)
