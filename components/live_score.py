@@ -1,19 +1,14 @@
-import datetime
 import os
-from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 from cachetools.func import ttl_cache
 
-from dtower.tourney_results.constants import champ, how_many_results_public_site, leagues, us_to_jim
-from dtower.tourney_results.data import get_player_id_lookup, get_sus_ids, get_tourneys
+from dtower.tourney_results.constants import champ, how_many_results_public_site, leagues
+from dtower.tourney_results.data import get_tourneys
 from dtower.tourney_results.models import TourneyResult
-
-
-def get_time(file_path: Path) -> datetime.datetime:
-    return datetime.datetime.strptime(str(file_path.stem), "%Y-%m-%d__%H_%M")
+from dtower.tourney_results.tourney_utils import get_live_df
 
 
 @ttl_cache(maxsize=1000, ttl=600)
@@ -87,41 +82,6 @@ Your summary starts now."""
     )
     response = message.content[0].text
     return response
-
-
-def get_live_df(league):
-    home = Path(os.getenv("HOME"))
-    league_folder = us_to_jim[league]
-    live_path = home / "tourney" / "results_cache" / f"{league_folder}_live"
-
-    all_files = sorted(live_path.glob("*.csv"))
-    last_file = all_files[-1]
-
-    last_date = get_time(last_file)
-
-    data = {current_time: pd.read_csv(file) for file in all_files if last_date - (current_time := get_time(file)) < datetime.timedelta(days=2)}
-
-    for dt, df in data.items():
-        df["datetime"] = dt
-
-    if not data:
-        raise ValueError("No current data, wait until the tourney day")
-
-    df = pd.concat(data.values())
-    df = df.sort_values(["datetime", "wave"], ascending=False)
-    df["bracket"] = df.bracket.map(lambda x: x.strip())
-
-    bracket_counts = dict(df.groupby("bracket").player_id.unique().map(lambda player_ids: len(player_ids)))
-    fullish_brackets = [bracket for bracket, count in bracket_counts.items() if count >= 28]
-
-    df = df[df.bracket.isin(fullish_brackets)]  # no sniping
-    lookup = get_player_id_lookup()
-    df["real_name"] = [lookup.get(id, name).strip() for id, name in zip(df.player_id, df.name)]
-
-    df = df[~df.player_id.isin(get_sus_ids())]
-    df = df.reset_index(drop=True)
-
-    return df
 
 
 def live_score():
@@ -391,6 +351,7 @@ def live_score():
             title=f"Placement Timeline for {wave_to_analyze} waves",
             labels={"Creation Time": "Bracket Creation Time", "Placement": "Would Place Position"},
             trendline="lowess",
+            trendline_options=dict(frac=0.2),
         )
 
         # Add player's actual position as a red X

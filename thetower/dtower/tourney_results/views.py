@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from dtower.sus.models import PlayerId
 from dtower.tourney_results.data import get_details, get_tourneys, how_many_results_public_site
 from dtower.tourney_results.models import TourneyResult, TourneyRow
+from dtower.tourney_results.tourney_utils import get_live_df
 
 
 def results_per_tourney(request, league, tourney_date):
@@ -83,6 +84,18 @@ def results_per_user(request, player_id):
             "patch": str(row.patch),
         }
         for _, row in df.iterrows()
+    ]
+
+    return JsonResponse(response, status=200, safe=False)
+
+
+def last_full_results(request, league):
+    position = int(request.GET.get("position", 0))  # default to 0 if not provided
+    df = get_live_df(league)
+
+    ldf = df[df.datetime == df.datetime.max()]
+    response = [
+        {"bracket_id": bracket, position: int(sdf.sort_values("wave", ascending=False).iloc[position + 1].wave)} for bracket, sdf in ldf.groupby("bracket")
     ]
 
     return JsonResponse(response, status=200, safe=False)

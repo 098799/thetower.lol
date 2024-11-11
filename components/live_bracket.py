@@ -4,10 +4,10 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from components.live_score import get_live_df
 from components.util import get_options
 from dtower.tourney_results.constants import leagues
 from dtower.tourney_results.formatting import BASE_URL
+from dtower.tourney_results.tourney_utils import get_live_df
 
 
 def live_bracket():
