@@ -232,25 +232,31 @@ def live_score():
 
         st.write(f"Total closed brackets until now: {ldf.groupby('bracket').ngroups}")
 
-        cols = st.columns(2 if not is_mobile else 1)
+        # Create combined histogram for median and mean waves
+        stats_df = pd.DataFrame({"Median": group_by_bracket.median(), "Mean": group_by_bracket.mean()}).melt()
 
-        # Create histograms for bracket statistics
-        median_waves = group_by_bracket.median()
-        mean_waves = group_by_bracket.mean()
-
-        # Median waves histogram
         fig1 = px.histogram(
-            median_waves, title="Distribution of Median Waves per Bracket", labels={"value": "Median Waves", "count": "Number of Brackets"}, height=300
+            stats_df,
+            x="value",
+            color="variable",
+            barmode="overlay",
+            opacity=0.7,
+            title="Distribution of Median and Mean Waves per Bracket",
+            labels={"value": "Waves", "count": "Number of Brackets", "variable": "Statistic"},
+            height=300,
         )
-        fig1.update_layout(showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
+        fig1.update_layout(margin=dict(l=20, r=20, t=40, b=20))
         st.plotly_chart(fig1, use_container_width=True)
 
-        # Mean waves histogram
-        fig2 = px.histogram(
-            mean_waves, title="Distribution of Mean Waves per Bracket", labels={"value": "Mean Waves", "count": "Number of Brackets"}, height=300
+        # Highest waves histogram
+        max_waves = group_by_bracket.max()
+        fig3 = px.histogram(
+            max_waves, title="Distribution of Highest Waves per Bracket", labels={"value": "Highest Wave", "count": "Number of Brackets"}, height=300
         )
-        fig2.update_layout(showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
-        st.plotly_chart(fig2, use_container_width=True)
+        fig3.update_layout(showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
+        st.plotly_chart(fig3, use_container_width=True)
+
+        cols = st.columns(2 if not is_mobile else 1)
 
         with cols[0]:
             st.write(f"Highest total waves: {bracket_from_hell}")
