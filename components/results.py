@@ -4,6 +4,7 @@ from typing import Optional
 
 import streamlit as st
 
+from dtower.sus.models import KnownPlayer
 from dtower.tourney_results.constants import (
     Graph,
     Options,
@@ -78,6 +79,15 @@ class Results:
         self.df = get_tourneys(qs, offset=begin, limit=step)
         self.df = self.df.reset_index(drop=True)
 
+        fnords = KnownPlayer.objects.filter(name="Fnord")
+
+        if len(fnords) == 1:
+            fnord = fnords.get()
+            fnord_ids = fnord.ids.all().values_list("id", flat=True)
+
+            if not self.df.loc[self.df.id.isin(fnord_ids)].empty:
+                self.df.loc[self.df.id.isin(fnord_ids)].position = 42
+
         if self.df.empty:
             return None
 
@@ -119,9 +129,6 @@ class Results:
 
         to_be_displayed["real_name"] = [sus_person if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.real_name)]
 
-        to_be_displayed["position"] = [
-            position if real_name != "Fnord" else 42 for position, real_name in zip(to_be_displayed["position"], to_be_displayed.real_name)
-        ]
         to_be_displayed["tourney_name"] = [strike(name) if id_ in self.sus_ids else name for id_, name in zip(to_be_displayed.id, to_be_displayed.tourney_name)]
         to_be_displayed["avatar"] = to_be_displayed.avatar.map(make_avatar)
         to_be_displayed["relic"] = to_be_displayed.relic.map(make_relic)
