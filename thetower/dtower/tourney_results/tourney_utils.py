@@ -191,7 +191,7 @@ def get_live_df(league):
 
     last_date = get_time(last_file)
 
-    data = {current_time: pd.read_csv(file) for file in all_files if last_date - (current_time := get_time(file)) < datetime.timedelta(days=2)}
+    data = {current_time: pd.read_csv(file) for file in all_files if last_date - (current_time := get_time(file)) < datetime.timedelta(hours=44)}
 
     for dt, df in data.items():
         df["datetime"] = dt
