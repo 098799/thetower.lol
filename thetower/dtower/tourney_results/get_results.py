@@ -117,7 +117,11 @@ def execute(league):
         logging.info(f"Using cached file {file_path}")
         return
 
-    df = make_request(league)
+    try:
+        df = make_request(league)
+    except Exception as e:
+        logging.error(f"Error in make_request: {e}")
+        return
 
     df.to_csv(file_path, index=False)
     logging.info(f"Successfully stored file {file_path}")
