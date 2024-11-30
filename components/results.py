@@ -1,5 +1,7 @@
 import datetime
 import os
+import re
+from pathlib import Path
 from typing import Optional
 
 import streamlit as st
@@ -106,7 +108,9 @@ class Results:
                     )
 
         def make_avatar(avatar_id):
-            if avatar_id == -1:
+            all_avatars = {int(re.findall(r"\d+", item.name.split(".")[0])[0]) for item in (Path("components") / "static" / "Tower_Skins").glob("*.*")}
+
+            if avatar_id == -1 or avatar_id not in all_avatars:
                 return ""
 
             if avatar_id in [35, 36, 39, 42, 44, 45, 46]:
