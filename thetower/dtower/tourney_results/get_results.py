@@ -105,7 +105,7 @@ def make_request(league):
         with open(path, "w") as outfile:
             outfile.write(csv_contents)
 
-        print(f"{league} csv failed processing. Check {path} for the faulty file and adjust.")
+        logging.info(f"{league} csv failed processing. Check {path} for the faulty file and adjust.")
 
     df["wave"] = df["wave"].astype(int)
     df = df.sort_values("wave", ascending=False)
