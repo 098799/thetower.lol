@@ -96,7 +96,17 @@ def make_request(league):
     header = "player_id,name,avatar,relic,wave,bracket,tourney_number\n"
 
     csv_contents = header + csv_contents
-    df = pd.read_csv(io.StringIO(csv_contents.strip()))
+
+    try:
+        df = pd.read_csv(io.StringIO(csv_contents.strip()))
+    except Exception:
+        path = f"/tmp/{league}__failed_result.csv"
+
+        with open(path, "w") as outfile:
+            outfile.write(csv_contents)
+
+        print(f"{league} csv failed processing. Check {path} for the faulty file and adjust.")
+
     df["wave"] = df["wave"].astype(int)
     df = df.sort_values("wave", ascending=False)
     return df
