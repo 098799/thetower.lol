@@ -21,7 +21,7 @@ def compute_overview(options: Options):
 
     # st.markdown(get_summary())
     if overview := TourneyResult.objects.filter(league=legend, **public).latest("date").overview:
-        st.markdown(overview)
+        st.markdown(overview, unsafe_allow_html=True)
 
     for league in leagues:
         url = get_url(path=league.lower() if league != champ else "results")
