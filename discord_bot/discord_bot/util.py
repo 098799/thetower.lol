@@ -68,7 +68,7 @@ position_role_ids = {
     # 900: const.top900_id,
     1000: const.top1000_id,
     1500: const.top1500_id,
-    # 2000: const.top2000_id,
+    2000: const.top2000_id,
 }
 
 
