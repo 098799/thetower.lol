@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "dtower.sus",
     "dtower.tourney_results",
     "colorfield",
+    "simple_history",
 ]
 
 MIDDLEWARE = [
