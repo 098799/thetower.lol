@@ -124,10 +124,10 @@ class Results:
             if relic_id == -1 or relic_id not in all_relics:
                 return ""
 
-            if relic_id in [48, 49, 50, 51, 52, 53, 60, 61]:
-                extension = "webp"
-            else:
-                extension = "png"
+            # if relic_id in [48, 49, 50, 51, 52, 53, 60, 61]:
+            #     extension = "webp"
+            # else:
+            extension = "png"
 
             return f"<img src='./app/static/Tower_Relics/{relic_id}.{extension}' width='32' title='{all_relics[relic_id][0]}, {all_relics[relic_id][1]} {all_relics[relic_id][2]}'>"
 
